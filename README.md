@@ -1,7 +1,8 @@
-# darenogare
+darenogare
+==============
 
 ##member
 
-*KazuyaSaeki
-*TakumaMatsumoto
-*TakumaKobayashi
+* KazuyaSaeki
+* TakumaMatsumoto
+* TakumaKobayashi
