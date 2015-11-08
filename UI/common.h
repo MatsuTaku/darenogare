@@ -32,6 +32,7 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
+/*UI用に追記*/
 #include <SDL/SDL.h>
 
 /* マップサイズ */
@@ -49,13 +50,6 @@ enum {
     MSG_Win      = 1,
     MSG_NUM      = 2            /* メッセージの数 */
 };
-
-/*typedef enum {
-    MT_Wall  = -2,
-    MT_Water = -1,
-    MT_Grass = 0,
-    MT_Sand  = 1,
-} MapType;*/
 
 
 /* マップの座標 */
