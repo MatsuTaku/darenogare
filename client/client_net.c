@@ -93,14 +93,14 @@ int recvIntData(int *intData)
 
 void sendData(void *data, int dataSize)
 {
-    /* °ú¤­¿ô¥Á¥§¥Ã¥¯ */
+    /* Â°Ãºâ‚¬Â­Â¿Ã´Â¥ÃÂ¥Â§Â¥ÃƒÂ¥Â¯ */
     assert(data != NULL);
     assert(0 < dataSize);
 
     write(gSocket,data,dataSize);
 }
 
-void closeSoc(void)
+void closeSoc(void) //ã‚½ã‚±ãƒƒãƒˆã‚’é–‰ã˜ã‚‹
 {
     printf("...Connection closed\n");
     close(gSocket);

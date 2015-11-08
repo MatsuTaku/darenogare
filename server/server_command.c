@@ -31,7 +31,11 @@ int executeCommand(char command, int pos) //コマンド処理
 		case V: //方向転換コマンド
 			break;
 		case J: //ジェット噴射コマンド
+			break;
+		case I: //アイテムコマンド
+			break;
 		default:
+		
 			fprintf(stderr,"0x%02x is not command!\n", command);
 			break;
 		}

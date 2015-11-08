@@ -10,9 +10,9 @@ int executeCommand(RESULT* result)
 		printf("ExecuteCommand()\n");
 #endif
 		switch(result->command){
-				case END_COMMAND:
-						endFlag = 0;
-						break;
+			case END_COMMAND:
+				endFlag = 0;
+				break;
 		}
 		return endFlag;
 }
