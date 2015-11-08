@@ -1,8 +1,8 @@
 darenogare
 ==============
-aa
+
 ##member
 
-* KazuyaSaeki0721
+* KazuyaSaeki
 * TakumaMatsumoto
 * TakumaKobayashi
