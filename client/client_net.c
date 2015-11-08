@@ -62,7 +62,7 @@ int setUpClient(char *hostName,int *clientID,int *num,char clientNames[][MAX_NAM
 int sendRecvManager(void)
 {
     fd_set	readOK;
-	RESULT result;
+	int command;
     int		i;
     int		endFlag = 1;
     struct timeval	timeout;
@@ -73,8 +73,8 @@ int sendRecvManager(void)
     readOK = gMask;
     select(gWidth,&readOK,NULL,NULL,&timeout);
     if(FD_ISSET(gSocket,&readOK)){
-		recvData(&result,sizeof(RESULT));
-		endFlag = executeCommand(&result);
+		recvData(&command,sizeof(int));
+		endFlag = executeCommand(command);
     }
     return endFlag;
 }

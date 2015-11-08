@@ -1,9 +1,10 @@
 OBJS	=	client_main.o client_net.o client_command.o client_win.o
 TARGET	=	client
-CFLAGS	=	-c -DNDEBUG
+NDEBUG	=	-DNDEBUG
 
 .c.o:
-	gcc $(CFLAGS) $<
+	gcc -c $<
+#	gcc -c $(NDEBUG) $<
 
 all: $(TARGET)
 
@@ -11,7 +12,7 @@ $(TARGET):	$(OBJS)
 	gcc -o $@ $^ -lm -lSDL -lSDL_image -lSDL_gfx -lSDL_ttf
 
 clean:
-	rm *.o $(TARGET) *~ core
+	rm *.o $(TARGET) *~ core *.swp
 
 client_main.o: client_main.c client_func.h ../common.h
 client_net.o: client_net.c client_func.h ../common.h
