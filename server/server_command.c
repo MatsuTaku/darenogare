@@ -1,12 +1,9 @@
 #include"server_common.h"
 #include"server_func.h"
 
-static RESULT results[MAX_RESULT];
-static RESULT* nowResult;
-static int numResult = -1;
 static int numCommand;
 
-int executeCommand(char command, int pos)
+int executeCommand(int command, int pos)
 {
 		int			endFlag = 1;
 
@@ -21,8 +18,7 @@ int executeCommand(char command, int pos)
 		switch(command){
 				case END_COMMAND:
 						endFlag = 0;
-						nowResult->command = command;
-						sendData(ALL_CLIENTS, nowResult, sizeof(RESULT));
+						sendData(ALL_CLIENTS, END_COMMAND, sizeof(int));
 						break;
 				default:
 						fprintf(stderr,"0x%02x is not command!\n", command);

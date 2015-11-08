@@ -10,6 +10,6 @@ extern void sendData(int pos,void *data,int dataSize);
 extern int sendRecvManager(void);
 
 /* server_command.c */
-extern int executeCommand(char command, int pos);
+extern int executeCommand(int command, int pos);
 
 #endif
