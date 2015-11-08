@@ -2,17 +2,17 @@
 #include "client_common.h"
 #include "client_func.h"
 
-int executeCommand(RESULT* result)
+int executeCommand(int command)
 {
 		int	endFlag = 1;
 #ifndef NDEBUG
 		printf("#####\n");
 		printf("ExecuteCommand()\n");
 #endif
-		switch(result->command){
-			case END_COMMAND:
-				endFlag = 0;
-				break;
+		switch(command){
+				case END_COMMAND:
+						endFlag = 0;
+						break;
 		}
 		return endFlag;
 }

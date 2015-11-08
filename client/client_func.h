@@ -17,7 +17,7 @@ extern void destroyWindow(void);
 extern void windowEvent(int num);
 
 /* client_command.c */
-extern int executeCommand(RESULT* result);
+extern int executeCommand(int command);
 extern void sendEndCommand(void);
 
 #endif
