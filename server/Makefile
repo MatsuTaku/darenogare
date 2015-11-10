@@ -1,4 +1,4 @@
-OBJS	=	server_main.o server_net.o server_command.o
+OBJS	=	server_main.o server_net.o server_command.o server_system.o
 TARGET	=	server
 NDEBUG	=	-DNDEBUG
 
@@ -17,3 +17,4 @@ clean:
 server_main.o: server_main.c server_common.h server_func.h ../common.h
 server_net.o: server_net.c server_common.h server_func.h ../common.h
 server_command.o: server_command.c server_common.h server_func.h ../common.h
+server_system.o: server_system.c server_common.h server_func.h ../common.h
