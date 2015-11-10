@@ -14,7 +14,7 @@ static int myID;
 
 static SDL_Surface *gMainWindow;
 
-int initWindows(int clientID, int num, char name[][MAX_NAME_SIZE])
+int initWindows(int clientID, int num)
 {
 		int i;
 		char *s, title[10];

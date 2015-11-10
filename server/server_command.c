@@ -4,7 +4,7 @@
 static int numCommand;
 
 
-int executeCommand(char command, int pos) //コマンド処理
+int executeCommand(int command, int pos) //コマンド処理
 {
 /*
 引数1:コマンド

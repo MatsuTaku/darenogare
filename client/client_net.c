@@ -10,10 +10,10 @@ static int	gSocket;
 static fd_set	gMask;	
 static int	gWidth;		
 
-static void getAllName(int *clientID,int *num,char clientNames[][MAX_NAME_SIZE]);
+static void getAllName(int *clientID,int *num);
 static void setMask(void);
 
-int setUpClient(char *hostName,int *clientID,int *num,char clientNames[][MAX_NAME_SIZE])
+int setUpClient(char *hostName,int *clientID,int *num)
 {
     struct hostent	*servHost;
     struct sockaddr_in	server;
@@ -52,7 +52,7 @@ int setUpClient(char *hostName,int *clientID,int *num,char clientNames[][MAX_NAM
 
     printf("Please Wait\n");
 
-    getAllName(clientID,num,clientNames);
+    getAllName(clientID,num);
 
     setMask();
     
@@ -109,23 +109,12 @@ void closeSoc(void) //ソケットを閉じる
 /*****
 static
 *****/
-static void getAllName(int *clientID,int *num,char clientNames[][MAX_NAME_SIZE])
+static void getAllName(int *clientID,int *num)
 {
     int	i;
 
     recvIntData(clientID);
     recvIntData(num);
-
-    for(i=0;i<(*num);i++){
-		recvData(clientNames[i],MAX_NAME_SIZE);
-    }
-#ifndef NDEBUG
-    printf("#####\n");
-    printf("client number = %d\n",(*num));
-    for(i=0;i<(*num);i++){
-		printf("%d:%s\n",i,clientNames[i]);
-    }
-#endif
 }
 
 static void setMask(void)

@@ -6,7 +6,6 @@
 
 typedef struct{
 	int		fd;
-	char	name[MAX_NAME_SIZE];
 }CLIENT;
 
 static CLIENT	gClients[MAX_CLIENTS];
