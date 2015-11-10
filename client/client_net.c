@@ -93,7 +93,6 @@ int recvIntData(int *intData)
 
 void sendData(void *data, int dataSize)
 {
-    /* °ú€­¿ô¥Á¥§¥Ã¥¯ */
     assert(data != NULL);
     assert(0 < dataSize);
 

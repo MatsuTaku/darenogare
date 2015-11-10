@@ -3,8 +3,8 @@
 #include "client_func.h"
 #include <SDL/SDL.h>
 
-int networkEvent(void* data);
-int drawThread(void* data);
+static int networkEvent(void* data);
+static Uint32 drawEvent(Uint32 interval, void* param);
 
 int main(int argc,char *argv[])
 {
@@ -14,56 +14,57 @@ int main(int argc,char *argv[])
 		char	localHostName[]="localhost";
 		char	*serverName;
 
-	SDL_Thread* thread1;
-	SDL_Thread* thread2;
+		SDL_Thread* networkThread;
+		SDL_TimerID drawTimer;
 
-    if(argc == 1){
-    	serverName = localHostName;
-    }
-    else if(argc == 2){
-    	serverName = argv[1];
-    }
-    else{
-		fprintf(stderr, "Usage: %s, Cannot find a Server Name.\n", argv[0]);
-		return -1;
-    }
+		if(argc == 1){
+				serverName = localHostName;
+		}
+		else if(argc == 2){
+				serverName = argv[1];
+		}
+		else{
+				fprintf(stderr, "Usage: %s, Cannot find a Server Name.\n", argv[0]);
+				return -1;
+		}
 
-    if(setUpClient(serverName,&clientID,&num)==-1){
-		fprintf(stderr,"setup failed : SetUpClient\n");
-		return -1;
-	}
-	if(initWindows(clientID,num)==-1){
-		fprintf(stderr,"setup failed : InitWindows\n");
-		return -1;
-	}
+		if(setUpClient(serverName,&clientID,&num)==-1){
+				fprintf(stderr,"setup failed : SetUpClient\n");
+				return -1;
+		}
+		if(initWindows(clientID,num)==-1){
+				fprintf(stderr,"setup failed : InitWindows\n");
+				return -1;
+		}
 
-	thread1 = SDL_CreateThread(networkEvent, (void *)NULL);
-	thread2 = SDL_CreateThread(drawThread, (void *)NULL);
-	if (thread1 == NULL || thread2 == NULL) {
-			printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
-	}
+		networkThread = SDL_CreateThread(networkEvent, &endFlag);
+		if (networkThread == NULL) {
+				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
+		}
 
-    while(endFlag){
-		windowEvent(num);
-		endFlag = sendRecvManager();
-    };
+		Uint32 drawInterval = 1000 / 60;	// 60fps
+		printf("fps: %3d\n", drawInterval);
+		drawTimer = SDL_AddTimer(drawInterval, drawEvent, NULL);
 
-	destroyWindow();
-	closeSoc();
+		while(endFlag){
+				windowEvent(num);
+		};
 
-    return 0;
+		destroyWindow();
+		closeSoc();
+
+		return 0;
 }
 
-int networkEvent(void* data) {
-		int endFlag = 1;
-		while(endFlag) {
-				endFlag = sendRecvManager();
+static int networkEvent(void* data) {
+		int* endFlag;
+		endFlag = (int*)data;
+		while(*endFlag) {
+				*endFlag = sendRecvManager();
 		}
+		return 0;
 }
 
-int drawThread(void* data) {
-		int endFlag = 1;
-		while(endFlag) {
-				endFlag = drawWindow();
-		}
+static Uint32 drawEvent(Uint32 interval, void* param) {
+		drawWindow();
 }
