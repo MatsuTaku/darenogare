@@ -45,7 +45,7 @@ typedef struct {
 // 通信データ
 typedef struct {
 		int id;				// ユーザーID
-		PLAYER player		// プレイヤーのデータ
+		PLAYER player;		// プレイヤーのデータ
 } entityState;
 
 #endif
