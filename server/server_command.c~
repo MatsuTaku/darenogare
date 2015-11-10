@@ -1,12 +1,13 @@
 #include"server_common.h"
 #include"server_func.h"
 
-static RESULT results[MAX_RESULT];
-static RESULT* nowResult;
-static int numResult = -1;
 static int numCommand;
 
+<<<<<<< HEAD
 int executeCommand(char command, int pos) //コマンド処理
+=======
+int executeCommand(int command, int pos)
+>>>>>>> 8e98fb9ebbcbf58408ce39acf28dfb0906e970e3
 {
 /*
 引数1:コマンド
@@ -22,6 +23,7 @@ int executeCommand(char command, int pos) //コマンド処理
 	printf("ExecuteCommand()\n");
 #endif
 
+<<<<<<< HEAD
 	switch(command){
 		case END_COMMAND: //終了コマンド
 			endFlag = 0;
@@ -38,6 +40,16 @@ int executeCommand(char command, int pos) //コマンド処理
 		
 			fprintf(stderr,"0x%02x is not command!\n", command);
 			break;
+=======
+		switch(command){
+				case END_COMMAND:
+						endFlag = 0;
+						sendData(ALL_CLIENTS, END_COMMAND, sizeof(int));
+						break;
+				default:
+						fprintf(stderr,"0x%02x is not command!\n", command);
+						break;
+>>>>>>> 8e98fb9ebbcbf58408ce39acf28dfb0906e970e3
 		}
 	return endFlag;
 }
