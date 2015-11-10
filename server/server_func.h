@@ -12,4 +12,7 @@ extern int sendRecvManager(void);
 /* server_command.c */
 extern int executeCommand(int command, int pos);
 
+/* server_system.c */
+extern void physicsManager(void);
+
 #endif

@@ -42,10 +42,12 @@ typedef struct {
 		int alive;			// 生存フラグ
 } PLAYER;
 
-// 通信データ
+// 通信データ(client > server)
 typedef struct {
 		int id;				// ユーザーID
 		PLAYER player;		// プレイヤーのデータ
 } entityState;
+
+entityState entityAll[MAX_CLIENTS];	// 通信データ(server > client)
 
 #endif

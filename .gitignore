@@ -1,5 +1,4 @@
+.DS_Store
 *~
-*.[ao]
 *.swp
-client
-server
+*.[ao]
