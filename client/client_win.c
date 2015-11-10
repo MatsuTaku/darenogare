@@ -52,9 +52,54 @@ void destroyWindow(void)
 		SDL_Quit();
 }
 
+
 void windowEvent(int num)
 {
 		SDL_Event event;
-
 		assert(0<num && num<=MAX_CLIENTS);
+
+
+		switch(SDL_PollEvent(&event)){ //イベント取得
+			case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+			
+			   break;
+
+			case SDL_JOYBUTTONDOWN: //ボタンが押された時
+			   switch(event.jbutton.button){ //ボタン毎の処理
+			      case 2: //ジェット噴射
+			         player.ver.vx++; //速度上昇（ブースト）
+			         player.ver.vy++;
+			         break;
+			      case 4: //ジェット逆噴射
+			         player.ver.vx--; //速度下降（逆方向にブースト）
+			         player.ver.vy--;
+			         break;
+			   }
+			   break;
+
+
+			case SDL_JOYBUTTONUP: //ボタンが離された時
+			   if(event.jbutton.button == 6){ //アイテム使用
+			      ItemUse();
+			}
+			   //徐々に減速する
+			   if(player.ver.vx > 0){
+			      player.ver.vx--;
+			      player.ver.vy--;
+			   }
+			   if(player.ver.vx < 0){
+			      player.ver.vx++;
+			      player.ver.vy++;
+			   }
+			   break;
+		}
+
 }
+
+
+
+
+
+
+
+
