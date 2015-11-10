@@ -42,4 +42,10 @@ typedef struct {
 		int alive;			// 生存フラグ
 } PLAYER;
 
+// 通信データ
+typedef struct {
+		int id;				// ユーザーID
+		PLAYER player;		// プレイヤーのデータ
+} entityState;
+
 #endif
