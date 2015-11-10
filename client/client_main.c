@@ -6,6 +6,8 @@
 int networkEvent(void* data);
 int drawThread(void* data);
 
+
+
 int main(int argc,char *argv[])
 {
 		int		num;
@@ -43,6 +45,14 @@ int main(int argc,char *argv[])
 			printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
 	}
 
+    SDL_Joystick *joystick; //ジョイスティック用構造体
+    if(SDL_NumJoysticks() > 0){ //ジョイスティックが接続されたら
+    		joystick = SDL_JoystickOpen(0); //ジョイスティックをオープン
+    } else{ //接続に失敗
+		fprintf(stderr,"failed to connect joystick\n");
+		return -1;
+    }
+
     while(endFlag){
 		windowEvent(num);
 		endFlag = sendRecvManager();
@@ -61,9 +71,9 @@ int networkEvent(void* data) {
 		}
 }
 
-int drawThread(void* data) {
+int drawThread(void* data) {//キャラ移動などを反映
 		int endFlag = 1;
-		while(endFlag) {
+		while(endFlag) {//1なら継続→client_winへ
 				endFlag = drawWindow();
 		}
 }
