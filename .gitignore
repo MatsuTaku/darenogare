@@ -2,3 +2,5 @@
 *~
 *.swp
 *.[ao]
+server/server
+client/client
