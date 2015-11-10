@@ -61,9 +61,9 @@ int networkEvent(void* data) {
 		}
 }
 
-int drawThread(void* data) {
+int drawThread(void* data) {//キャラ移動などを反映
 		int endFlag = 1;
-		while(endFlag) {
+		while(endFlag) {//1なら継続→client_winへ
 				endFlag = drawWindow();
 		}
 }

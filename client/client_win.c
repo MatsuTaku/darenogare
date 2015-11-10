@@ -14,6 +14,12 @@ static int myID;
 
 static SDL_Surface *gMainWindow;
 
+typedef struct {
+    SDL_Rect src;
+    SDL_Rect dst;
+} Rect;
+
+
 int initWindows(int clientID, int num)
 {
 		int i;
@@ -41,12 +47,39 @@ int initWindows(int clientID, int num)
 		return 0;
 }
 
-int drawWindow()
+int drawWindow()//ここを主に編集
 {
-		int endFlag = 1;
-		return endFlag;
+    int endFlag = 1;
+                
+
+    gMapImage = IMG_Load( gMapImgFile ); //マップデータ読み込み
+    if( gMapImage == NULL ){
+        printf("Failedreadmapimg\n");//読み込めない時のエラー表示
+	exit(-1);
+    }
+
+        SDL_Surface* image;
+	SDL_Rect rect, scr_rect;    
+
+        image = SDL_LoadBMP("Field.bmp");
+    
+        rect.x = 0;
+	rect.y = 0;
+	rect.w = image->w;
+	rect.h = image->h;
+     
+        scr_rect.x = 0;
+	scr_rect.y = 0;
+        SDL_BlitSurface(image, &rect, gMainWindow, &scr_rect);	
+        SDL_Flip(gMainWindow);//描画更新
+
+        return endFlag; //endflagは1で返す(継続)
 }
 
+void ItemUse()//
+{
+
+}
 void destroyWindow(void)
 {
 		SDL_Quit();
