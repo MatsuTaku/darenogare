@@ -20,15 +20,22 @@ int executeCommand(int command, int pos) //コマンド処理
 	printf("ExecuteCommand()\n");
 #endif
 
-
-		switch(command){
-				case END_COMMAND:
-						endFlag = 0;
-						sendData(ALL_CLIENTS, END_COMMAND, sizeof(int));
-						break;
-				default:
-						fprintf(stderr,"0x%02x is not command!\n", command);
-						break;
+	switch(command){
+		case END_COMMAND: //終了コマンド
+			endFlag = 0;
+			nowResult->command = command;
+			sendData(ALL_CLIENTS, nowResult, sizeof(RESULT));
+			break;
+		case V: //方向転換コマンド
+			break;
+		case J: //ジェット噴射コマンド
+			break;
+		case I: //アイテムコマンド
+			break;
+		default:
+		
+			fprintf(stderr,"0x%02x is not command!\n", command);
+			break;
 		}
 	return endFlag;
 }
