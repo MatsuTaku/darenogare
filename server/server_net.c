@@ -156,10 +156,6 @@ static void enter(int pos, int fd)
 引数1:送信元
 引数2:FD
 */
-	read(fd,gClients[pos].name,MAX_NAME_SIZE); //クライアント名の受信
-#ifndef NDEBUG
-	printf("%s is accepted\n",gClients[pos].name);
-#endif
 	gClients[pos].fd = fd; //ファイルディスクリプタの格納
 }
 
@@ -182,9 +178,6 @@ static void sendAllName(void)
 		tmp1 = htonl(i);
 		sendData(i,&tmp1,sizeof(int));
 		sendData(i,&tmp2,sizeof(int)); //クライアント番号を振り分け
-		for(j=0;j<gClientNum;j++){
-			sendData(i,gClients[j].name,MAX_NAME_SIZE);
-		}
 	}
 }
 
