@@ -123,7 +123,7 @@ void ending(void)
     int	i;
 
     printf("... Connection closed\n");
-    for(i=0;i<gClientNum;i++)close(gClients[i].fd); //クライアントを終了させる
+    for(i=0;i<gClientNum;i++)close(gClients[i].fd);
 }
 
 
