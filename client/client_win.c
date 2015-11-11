@@ -81,7 +81,7 @@ int drawWindow()//ここを主に編集
 int ItemGet()//触れたアイテムをゲットする
 {
  int num;
- if(player.pos.x == .item.pos.x || player.pos.y == OBJECT.item.pos.y){
+ if(player.pos.x == [OBJECT_TYPE].item.pos.x || player.pos.y == [OBJECT_TYPE].item.pos.y){
      num = ITEM_NUM;
  }
  return num;
