@@ -19,6 +19,12 @@ typedef enum {
 		END_COMMAND
 } COMMANDS;
 
+typedef enum {
+		CHARACTER,
+		ITEM,
+		OBSTACLE
+} OBJECT_TYPE;
+
 typedef struct {
 		int x;	// X座標
 		int y;	// Y座標
