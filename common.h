@@ -48,7 +48,7 @@ typedef struct {
 		int alive;			// 生存フラグ
 } PLAYER;
 
-typedef struct {
+typedef enum {
                 ITEM_THUNDER = 1,
                 ITEM_LASER   = 2,
                 ITEM_TRAP    = 3,
