@@ -19,6 +19,7 @@ typedef enum {
 		END_COMMAND
 } COMMANDS;
 
+// オブジェクト列挙体
 typedef enum {
 		CHARACTER,
 		ITEM,
