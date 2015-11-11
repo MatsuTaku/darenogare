@@ -14,10 +14,19 @@
 #define MAX_NAME_SIZE	10 				
 
 #define MAX_DATA		200				
+#define MAX_OBJECT		0xff
 
 typedef enum {
 		END_COMMAND
 } COMMANDS;
+
+// オブジェクト列挙体
+typedef enum {
+		EMPTY,
+		CHARACTER,
+		ITEM,
+		OBSTACLE
+} OBJECT_TYPE;
 
 typedef struct {
 		int x;	// X座標
@@ -33,6 +42,7 @@ typedef struct  {
 		int type;		// オブジェクト型（キャラ、アイテム、障害物）
 		int id;			// オブジェクト番号
 		POSITION pos;	// 座標
+		void* typeBuffer;	// オブジェクト固有の構造体 *キャスト必須
 } OBJECT;
 
 typedef struct {
