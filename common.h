@@ -42,6 +42,14 @@ typedef struct {
 		int alive;			// 生存フラグ
 } PLAYER;
 
+typedef struct {
+                ITEM_THUNDER = 1,
+                ITEM_LASER   = 2,
+                ITEM_TRAP    = 3,
+                ITEM_MINIMUM = 4, 
+
+}ITEM_NUM;
+
 // 通信データ(client > server)
 typedef struct {
 		int id;				// ユーザーID

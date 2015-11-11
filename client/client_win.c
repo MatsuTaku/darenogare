@@ -20,6 +20,8 @@ typedef struct {
 } Rect;
 
 
+
+
 int initWindows(int clientID, int num)
 {
 		int i;
@@ -76,10 +78,30 @@ int drawWindow()//ここを主に編集
         return endFlag; //endflagは1で返す(継続)
 }
 
-
+int ItemGet()//触れたアイテムをゲットする
+{
+ int num;
+ if(player.pos.x == .item.pos.x || player.pos.y == OBJECT.item.pos.y){
+     num = ITEM_NUM;
+ }
+ return num;
+}
 
 void ItemUse()//アイテムの使用
 {
+  int num = 0;
+  num = ItemGet();
+  player.item = num;
+
+  if(player.item != 0){ /*アイテムごとに決められた処理を行う*/
+     switch(num){
+            case 1: break;
+            case 2: break;
+            case 3: break;
+            case 4: break;
+     }
+         player.item = 0;/*使用後消去*/ 
+  }    
 
 }
 
