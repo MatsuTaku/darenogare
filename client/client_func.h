@@ -20,4 +20,10 @@ extern void windowEvent(int num);
 extern int executeCommand(int command);
 extern void sendEndCommand(void);
 
+/* client_system.c */
+extern int initGameSystem(int myId, int playerNum);
+extern void useItem();
+extern changeDir(int dir);
+extern boost(int dir);
+
 #endif

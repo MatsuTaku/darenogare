@@ -48,6 +48,4 @@ typedef struct {
 		PLAYER player;		// プレイヤーのデータ
 } entityState;
 
-entityState entityAll[MAX_CLIENTS];	// 通信データ(server > client)
-
 #endif

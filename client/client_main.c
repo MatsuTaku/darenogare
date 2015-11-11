@@ -34,6 +34,12 @@ int main(int argc,char *argv[])
 				fprintf(stderr,"setup failed : SetUpClient\n");
 				return -1;
 		}
+
+		if (initGameSystem(clientID, num) == -1) {
+				fprintf(stderr, "initalize failed: initGameSystem\n");
+				return -1;
+		}
+
 		if(initWindows(clientID,num)==-1){
 				fprintf(stderr,"setup failed : InitWindows\n");
 				return -1;
