@@ -76,10 +76,28 @@ int drawWindow()//ここを主に編集
         return endFlag; //endflagは1で返す(継続)
 }
 
-void ItemUse()//
+
+
+void ItemUse()//アイテムの使用
 {
 
 }
+
+
+void Boost(int accele){ //機体の速度変更
+	player.ver.vx += ( accele * cos(player.dir) ); //x方向
+	player.ver.vy += ( accele * sin(player.dir) ); //y方向
+}
+
+void changeDir(int degree){ //方向転換
+//引数:アナログスティックを倒した方向
+}
+
+
+
+
+
+
 void destroyWindow(void)
 {
 		SDL_Quit();
@@ -94,18 +112,16 @@ void windowEvent(int num)
 
 		switch(SDL_PollEvent(&event)){ //イベント取得
 			case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-			
+			   changeDir(event.jaxis.axis); //方向転換
 			   break;
 
 			case SDL_JOYBUTTONDOWN: //ボタンが押された時
 			   switch(event.jbutton.button){ //ボタン毎の処理
 			      case 2: //ジェット噴射
-			         player.ver.vx++; //速度上昇（ブースト）
-			         player.ver.vy++;
+			         Boost(1); //速度上昇
 			         break;
 			      case 4: //ジェット逆噴射
-			         player.ver.vx--; //速度下降（逆方向にブースト）
-			         player.ver.vy--;
+			         Boost(-1); //速度下降（逆方向にブースト）
 			         break;
 			   }
 			   break;
@@ -117,12 +133,10 @@ void windowEvent(int num)
 			}
 			   //徐々に減速する
 			   if(player.ver.vx > 0){
-			      player.ver.vx--;
-			      player.ver.vy--;
+			      Boost(-1)
 			   }
 			   if(player.ver.vx < 0){
-			      player.ver.vx++;
-			      player.ver.vy++;
+			      Boost(1)
 			   }
 			   break;
 		}
