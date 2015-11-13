@@ -17,8 +17,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
 {
     struct hostent	*servHost;
     struct sockaddr_in	server;
-    int			len;
-    char		str[BUF_SIZE];
 
     if((servHost = gethostbyname(hostName))==NULL){
 		fprintf(stderr,"Unknown host\n");
@@ -42,12 +40,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
     }
     fprintf(stderr,"connected\n");
 
-    do {
-		printf("Enter Your Name\n");
-		fgets(str,BUF_SIZE,stdin);
-		len = strlen(str)-1;
-		str[len]='\0';
-    } while(len>MAX_NAME_SIZE-1 || len==0);
     sendData(str, MAX_NAME_SIZE);
 
     printf("Please Wait\n");

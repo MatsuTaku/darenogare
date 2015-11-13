@@ -4,7 +4,7 @@
 static int numCommand;
 
 
-int executeCommand(int command, int pos) //コマンド処理
+int executeCommand(int pos) //コマンド処理
 {
 /*
 引数1:コマンド
@@ -19,23 +19,8 @@ int executeCommand(int command, int pos) //コマンド処理
 	printf("#####\n");
 	printf("ExecuteCommand()\n");
 #endif
+	//ここで当たり判定、場所の移動、画像の描画などの処理	
+	sendData(ALL_CLIENTS, , sizeof()); //全員に
 
-	switch(command){
-		case END_COMMAND: //終了コマンド
-			endFlag = 0;
-			nowResult->command = command;
-			sendData(ALL_CLIENTS, nowResult, sizeof(RESULT));
-			break;
-		case V: //方向転換コマンド
-			break;
-		case J: //ジェット噴射コマンド
-			break;
-		case I: //アイテムコマンド
-			break;
-		default:
-		
-			fprintf(stderr,"0x%02x is not command!\n", command);
-			break;
-		}
 	return endFlag;
 }

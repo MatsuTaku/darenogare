@@ -73,7 +73,6 @@ int setUpServer(int num)//サーバの立ち上げ
 
 int sendRecvManager(void) //ネットワークメインモジュール
 {
-    char	command;
     fd_set	readOK;
     int		i;
     int		endFlag = 1;
@@ -85,7 +84,7 @@ int sendRecvManager(void) //ネットワークメインモジュール
 
     for(i=0;i<gClientNum;i++){ //全てのクライアントに対して
 		if(FD_ISSET(gClients[i].fd,&readOK)){ //読み込み可能なFDがあれば
-			recvData(i,&command,sizeof(char)); //データを受け取る
+			recvData(i,&player[i],sizeof(char)); //データを受け取る
 	    		endFlag = executeCommand(command, i); //コマンド処理
 	    	if(endFlag == 0)break; //終了コマンドが押されたら脱ループ
 		}
