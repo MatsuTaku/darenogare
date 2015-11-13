@@ -5,16 +5,18 @@
 
 static int networkEvent(void* data);
 static Uint32 drawEvent(Uint32 interval, void* param);
-
+static Uint32 timerEvent(Uint32 frame);
 
 
 int main(int argc,char *argv[])
 {
 		int		num;
-		int clientID;
+		int 	clientID;
 		int		endFlag=1;
 		char	localHostName[]="localhost";
 		char	*serverName;
+
+		int		frame;
 
 		SDL_Thread* networkThread;
 		SDL_TimerID drawTimer;
@@ -50,10 +52,6 @@ int main(int argc,char *argv[])
 				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
 		}
 
-		Uint32 drawInterval = 1000 / 60;	// 60fps
-		printf("fps: %3d\n", drawInterval);
-		drawTimer = SDL_AddTimer(drawInterval, drawEvent, NULL);
-
 		SDL_Joystick *joystick; //ジョイスティック用構造体
 		if(SDL_NumJoysticks() > 0){ //ジョイスティックが接続されたら
 				joystick = SDL_JoystickOpen(0); //ジョイスティックをオープン
@@ -62,8 +60,18 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
+
+		Uint32 loopInterval = 1000 / FPS;
+		Uint32 nowTime;
+		Uint32 toTime = SDL_GetTicks() + loopInterval;
 		while(endFlag){
 				windowEvent(num);
+
+				nowTime = SDL_GetTicks();
+				if (nowTime >= toTime) {
+						timerEvent(frame++);
+						toTime = nowTime + loopInterval;
+				}
 		};
 
 		destroyWindow();
@@ -71,6 +79,7 @@ int main(int argc,char *argv[])
 
 		return 0;
 }
+
 
 static int networkEvent(void* data) {
 		int* endFlag;
@@ -81,6 +90,8 @@ static int networkEvent(void* data) {
 		return 0;
 }
 
-static Uint32 drawEvent(Uint32 interval, void* param) {
+
+static Uint32 timerEvent(Uint32 frame) {
+		updateEvent();
 		drawWindow();
 }
