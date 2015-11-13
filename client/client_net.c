@@ -54,7 +54,7 @@ int setUpClient(char *hostName,int *clientID,int *num)
 int sendRecvManager(void)
 {
     fd_set	readOK;
-	int command;
+    int         command;
     int		i;
     int		endFlag = 1;
     struct timeval	timeout;

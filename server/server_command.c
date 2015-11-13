@@ -19,6 +19,7 @@ int executeCommand(int pos) //コマンド処理
 	printf("#####\n");
 	printf("ExecuteCommand()\n");
 #endif
+	physicsManager();
 	//ここで当たり判定、場所の移動、画像の描画などの処理	
 	sendData(ALL_CLIENTS, , sizeof()); //全員に
 
