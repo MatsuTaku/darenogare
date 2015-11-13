@@ -92,15 +92,16 @@ void windowEvent(int num) {
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
 								if (event.jaxis.axis == 0) {	// 左右)
 										if (event.jaxis.value < -REACTION_VALUE) {	// left
-												changeDir(LEFT);
+												rotateLeft();
 										} else if (event.jaxis.value > REACTION_VALUE) {	// right
-												changeDir(RIGHT);
+												rotateRight();
+										} else {
+												fixRotation();
 										}
 								} else if (event.jaxis.axis == 1) {	// 上下
 										if (event.jaxis.value < -REACTION_VALUE) {	// down
-												changeDir(DOWN);
 										} else if (event.jaxis.value > REACTION_VALUE) {	// up
-												changeDir(UP);
+										} else {
 										}
 								}
 								break;
@@ -108,10 +109,12 @@ void windowEvent(int num) {
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
 								switch(event.jbutton.button) { //ボタン毎の処理
 										case 2: //ジェット噴射
-												boost(GO); //速度上昇
+												//速度上昇
+												acceleration();
 												break;
 										case 4: //ジェット逆噴射
-												boost(BACK); //速度下降（逆方向にブースト）
+												//速度下降（逆方向にブースト）
+												deceleration();
 												break;
 								}
 								break;
@@ -120,7 +123,8 @@ void windowEvent(int num) {
 								switch (event.jbutton.button) {
 										case 2:
 										case 4:
-												boost(NEUTRAL);	// 徐々に減速
+												// 徐々に減速
+												inertialNavigation();
 												break;
 										case 6:	//アイテム使用
 												useItem();

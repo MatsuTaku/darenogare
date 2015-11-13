@@ -11,6 +11,8 @@
 
 #define PORT			(u_short)51001
 
+#define FPS	60
+
 #define MAX_CLIENTS		4				
 #define MAX_NAME_SIZE	10 				
 
@@ -46,11 +48,31 @@ typedef struct {
 		double vy;	// 速度成分Y
 } VEROCITY;
 
+typedef enum {
+		BOOST_NEUTRAL,
+		BOOST_GO,
+		BOOST_BACK
+} BOOST_FLAG;
+
+typedef enum {
+		ROTATE_NEUTRAL,
+		ROTATE_LEFT,
+		ROTATE_RIGHT		
+} ROTATE_FLAG;
+
+typedef enum {
+		NONE,
+		USE_ITEM,
+} ACTION_FLAG;
+
 typedef struct {
 		int item;			// 所有アイテム
 		double dir;			// 進行方向
 		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
+		BOOST_FLAG boost;			// 噴射フラグ
+		ROTATE_FLAG rotate;		// 旋回フラグ
+		ACTION_FLAG action;		// 行動フラグ
 } PLAYER;
 
 typedef enum {
@@ -65,7 +87,7 @@ typedef enum {
 		ITEM_LASER		= 2,
 		ITEM_TRAP		= 3,
 		ITEM_MINIMUM	= 4, 
-}ITEM_NUM;
+}	ITEM_NUM;
 
 // 通信データ(client > server)
 typedef struct {
