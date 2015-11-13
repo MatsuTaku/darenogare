@@ -65,9 +65,11 @@ int sendRecvManager(void)
     readOK = gMask;
     select(gWidth,&readOK,NULL,NULL,&timeout);
     if(FD_ISSET(gSocket,&readOK)){
-		recvData(&command,sizeof(int));
+		recvMapData();
+		recvData(&MAP,sizeof(MAP)); //受信
 		endFlag = executeCommand(command);
     }
+    sendData(&player, sizeof(entityState)); //プレイヤーのステータスを送信
     return endFlag;
 }
 
@@ -117,6 +119,7 @@ static void setMask(void)
 
     gWidth = gSocket+1;
 }
+
 
 int recvData(void *data,int dataSize)
 {

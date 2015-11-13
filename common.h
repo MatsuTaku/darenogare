@@ -73,4 +73,10 @@ typedef struct {
 		PLAYER player;		// プレイヤーのデータ
 } entityState;
 
+typedef struct {
+		
+} mapData
+
+
+
 #endif

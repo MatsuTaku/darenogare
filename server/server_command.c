@@ -10,8 +10,7 @@ int executeCommand(int pos) //コマンド処理
 引数1:コマンド
 引数2:送信元
 */
-	int	endFlag = 1; //エンドフラグ（0で終了、非0で継続）
-
+	int	i, endFlag = 1; //エンドフラグ（0で終了、非0で継続）
 	assert(0<=pos && pos<MAX_CLIENTS); //送信元が正しいか確認
 
 	int i;
@@ -19,9 +18,7 @@ int executeCommand(int pos) //コマンド処理
 	printf("#####\n");
 	printf("ExecuteCommand()\n");
 #endif
-	physicsManager();
-	//ここで当たり判定、場所の移動、画像の描画などの処理	
-	sendData(ALL_CLIENTS, , sizeof()); //全員に
+	sendData(ALL_CLIENTS, &MAP, sizeof(mapData)); //各クライアントに送信
 
 	return endFlag;
 }

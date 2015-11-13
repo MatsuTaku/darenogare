@@ -4,6 +4,7 @@
 
 #include"../common.h"
 
+extern mapData MAP;
 /* server_net.c */
 extern int gClientNum;
 
