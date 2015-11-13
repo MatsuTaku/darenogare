@@ -4,7 +4,9 @@
 
 #include"../common.h"
 
-extern mapData MAP;
+entityState plane[4];
+mapData MAP;
+
 /* server_net.c */
 extern int gClientNum;
 

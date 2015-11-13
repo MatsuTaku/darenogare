@@ -11,10 +11,21 @@
 
 #define REACTION_VALUE	0x3fff
 
+/*画像ファイルパス*/
+static char gMapImgFile[] = "Field.bmp";
+static char gObstacleImgFile[] = "obstacle.png";
+static char gItemImgFile[] = "Thunder.png";
+
 static int weitFlag = 0;
 static int myID;
 
-static SDL_Surface *gMainWindow;
+/*サーフェース*/
+static SDL_Surface *gMainWindow;//メインウィンドウ
+static SDL_Surface *gWorld;//背景画像
+static SDL_Surface *gItem[ITEM_NUM];//アイテム
+static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
+static SDL_Surface *Obstacle;//障害物
+
 
 typedef struct {
 		SDL_Rect src;
@@ -24,7 +35,7 @@ typedef struct {
 OBJECT object;
 
 
-int initWindows(int clientID, int num)
+int initWindows(int clientID, int num) //ウィンドウ生成
 {
 		int i;
 		char *s, title[10];
@@ -51,25 +62,35 @@ int initWindows(int clientID, int num)
 		return 0;
 }
 
-int drawWindow()//ここを主に編集
+int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
+		gWorld = IMG_Load( gMapImgFile ); 
+		if ( gWorld == NULL ) {
+		printf("Failedreadmapimg\n");//読み込めない時のエラー表示
+		exit(-1);
+		}
 		SDL_Surface* image;
 		Rect fieldRect;
-
-		image = SDL_LoadBMP("Field.bmp");
+		image = SDL_LoadBMP("Field.bmp");//背景読み込み
 
 		fieldRect.src.x = 0;
 		fieldRect.src.y = 0;
 		fieldRect.src.w = image->w;
 		fieldRect.src.h = image->h;
-
 		fieldRect.dst.x = 0;
 		fieldRect.dst.y = 0;
 
-		SDL_BlitSurface(image, &(fieldRect.src), gMainWindow, &(fieldRect.dst));
-		SDL_Flip(gMainWindow);//描画更新
+                /*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)*/
+                boxColor(gWorld,130,540,190,600,0xffffff);    
+                boxColor(gWorld,450,540,510,600,0xffffff);                            
+                boxColor(gWorld,770,540,830,600,0xffffff); 
+                boxColor(gWorld,1090,540,1150,600,0xffffff);                          
+
+		
+		SDL_BlitSurface(image, &(fieldRect.src), gWorld, &(fieldRect.dst));
+		SDL_Flip(gWorld);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
 }
@@ -131,5 +152,5 @@ void windowEvent(int num) {
 								break;
 				}
 		}
-
+		
 }

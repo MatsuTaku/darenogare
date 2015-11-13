@@ -29,7 +29,17 @@ typedef enum {
 		OBSTACLE
 } OBJECT_TYPE;
 
-typedef struct {
+/* プレイヤー */
+typedef enum {
+    CT_PLAYER1 = 0,
+    CT_PLAYER2 = 1,
+    CT_PLAYER3 = 2,
+    CT_PLAYER4 = 3,      /* タイプの数 */
+    CT_NUM = 4,
+} Charatype;
+
+
+typedef struct {//マップの座標
 		int x;	// X座標
 		int y;	// Y座標
 } POSITION;
@@ -51,6 +61,7 @@ typedef struct {
 		double dir;			// 進行方向
 		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
+
 } PLAYER;
 
 typedef enum {
@@ -60,12 +71,12 @@ typedef enum {
 }	OBJECT_RANGE;
 
 typedef enum {
-		ITEM_EMPTY		= 0,
-		ITEM_THUNDER	= 1,
-		ITEM_LASER		= 2,
-		ITEM_TRAP		= 3,
-		ITEM_MINIMUM	= 4, 
-}ITEM_NUM;
+                ITEM_THUNDER = 0,
+                ITEM_LASER   = 1,
+                ITEM_TRAP    = 2,
+                ITEM_MINIMUM = 3,
+                ITEM_NUM = 4
+}ITEM_NUMBER ;
 
 // 通信データ(client > server)
 typedef struct {
@@ -73,10 +84,15 @@ typedef struct {
 		PLAYER player;		// プレイヤーのデータ
 } entityState;
 
+
 typedef struct {
-		
-} mapData
+	int a;	
+} mapData;
 
 
+extern Charatype gChara[CT_NUM];
+extern ITEM_NUMBER Item[ITEM_NUM];
+extern PLAYER player;
+extern POSITION positon;
 
 #endif
