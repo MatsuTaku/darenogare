@@ -55,12 +55,6 @@ int drawWindow()//ここを主に編集
 {
 		int endFlag = 1;
 
-		gMapImage = IMG_Load( gMapImgFile ); //マップデータ読み込み
-		if ( gMapImage == NULL ) {
-				printf("Failedreadmapimg\n");//読み込めない時のエラー表示
-				exit(-1);
-		}
-
 		SDL_Surface* image;
 		Rect fieldRect;
 
@@ -74,39 +68,10 @@ int drawWindow()//ここを主に編集
 		fieldRect.dst.x = 0;
 		fieldRect.dst.y = 0;
 
-		SDL_BlitSurface(image, &rect, gMainWindow, &scr_rect);	
 		SDL_BlitSurface(image, &(fieldRect.src), gMainWindow, &(fieldRect.dst));
 		SDL_Flip(gMainWindow);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
-}
-
-
-int ItemGet()//触れたアイテムをゲットする
-{
-		int num;
-		if(player.pos.x == object.pos.x || player.pos.y == object.pos.y){
-				num = ITEM_NUM;
-		}
-		return num;
-}
-
-
-void ItemUse()//アイテムの使用
-{
-		int num = 0;
-		num = ItemGet();
-		player.item = num;
-
-		if(player.item != 0){ /*アイテムごとに決められた処理を行う*/
-				switch(num){
-						case 1: break;
-						case 2: break;
-						case 3: break;
-						case 4: break;
-				}
-				player.item = 0;/*使用後消去*/ 
-		}    
 }
 
 
@@ -125,19 +90,16 @@ void windowEvent(int num) {
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-								int axis = event.jaxis.axis;
-								int value = event.jaxis.value;
-
-								if (axis == 0) {	// 左右)
-										if (value < -REACTION_VALUE) {	// left
+								if (event.jaxis.axis == 0) {	// 左右)
+										if (event.jaxis.value < -REACTION_VALUE) {	// left
 												changeDir(LEFT);
-										} else if (value > REACTION_VALUE) {	// right
+										} else if (event.jaxis.value > REACTION_VALUE) {	// right
 												changeDir(RIGHT);
 										}
-								} else if (axis == 1) {	// 上下
-										if (value < -REACTION_VALUE) {	// down
+								} else if (event.jaxis.axis == 1) {	// 上下
+										if (event.jaxis.value < -REACTION_VALUE) {	// down
 												changeDir(DOWN);
-										} else if (value > REACTION_VALUE) {	// up
+										} else if (event.jaxis.value > REACTION_VALUE) {	// up
 												changeDir(UP);
 										}
 								}
@@ -158,10 +120,10 @@ void windowEvent(int num) {
 								switch (event.jbutton.button) {
 										case 2:
 										case 4:
-												boost(NEWTRAL);	// 徐々に減速
+												boost(NEUTRAL);	// 徐々に減速
 												break;
 										case 6:	//アイテム使用
-												ItemUse();
+												useItem();
 												break;
 								}
 								break;
