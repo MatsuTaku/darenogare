@@ -8,19 +8,6 @@
 extern entityState rocket;
 extern mapData MAP;
 
-enum axisDirection {
-		LEFT,
-		RIGHT,
-		UP,
-		DOWN
-};
-
-enum boostDirection {
-		GO,
-		BACK,
-		NEUTRAL
-};
-
 /* client_net.c */
 extern int clientID;
 

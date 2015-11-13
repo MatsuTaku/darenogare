@@ -16,6 +16,11 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 
+
+/*
+ *	ゲームシステムの初期化
+ *	return: Error = -1
+ */
 int initGameSystem(int myId, int playerNum) {
 		int i;
 
@@ -36,13 +41,18 @@ int initGameSystem(int myId, int playerNum) {
 				player->ver.vy = 0;
 				player->alive = true;
 				if ((myPlayerSub = insertObject(player, CHARACTER)) == -1) {
-						fprintf(stderr, "insert object is failed!\n");
-						return-1;
+						fprintf(stderr, "Inserting OBJECT is failed!\n");
+						return -1;
 				}
 		}
 
 		return 0;
 }
+
+
+int updateEvent() {
+}
+
 
 static int insertObject(void* buffer, OBJECT_TYPE type) {
 		int count = 0;
@@ -77,67 +87,49 @@ void getItem() {
 }
 
 void useItem() {	// アイテムの使用
-		// MARK
 		if (myPlayer->item != ITEM_EMPTY) {
-				switch (myPlayer->item) {	// アイテムごとに決められた処理を行う
-						case ITEM_THUNDER:
-								break;
-						case ITEM_LASER:
-								break;
-						case ITEM_TRAP:
-								break;
-						case ITEM_MINIMUM:
-								break;
-						default:
-								break;
-				}
-				myPlayer->item = ITEM_EMPTY;	// 使用後消去
+				myPlayer->action = USE_ITEM;
 		}
 }
 
 
 /*
  * 方向転換
- * 引数　：　アナログスティックを倒した方向
  */
-void changeDir(int dir) {
-		// MARK
-		switch (dir) {
-				case LEFT:
-						break;
-				case RIGHT:
-						break;
-				case UP:
-						break;
-				case DOWN:
-						break;
-				default:
-						break;
-		}
+
+void rotateLeft() {
+		myPlayer->rotate = ROTATE_LEFT;
+}
+
+void rotateRight() {
+		myPlayer->rotate = ROTATE_RIGHT;
+}
+
+void fixRotation() {
+		myPlayer->rotate = ROTATE_NEUTRAL;
 }
 
 
 /*
  * 機体の速度変更
  */
-void boost(int dir) {
-		// MARK
-		switch (dir) {
-				case GO:
-						break;
-				case BACK:
-						break;
-				case NEUTRAL:
-						break;
-				default:
-						break;
-		}
+void acceleration() {
+		myPlayer->boost = BOOST_GO;
+}
+
+void deceleration() {
+		myPlayer->boost = BOOST_BACK;
+}
+
+void inertialNavigation() {
+		myPlayer->boost = BOOST_NEUTRAL;
 }
 
 
 /*
  *	当たり判定
  *	input:	オブジェクトポインタ
+ *	return:	判定
  */
 static bool hitObject(OBJECT* alpha, OBJECT* beta) {
 		double rimitRange = getObjectSize(alpha) + getObjectSize(beta);
