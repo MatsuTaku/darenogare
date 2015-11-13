@@ -6,6 +6,10 @@
 
 #define	BUF_SIZE	100
 
+
+entityState rocket;
+mapData MAP;
+
 static int	gSocket;	
 static fd_set	gMask;	
 static int	gWidth;		
@@ -50,6 +54,7 @@ int setUpClient(char *hostName,int *clientID,int *num)
     return 0;
 }
 
+
 int sendRecvManager(void)
 {
     fd_set	readOK;
@@ -64,11 +69,10 @@ int sendRecvManager(void)
     readOK = gMask;
     select(gWidth,&readOK,NULL,NULL,&timeout);
     if(FD_ISSET(gSocket,&readOK)){
-		recvMapData();
 		recvData(&MAP,sizeof(MAP)); //受信
 		endFlag = executeCommand(command);
     }
-    sendData(&player, sizeof(entityState)); //プレイヤーのステータスを送信
+    sendData(&rocket, sizeof(entityState)); //プレイヤーのステータスを送信
     return endFlag;
 }
 

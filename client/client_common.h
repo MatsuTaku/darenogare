@@ -5,6 +5,7 @@
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
+
 extern entityState rocket;
 extern mapData MAP;
 
