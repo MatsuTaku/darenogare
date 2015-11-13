@@ -5,7 +5,7 @@
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
-extern entityState player;
+extern entityState rocket;
 extern mapData MAP;
 
 enum axisDirection {

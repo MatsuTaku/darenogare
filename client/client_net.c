@@ -40,7 +40,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
     }
     fprintf(stderr,"connected\n");
 
-    sendData(str, MAX_NAME_SIZE);
 
     printf("Please Wait\n");
 
