@@ -3,5 +3,6 @@
 *.swp
 *.[ao]
 .goutputstream*
+#*#
 server/server
 client/client
