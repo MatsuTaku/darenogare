@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <assert.h>
 #include <math.h>
@@ -20,7 +21,7 @@ typedef enum {
 		END_COMMAND
 } COMMANDS;
 
-// オブジェクト列挙体
+// オブジェクトタイプ列挙体
 typedef enum {
 		EMPTY,
 		CHARACTER,
@@ -33,17 +34,17 @@ typedef struct {
 		int y;	// Y座標
 } POSITION;
 
-typedef struct {
-		double vx;	// 速度成分X
-		double vy;	// 速度成分Y
-} VEROCITY;
-
 typedef struct  {
-		int type;		// オブジェクト型（キャラ、アイテム、障害物）
+		OBJECT_TYPE type;		// オブジェクト型（キャラ、アイテム、障害物）
 		int id;			// オブジェクト番号
 		POSITION pos;	// 座標
 		void* typeBuffer;	// オブジェクト固有の構造体 *キャスト必須
 } OBJECT;
+
+typedef struct {
+		double vx;	// 速度成分X
+		double vy;	// 速度成分Y
+} VEROCITY;
 
 typedef struct {
 		int item;			// 所有アイテム
@@ -53,11 +54,17 @@ typedef struct {
 } PLAYER;
 
 typedef enum {
-                ITEM_THUNDER = 1,
-                ITEM_LASER   = 2,
-                ITEM_TRAP    = 3,
-                ITEM_MINIMUM = 4, 
+		RANGE_CHARACTER = 20,
+		RANGE_ITEM = 15,
+		RANGE_ROCK = 10,
+}	OBJECT_RANGE;
 
+typedef enum {
+		ITEM_EMPTY		= 0,
+		ITEM_THUNDER	= 1,
+		ITEM_LASER		= 2,
+		ITEM_TRAP		= 3,
+		ITEM_MINIMUM	= 4, 
 }ITEM_NUM;
 
 // 通信データ(client > server)
