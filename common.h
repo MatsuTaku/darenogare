@@ -120,8 +120,5 @@ extern ITEM_NUMBER Item[ITEM_NUM];
 extern PLAYER player;
 extern POSITION positon;
 
-<<<<<<< HEAD
-=======
 
->>>>>>> f6eae6bd5d4b13f1ff94b456b312802e6b16045e
 #endif
