@@ -22,8 +22,9 @@ extern void sendEndCommand(void);
 
 /* client_system.c */
 extern int initGameSystem(int myId, int playerNum);
+extern void getItem();
 extern void useItem();
-extern changeDir(int dir);
-extern boost(int dir);
+extern void changeDir(int dir);
+extern void boost(int dir);
 
 #endif

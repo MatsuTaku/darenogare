@@ -96,36 +96,6 @@ int drawWindow()//ゲーム画面の描画
 }
 
 
-int ItemGet()//触れたアイテムをゲットする
-{
-                
-		int num;
-		//if(object.pos.x == object.pos.x || player.pos.y == object.pos.y){
-				num = ITEM_NUM;
-	//	}
-		return num;
-}
-
-
-void ItemUse()//アイテムの使用
-{
-		int num = 0;
-		num = ItemGet();
-		player.item = num;
-
-		if(player.item != 0){ /*アイテムごとに決められた処理を行う*/
-				switch(num){
-						case 1: break;
-						case 2: break;
-						case 3: break;
-						case 4: break;
-				}
-				player.item = 0;/*使用後消去*/ 
-		}    
-}
-
-
-
 void destroyWindow(void) {
 		SDL_Quit();
 }
@@ -139,50 +109,47 @@ void windowEvent(int num) {
 		assert(0<num && num<=MAX_CLIENTS);
 
 		if (SDL_PollEvent(&event)) {	// イベント所得
-		    switch(event.type) { 
-		    case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-			int axis = event.jaxis.axis;
-			int value = event.jaxis.value;
-			
-			if (axis == 0) {	// 左右)
-			    if (value < -REACTION_VALUE) {	// left
-				changeDir(LEFT);
-			    } else if (value > REACTION_VALUE) {	// right
-				changeDir(RIGHT);
-			    }
-			} else if (axis == 1) {	// 上下
-			    if (value < -REACTION_VALUE) {	// down
-				changeDir(DOWN);
-			    } else if (value > REACTION_VALUE) {	// up
-				changeDir(UP);
-			    }
-			}
-			break;
-			
-		    case SDL_JOYBUTTONDOWN: //ボタンが押された時
-			switch(event.jbutton.button) { //ボタン毎の処理
-			case 2: //ジェット噴射
+				switch(event.type) { 
+						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+								if (event.jaxis.axis == 0) {	// 左右)
+										if (event.jaxis.value < -REACTION_VALUE) {	// left
+												changeDir(LEFT);
+										} else if (event.jaxis.value > REACTION_VALUE) {	// right
+												changeDir(RIGHT);
+										}
+								} else if (event.jaxis.axis == 1) {	// 上下
+										if (event.jaxis.value < -REACTION_VALUE) {	// down
+												changeDir(DOWN);
+										} else if (event.jaxis.value > REACTION_VALUE) {	// up
+												changeDir(UP);
+										}
+								}
+								break;
+
+						case SDL_JOYBUTTONDOWN: //ボタンが押された時
+								switch(event.jbutton.button) { //ボタン毎の処理
+										case 2: //ジェット噴射
 												boost(GO); //速度上昇
 												break;
-			case 4: //ジェット逆噴射
-			    boost(BACK); //速度下降（逆方向にブースト）
-			    break;
-			}
-			break;
-			
-		    case SDL_JOYBUTTONUP: //ボタンが離された時
-			switch (event.jbutton.button) {
-			case 2:
-			case 4:
-			    boost(NEWTRAL);	// 徐々に減速
-			    break;
-			case 6:	//アイテム使用
-			    ItemUse();
-			    break;
-			}
-			break;
-		    default:
-			break;
+										case 4: //ジェット逆噴射
+												boost(BACK); //速度下降（逆方向にブースト）
+												break;
+								}
+								break;
+
+						case SDL_JOYBUTTONUP: //ボタンが離された時
+								switch (event.jbutton.button) {
+										case 2:
+										case 4:
+												boost(NEUTRAL);	// 徐々に減速
+												break;
+										case 6:	//アイテム使用
+												useItem();
+												break;
+								}
+								break;
+						default:
+								break;
 				}
 		}
 		
