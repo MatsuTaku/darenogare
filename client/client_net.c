@@ -17,8 +17,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
 {
     struct hostent	*servHost;
     struct sockaddr_in	server;
-    int			len;
-    char		str[BUF_SIZE];
 
     if((servHost = gethostbyname(hostName))==NULL){
 		fprintf(stderr,"Unknown host\n");
@@ -42,13 +40,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
     }
     fprintf(stderr,"connected\n");
 
-    do {
-		printf("Enter Your Name\n");
-		fgets(str,BUF_SIZE,stdin);
-		len = strlen(str)-1;
-		str[len]='\0';
-    } while(len>MAX_NAME_SIZE-1 || len==0);
-    sendData(str, MAX_NAME_SIZE);
 
     printf("Please Wait\n");
 
@@ -62,7 +53,7 @@ int setUpClient(char *hostName,int *clientID,int *num)
 int sendRecvManager(void)
 {
     fd_set	readOK;
-	int command;
+    int         command;
     int		i;
     int		endFlag = 1;
     struct timeval	timeout;
@@ -73,9 +64,11 @@ int sendRecvManager(void)
     readOK = gMask;
     select(gWidth,&readOK,NULL,NULL,&timeout);
     if(FD_ISSET(gSocket,&readOK)){
-		recvData(&command,sizeof(int));
+		recvMapData();
+		recvData(&MAP,sizeof(MAP)); //受信
 		endFlag = executeCommand(command);
     }
+    sendData(&player, sizeof(entityState)); //プレイヤーのステータスを送信
     return endFlag;
 }
 
@@ -125,6 +118,7 @@ static void setMask(void)
 
     gWidth = gSocket+1;
 }
+
 
 int recvData(void *data,int dataSize)
 {

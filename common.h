@@ -114,6 +114,12 @@ typedef struct {
 		PLAYER player;	// プレイヤーのデータ
 } entityState;
 
+
+typedef struct {
+	int a;	
+} mapData;
+
+
 extern Charatype gChara[CT_NUM];
 extern ITEM_NUMBER Item[ITEM_NUM];
 extern PLAYER player;
