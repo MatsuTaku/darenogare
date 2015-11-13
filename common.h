@@ -56,13 +56,7 @@ typedef struct  {
 
 
 /* PLAYER Values */
-typedef enum {
-		ITEM_THUNDER	= 0,
-		ITEM_LASER  	= 1,
-		ITEM_TRAP		= 2,
-		ITEM_MINIMUM	= 3,
-		ITEM_NUM		= 4
-} ITEM_NUMBER;
+
 
 typedef struct {
 		double vx;	// 速度成分X
