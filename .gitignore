@@ -2,8 +2,9 @@
 *~
 *.swp
 *.[ao]
-core
+.nfs*
 .goutputstream*
 #*#
+core
 server/server
 client/client

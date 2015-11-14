@@ -103,11 +103,11 @@ void destroyWindow(void) {
 
 /*
  *	ジョイパッド操作
- *	return: error = -1
+ *	return: error = 0
  */
-int windowEvent(int num) {
+int windowEvent() {
 		SDL_Event event;
-		assert(0<num && num<=MAX_CLIENTS);
+		int endFlag = 1;
 
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
@@ -154,11 +154,15 @@ int windowEvent(int num) {
 								}
 								break;
 						case SDL_QUIT:
-								return -1;
+								endFlag = 0;
+#ifndef NDEBUG
+								printf("Press close button\n");
+#endif
+								break;
 						default:
 								break;
 				}
 		}
 		
-		return 0;
+		return endFlag;
 }

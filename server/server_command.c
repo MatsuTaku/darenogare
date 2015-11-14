@@ -17,8 +17,10 @@ int executeCommand(int pos) //コマンド処理
 
 	int i;
 #ifndef NDEBUG
+	/*
 	printf("#####\n");
 	printf("ExecuteCommand()\n");
+	*/
 #endif
 	sendData(ALL_CLIENTS, &MAP, sizeof(mapData)); //各クライアントに送信
 
