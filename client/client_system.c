@@ -7,11 +7,11 @@
 OBJECT allObject[MAX_OBJECT];
 PLAYER allPlayer[MAX_CLIENTS];
 PLAYER* myPlayer;
-int myPlayerSub;
 
 int curObject;
 
 static int insertObject(void* buffer, OBJECT_TYPE type);
+static void rotateDirection(double sign);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
@@ -40,7 +40,8 @@ int initGameSystem(int myId, int playerNum) {
 				player->ver.vx = 0;
 				player->ver.vy = 0;
 				player->alive = true;
-				if ((myPlayerSub = insertObject(player, CHARACTER)) == -1) {
+				int sub;
+				if (insertObject(player, CHARACTER) == -1) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -51,6 +52,66 @@ int initGameSystem(int myId, int playerNum) {
 
 
 int updateEvent() {
+		/** Player value change */
+		/* プレイヤーの行動 */
+		// MARK
+		switch (myPlayer->action) {
+				case NONE:
+						break;
+				case USE_ITEM:
+						break;
+				default:
+						break;
+		}
+
+		/* 旋回 */
+		switch (myPlayer->rotate) {
+				case ROTATE_NEUTRAL:
+						break;
+				case ROTATE_LEFT:
+						rotateDirection(1);
+						break;
+				case ROTATE_RIGHT:
+						rotateDirection(-1);
+						break;
+				default:
+						break;
+		}
+
+		/* 加減速 */
+		// MARK
+		switch (myPlayer->boost) {
+				case BOOST_NEUTRAL:
+						break;
+				case BOOST_GO:
+						
+						break;
+				case BOOST_BACK:
+						break;
+				default:
+						break;
+		}
+
+		/* 角度と速度を元に座標移動 */
+		POSITION* myPos = &(myPlayer->object->pos);
+		myPos->x += myPlayer->ver.vx / FPS;
+		myPos->y += myPlayer->ver.vy / FPS;
+}
+
+
+/**
+ * 機体を旋回
+ * input: 回転方向単位値
+ */
+static void rotateDirection(double sign) {
+		double toDir = myPlayer->dir + sign * (ANGULAR_VEROCITY / FPS / HALF_DEGRESS * PI);
+		while (toDir > PI) {
+				toDir -= 2 * PI;
+		}
+		while (toDir < -PI) {
+				toDir += 2 * PI;
+		}
+		myPlayer->dir = toDir;
 }
 
 
@@ -61,6 +122,19 @@ static int insertObject(void* buffer, OBJECT_TYPE type) {
 				if (object->type == EMPTY) {
 						object->type = type;
 						object->typeBuffer = buffer;
+						switch (type) {
+								case EMPTY:
+										break;
+								case CHARACTER:
+										((PLAYER*)buffer)->object = object;
+										break;
+								case ITEM:
+										break;
+								case OBSTACLE:
+										break;
+								default:
+										break;
+						}
 						return curObject;
 				}
 				curObject = nextObj(curObject);
@@ -74,7 +148,7 @@ static int insertObject(void* buffer, OBJECT_TYPE type) {
  */
 void getItem() {
 		int num, i;
-		OBJECT* playerObj = &allObject[myPlayerSub];
+		OBJECT* playerObj = myPlayer->object;
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &allObject[i];
 				if (curObj->type == ITEM) {

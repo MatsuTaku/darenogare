@@ -5,6 +5,9 @@
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
+#define PI				3.141592
+#define HALF_DEGRESS	180	
+#define ANGULAR_VEROCITY	100	// 秒間100度
 
 extern entityState rocket;
 extern mapData MAP;

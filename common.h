@@ -56,8 +56,6 @@ typedef struct  {
 
 
 /* PLAYER Values */
-
-
 typedef struct {
 		double vx;	// 速度成分X
 		double vy;	// 速度成分Y
@@ -70,9 +68,9 @@ typedef enum {
 } BOOST_FLAG;
 
 typedef enum {
-		ROTATE_NEUTRAL,
-		ROTATE_LEFT,
-		ROTATE_RIGHT		
+		ROTATE_RIGHT = -1,
+		ROTATE_NEUTRAL = 0,
+		ROTATE_LEFT = 1,
 } ROTATE_FLAG;
 
 typedef enum {
@@ -81,6 +79,7 @@ typedef enum {
 } ACTION_FLAG;
 
 typedef struct {
+		OBJECT* object;		// 固有オブジェクトバッファ
 		int item;			// 所有アイテム
 		double dir;			// 進行方向
 		VEROCITY ver;		// 速度ベクトル
