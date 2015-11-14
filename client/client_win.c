@@ -103,8 +103,9 @@ void destroyWindow(void) {
 
 /*
  *	ジョイパッド操作
+ *	return: error = -1
  */
-void windowEvent(int num) {
+int windowEvent(int num) {
 		SDL_Event event;
 		assert(0<num && num<=MAX_CLIENTS);
 
@@ -152,9 +153,12 @@ void windowEvent(int num) {
 												break;
 								}
 								break;
+						case SDL_QUIT:
+								return -1;
 						default:
 								break;
 				}
 		}
 		
+		return 0;
 }

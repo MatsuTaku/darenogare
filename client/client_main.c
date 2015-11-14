@@ -65,7 +65,7 @@ int main(int argc,char *argv[])
 		Uint32 nowTime;
 		Uint32 toTime = SDL_GetTicks() + loopInterval;
 		while(endFlag){
-				windowEvent(num);
+				endFlag = windowEvent(num);
 
 				nowTime = SDL_GetTicks();
 				if (nowTime >= toTime) {

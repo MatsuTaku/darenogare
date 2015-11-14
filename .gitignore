@@ -2,6 +2,7 @@
 *~
 *.swp
 *.[ao]
+core
 .goutputstream*
 #*#
 server/server
