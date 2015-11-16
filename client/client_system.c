@@ -29,6 +29,8 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* object = &allObject[i];
 				object->type = EMPTY;
 				object->typeBuffer = NULL;
+				object->pos.x = 0;
+				object->pos.y = 0;
 		}
 		curObject = 0;
 
@@ -38,13 +40,11 @@ int initGameSystem(int myId, int playerNum) {
 				PLAYER *player = &allPlayer[i];
 				player->item = 0;
 				player->dir = 0;
-				/*
-				player->ver.vx = 0;
-				player->ver.vy = 0;
-				*/
+				// player->ver.vx = 0;
+				// player->ver.vy = 0;
 				player->ver = 0;
 				player->alive = true;
-				if (insertObject(player, CHARACTER) == -1) {
+				if (insertObject(player, CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -54,8 +54,50 @@ int initGameSystem(int myId, int playerNum) {
 }
 
 
+/**
+ * オブジェクトの挿入
+ * input1: オブジェクト内容バッファ
+ * input2: オブジェクトタイプ
+ * return: オブジェクトのポインタ(error = NULL)
+ */
+static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
+		int count = 0;
+		OBJECT* object = NULL;
+
+		while (count < MAX_OBJECT) {
+				object = &allObject[curObject];
+				if (object->type == EMPTY) {
+						object->type = type;
+						object->typeBuffer = buffer;
+						switch (type) {
+								case EMPTY:
+										break;
+								case CHARACTER:
+										((PLAYER *)buffer)->object = object;
+										break;
+								case ITEM:
+										((ITEM *)buffer)->object = object;
+										break;
+								case OBSTACLE:
+										((OBSTACLE *)buffer)->object = object;
+										break;
+								default:
+										break;
+						}
+						curObject = nextObj(curObject);
+						return object;
+				}
+				curObject = nextObj(curObject);
+				count++;
+		}
+
+		return object;
+}
+
+
 void updateEvent() {
 		/** Player value change */
+
 		/* プレイヤーの行動 */
 		// MARK
 		switch (myPlayer->action) {
@@ -82,7 +124,6 @@ void updateEvent() {
 		}
 
 		/* 加減速 */
-		// MARK
 		switch (myPlayer->boost) {
 				case BOOST_NEUTRAL:
 						myPlayer->ver += RESISTANCE;
@@ -135,34 +176,6 @@ static void setPlayerPosition() {
 		pos->y += verocity * sin(angle) / FPS;
 }
 
-
-static int insertObject(void* buffer, OBJECT_TYPE type) {
-		int count = 0;
-		while (count < MAX_OBJECT) {
-				OBJECT* object = &allObject[curObject];
-				if (object->type == EMPTY) {
-						object->type = type;
-						object->typeBuffer = buffer;
-						switch (type) {
-								case EMPTY:
-										break;
-								case CHARACTER:
-										((PLAYER*)buffer)->object = object;
-										break;
-								case ITEM:
-										break;
-								case OBSTACLE:
-										break;
-								default:
-										break;
-						}
-						return curObject;
-				}
-				curObject = nextObj(curObject);
-				count++;
-		}
-		return -1;
-}
 
 /*
  *	触れたアイテムを入手する
@@ -221,7 +234,7 @@ void inertialNavigation() {
 }
 
 
-/*
+/**
  *	当たり判定
  *	input:	オブジェクトポインタ
  *	return:	判定
@@ -232,7 +245,7 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta) {
 }
 
 
-/*
+/**
  *	オブジェクト半径を所得
  *	input:	オブジェクトポインタ
  *	return: オブジェクトの半径(double)
@@ -257,7 +270,7 @@ static double getObjectSize(OBJECT* object) {
 }
 
 
-/*
+/**
  *	距離の所得
  *	input:	オブジェクトポインタ
  *	return: 距離の2乗

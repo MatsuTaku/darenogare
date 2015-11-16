@@ -55,12 +55,13 @@ typedef struct  {
 } OBJECT;
 
 
-/* PLAYER Values */
 typedef struct {
 		double vx;	// 速度成分X
 		double vy;	// 速度成分Y
 } VEROCITY;
 
+
+/* PLAYER Values */
 typedef enum {
 		BOOST_NEUTRAL,
 		BOOST_GO,
@@ -89,6 +90,22 @@ typedef struct {
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
 } PLAYER;
+
+
+/* OBSTACLE Values */
+typedef struct {
+		OBJECT* object;
+		double angle;
+		VEROCITY verocity;
+} OBSTACLE;
+
+
+/* ITEM Values */
+typedef struct {
+		// MARK
+		OBJECT* object;
+} ITEM;
+
 
 /* Range of objects */
 typedef enum {
