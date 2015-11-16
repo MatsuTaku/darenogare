@@ -40,7 +40,6 @@ int initGameSystem(int myId, int playerNum) {
 				player->ver.vx = 0;
 				player->ver.vy = 0;
 				player->alive = true;
-				int sub;
 				if (insertObject(player, CHARACTER) == -1) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
