@@ -23,7 +23,7 @@ extern void sendEndCommand(void);
 
 /* client_system.c */
 extern int initGameSystem(int myId, int playerNum);
-extern int updateEvent();
+extern void updateEvent();
 extern void getItem();
 extern void useItem();
 extern void rotateLeft();

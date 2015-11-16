@@ -80,13 +80,14 @@ typedef enum {
 
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
-		int item;			// 所有アイテム
 		double dir;			// 進行方向
-		VEROCITY ver;		// 速度ベクトル
+		// VEROCITY ver;		// 速度ベクトル
+		double ver;
 		int alive;			// 生存フラグ
 		BOOST_FLAG boost;	// 噴射フラグ
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
+		int item;			// 所有アイテム
 } PLAYER;
 
 /* Range of objects */

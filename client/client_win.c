@@ -102,7 +102,7 @@ void destroyWindow(void) {
 
 
 /*
- *	ジョイパッド操作
+ *	入力イベント操作
  *	return: error = 0
  */
 int windowEvent() {

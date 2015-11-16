@@ -12,6 +12,7 @@ int curObject;
 
 static int insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
+static void setPlayerPosition();
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
@@ -37,8 +38,11 @@ int initGameSystem(int myId, int playerNum) {
 				PLAYER *player = &allPlayer[i];
 				player->item = 0;
 				player->dir = 0;
+				/*
 				player->ver.vx = 0;
 				player->ver.vy = 0;
+				*/
+				player->ver = 0;
 				player->alive = true;
 				if (insertObject(player, CHARACTER) == -1) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
@@ -50,7 +54,7 @@ int initGameSystem(int myId, int playerNum) {
 }
 
 
-int updateEvent() {
+void updateEvent() {
 		/** Player value change */
 		/* プレイヤーの行動 */
 		// MARK
@@ -81,20 +85,25 @@ int updateEvent() {
 		// MARK
 		switch (myPlayer->boost) {
 				case BOOST_NEUTRAL:
+						myPlayer->ver += RESISTANCE;
 						break;
 				case BOOST_GO:
-						
+						myPlayer->ver += ACCELE_GO;
 						break;
 				case BOOST_BACK:
+						myPlayer->ver += ACCELE_BRAKE;
 						break;
 				default:
 						break;
 		}
 
 		/* 角度と速度を元に座標移動 */
+		/*
 		POSITION* myPos = &(myPlayer->object->pos);
 		myPos->x += myPlayer->ver.vx / FPS;
 		myPos->y += myPlayer->ver.vy / FPS;
+		*/
+		setPlayerPosition();
 }
 
 
@@ -111,6 +120,19 @@ static void rotateDirection(double sign) {
 				toDir += 2 * PI;
 		}
 		myPlayer->dir = toDir;
+}
+
+
+/**
+ * 機体の向きと速度から座標を移動
+ */
+static void setPlayerPosition() {
+		double verocity = myPlayer->ver;
+		double angle = myPlayer->dir;
+
+		POSITION* pos = &(myPlayer->object->pos);
+		pos->x += verocity * cos(angle) / FPS;
+		pos->y += verocity * sin(angle) / FPS;
 }
 
 
