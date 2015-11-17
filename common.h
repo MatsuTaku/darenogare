@@ -117,11 +117,13 @@ typedef enum {
 
 typedef enum {
                 ITEM_EMPTY   = 0,
-                ITEM_THUNDER = 1,
+                ITEM_NOIZING = 1,
                 ITEM_LASER   = 2,
-                ITEM_TRAP    = 3,
+                ITEM_MISSILE
+.00000000 = 3,
                 ITEM_MINIMUM = 4,
-                ITEM_NUM = 5
+                ITEM_BARRIER = 5,
+                ITEM_NUM = 6
 }ITEM_NUMBER ;
 
 
