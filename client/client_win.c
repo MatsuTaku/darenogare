@@ -96,6 +96,7 @@ int drawWindow()//ゲーム画面の描画
 
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
+
 		SDL_Flip(gWorld);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
@@ -141,11 +142,11 @@ int windowEvent() {
 
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
 								switch(event.jbutton.button) { //ボタン毎の処理
-										case 2: //ジェット噴射
+										case BUTTON_CIRCLE: //ジェット噴射
 												//速度上昇
 												acceleration();
 												break;
-										case 4: //ジェット逆噴射
+										case BUTTON_CROSS: //ジェット逆噴射
 												//速度下降（逆方向にブースト）
 												deceleration();
 												break;
@@ -154,13 +155,13 @@ int windowEvent() {
 
 						case SDL_JOYBUTTONUP: //ボタンが離された時
 								switch (event.jbutton.button) {
-										case 2:
-										case 4:
-												// 徐々に減速
+										case BUTTON_CIRCLE:
+										case BUTTON_CROSS:
 												inertialNavigation();
-												break;
-										case 6:	//アイテム使用
+										case BUTTON_TRIANGLE:	//アイテム使用
 												useItem();
+												break;
+										default:
 												break;
 								}
 								break;
@@ -174,7 +175,7 @@ int windowEvent() {
 								break;
 				}
 		}
-		
+
 		return endFlag;
 }
 

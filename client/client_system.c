@@ -2,7 +2,7 @@
 #include "client_common.h"
 #include "client_func.h"
 
-#define nextObj(a)	(a++ % MAX_OBJECT)
+#define nextObj(a)	((a + 1) % MAX_OBJECT)
 
 OBJECT allObject[MAX_OBJECT];
 PLAYER allPlayer[MAX_CLIENTS];
@@ -12,6 +12,7 @@ int curObject;
 
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
+static void accelerateVerocity(double accel);
 static void setPlayerPosition();
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
@@ -40,9 +41,8 @@ int initGameSystem(int myId, int playerNum) {
 				PLAYER *player = &allPlayer[i];
 				player->item = 0;
 				player->dir = 0;
-				// player->ver.vx = 0;
-				// player->ver.vy = 0;
-				player->ver = 0;
+				player->ver.vx = 0;
+				player->ver.vy = 0;
 				player->alive = true;
 				if (insertObject(player, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
@@ -96,13 +96,11 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 
 void updateEvent() {
-		/** Player value change */
-
+		/** Player value change method */
 		/* プレイヤーの行動 */
 		// MARK
 		switch (myPlayer->action) {
-				case NONE:
-						break;
+				case NONE:	break;
 				case USE_ITEM:
 						break;
 				default:
@@ -111,8 +109,7 @@ void updateEvent() {
 
 		/* 旋回 */
 		switch (myPlayer->rotate) {
-				case ROTATE_NEUTRAL:
-						break;
+				case ROTATE_NEUTRAL:	break;
 				case ROTATE_LEFT:
 						rotateDirection(1);
 						break;
@@ -125,35 +122,28 @@ void updateEvent() {
 
 		/* 加減速 */
 		switch (myPlayer->boost) {
-				case BOOST_NEUTRAL:
-						myPlayer->ver += RESISTANCE;
-						break;
+				case BOOST_NEUTRAL:	break;
 				case BOOST_GO:
-						myPlayer->ver += ACCELE_GO;
+						accelerateVerocity(ACCELE_GO);
 						break;
 				case BOOST_BACK:
-						myPlayer->ver += ACCELE_BRAKE;
+						accelerateVerocity(ACCELE_BRAKE);
 						break;
 				default:
 						break;
 		}
 
-		/* 角度と速度を元に座標移動 */
-		/*
-		POSITION* myPos = &(myPlayer->object->pos);
-		myPos->x += myPlayer->ver.vx / FPS;
-		myPos->y += myPlayer->ver.vy / FPS;
-		*/
+		/* 速度を元に座標移動 */
 		setPlayerPosition();
 }
 
 
 /**
  * 機体を旋回
- * input: 回転方向単位値
+ * input: 単位角速度
  */
 static void rotateDirection(double sign) {
-		double toDir = myPlayer->dir + sign * (ANGULAR_VEROCITY / FPS / HALF_DEGRESS * PI);
+		double toDir = myPlayer->dir + sign * ((ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
 		while (toDir > PI) {
 				toDir -= 2 * PI;
 		}
@@ -165,15 +155,28 @@ static void rotateDirection(double sign) {
 
 
 /**
+ * 噴射と向きに基づく速度変更
+ * input: 機体の向きに対する加速度
+ */
+static void accelerateVerocity(double accel) {
+		double direction = myPlayer->dir;
+
+		VEROCITY* ver = &(myPlayer->ver);
+		ver->vx += accel * cos(direction) / FPS;
+		ver->vy += accel * sin(direction) / FPS;
+}
+
+
+/**
  * 機体の向きと速度から座標を移動
  */
 static void setPlayerPosition() {
-		double verocity = myPlayer->ver;
-		double angle = myPlayer->dir;
-
 		POSITION* pos = &(myPlayer->object->pos);
-		pos->x += verocity * cos(angle) / FPS;
-		pos->y += verocity * sin(angle) / FPS;
+		pos->x += myPlayer->ver.vx;
+		pos->y += myPlayer->ver.vy;
+#ifndef NDEBUG
+		printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
+#endif
 }
 
 
@@ -183,10 +186,12 @@ static void setPlayerPosition() {
 void getItem() {
 		int num, i;
 		OBJECT* playerObj = myPlayer->object;
+
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &allObject[i];
 				if (curObj->type == OBJECT_ITEM) {
 						if (hitObject(playerObj, curObj)) {
+								// MARK
 								myPlayer->item = curObj->id;
 								break;
 						}
@@ -201,7 +206,7 @@ void useItem() {	// アイテムの使用
 }
 
 
-/*
+/**
  * 方向転換
  */
 
@@ -218,7 +223,7 @@ void fixRotation() {
 }
 
 
-/*
+/**
  * 機体の速度変更
  */
 void acceleration() {

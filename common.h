@@ -82,8 +82,7 @@ typedef enum {
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
 		double dir;			// 進行方向
-		// VEROCITY ver;		// 速度ベクトル
-		double ver;
+		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
 		BOOST_FLAG boost;	// 噴射フラグ
 		ROTATE_FLAG rotate;	// 旋回フラグ
@@ -116,13 +115,13 @@ typedef enum {
 } OBJECT_RANGE;
 
 typedef enum {
-                ITEM_EMPTY		= 0,
-                ITEM_NOIZING	= 1,
-                ITEM_LASER		= 2,
-                ITEM_MISSILE	= 3,
-                ITEM_MINIMUM	= 4,
-                ITEM_BARRIER	= 5,
-                ITEM_NUM		= 6
+		ITEM_EMPTY		= 0,
+		ITEM_NOIZING	= 1,
+		ITEM_LASER		= 2,
+		ITEM_MISSILE	= 3,
+		ITEM_MINIMUM	= 4,
+		ITEM_BARRIER	= 5,
+		ITEM_NUM		= 6
 } ITEM_NUMBER ;
 
 
@@ -134,9 +133,8 @@ typedef struct {
 
 
 typedef struct {
-	int a;	
+		int a;	
 } mapData;
-
 
 
 #endif
