@@ -12,6 +12,7 @@ int curObject;
 
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
+static void accelerateVerocity(double accel);
 static void setPlayerPosition();
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
