@@ -174,6 +174,9 @@ static void setPlayerPosition() {
 		POSITION* pos = &(myPlayer->object->pos);
 		pos->x += myPlayer->ver.vx;
 		pos->y += myPlayer->ver.vy;
+#ifndef NDEBUG
+		printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
+#endif
 }
 
 
