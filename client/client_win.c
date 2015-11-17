@@ -27,6 +27,8 @@ static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
 static SDL_Surface *Obstacle;//障害物
 
 
+static void drawObject();
+
 typedef struct {
 		SDL_Rect src;
 		SDL_Rect dst;
@@ -82,18 +84,27 @@ int drawWindow()//ゲーム画面の描画
 		fieldRect.dst.x = 0;
 		fieldRect.dst.y = 0;
 
-                /*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)*/
+                /*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)
                 boxColor(gWorld,130,540,190,600,0xffffff);    
                 boxColor(gWorld,450,540,510,600,0xffffff);                            
                 boxColor(gWorld,770,540,830,600,0xffffff); 
                 boxColor(gWorld,1090,540,1150,600,0xffffff);                          
+		*/
 
+		drawObject();
 		
 		SDL_BlitSurface(image, &(fieldRect.src), gWorld, &(fieldRect.dst));
 		SDL_Flip(gWorld);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
 }
+
+
+void drawObject(void){
+	SDL_Rect srcrect
+
+
+
 
 
 void destroyWindow(void) {
