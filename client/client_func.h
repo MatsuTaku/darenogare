@@ -14,7 +14,7 @@ extern int sendRecvManager(void);
 /* client_win.c */
 extern int initWindows(int clientID,int num);
 extern void destroyWindow(void);
-extern void windowEvent(int num);
+extern int windowEvent();
 extern int drawWindow();
 
 /* client_command.c */
@@ -23,7 +23,7 @@ extern void sendEndCommand(void);
 
 /* client_system.c */
 extern int initGameSystem(int myId, int playerNum);
-extern int updateEvent();
+extern void updateEvent();
 extern void getItem();
 extern void useItem();
 extern void rotateLeft();

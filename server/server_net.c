@@ -59,7 +59,7 @@ int setUpServer(int num)//サーバの立ち上げ
     fprintf(stderr,"Listen OK\n");
 
 
-/************ 3.接続ソケットの生成と接続の確率 *************/
+/************ 3.接続ソケットの生成と接続の確立 *************/
     maxfd = multiAccept(request_soc, gClientNum); //接続の確立
     close(request_soc); //受付用ソケットを閉じる
     if(maxfd == -1)return -1;

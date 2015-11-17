@@ -55,14 +55,13 @@ typedef struct  {
 } OBJECT;
 
 
-/* PLAYER Values */
-
-
 typedef struct {
 		double vx;	// 速度成分X
 		double vy;	// 速度成分Y
 } VEROCITY;
 
+
+/* PLAYER Values */
 typedef enum {
 		BOOST_NEUTRAL,
 		BOOST_GO,
@@ -70,9 +69,9 @@ typedef enum {
 } BOOST_FLAG;
 
 typedef enum {
-		ROTATE_NEUTRAL,
-		ROTATE_LEFT,
-		ROTATE_RIGHT		
+		ROTATE_RIGHT = -1,
+		ROTATE_NEUTRAL = 0,
+		ROTATE_LEFT = 1,
 } ROTATE_FLAG;
 
 typedef enum {
@@ -81,14 +80,32 @@ typedef enum {
 } ACTION_FLAG;
 
 typedef struct {
-		int item;			// 所有アイテム
+		OBJECT* object;		// 固有オブジェクトバッファ
 		double dir;			// 進行方向
-		VEROCITY ver;		// 速度ベクトル
+		// VEROCITY ver;		// 速度ベクトル
+		double ver;
 		int alive;			// 生存フラグ
 		BOOST_FLAG boost;	// 噴射フラグ
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
+		int item;			// 所有アイテム
 } PLAYER;
+
+
+/* OBSTACLE Values */
+typedef struct {
+		OBJECT* object;
+		double angle;
+		VEROCITY verocity;
+} OBSTACLE;
+
+
+/* ITEM Values */
+typedef struct {
+		// MARK
+		OBJECT* object;
+} ITEM;
+
 
 /* Range of objects */
 typedef enum {

@@ -12,7 +12,7 @@ int main(int argc,char *argv[])
 {
 		int		num;
 		int 	clientID;
-		int		endFlag=1;
+		int		endFlag = 1;
 		char	localHostName[]="localhost";
 		char	*serverName;
 
@@ -47,11 +47,7 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
-		networkThread = SDL_CreateThread(networkEvent, &endFlag);
-		if (networkThread == NULL) {
-				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
-		}
-
+		/*
 		SDL_Joystick *joystick; //ジョイスティック用構造体
 		if(SDL_NumJoysticks() > 0){ //ジョイスティックが接続されたら
 				joystick = SDL_JoystickOpen(0); //ジョイスティックをオープン
@@ -59,13 +55,22 @@ int main(int argc,char *argv[])
 				fprintf(stderr,"failed to connect joystick\n");
 				return -1;
 		}
+		*/
 
 
+		/* ネットワーク処理スレッド作成 */
+		networkThread = SDL_CreateThread(networkEvent, &endFlag);
+		if (networkThread == NULL) {
+				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
+		}
+
+
+		/* メインループ */
 		Uint32 loopInterval = 1000 / FPS;
 		Uint32 nowTime;
 		Uint32 toTime = SDL_GetTicks() + loopInterval;
 		while(endFlag){
-				windowEvent(num);
+				endFlag = windowEvent();
 
 				nowTime = SDL_GetTicks();
 				if (nowTime >= toTime) {
@@ -73,6 +78,9 @@ int main(int argc,char *argv[])
 						toTime = nowTime + loopInterval;
 				}
 		};
+	
+		// SDL_WaitThread(networkThread, NULL);
+		SDL_KillThread(networkThread);
 
 		destroyWindow();
 		closeSoc();
