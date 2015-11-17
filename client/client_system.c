@@ -10,7 +10,7 @@ PLAYER* myPlayer;
 
 int curObject;
 
-static int insertObject(void* buffer, OBJECT_TYPE type);
+static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
 static void setPlayerPosition();
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
@@ -27,7 +27,7 @@ int initGameSystem(int myId, int playerNum) {
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* object = &allObject[i];
-				object->type = EMPTY;
+				object->type = OBJECT_EMPTY;
 				object->typeBuffer = NULL;
 				object->pos.x = 0;
 				object->pos.y = 0;
@@ -44,7 +44,7 @@ int initGameSystem(int myId, int playerNum) {
 				// player->ver.vy = 0;
 				player->ver = 0;
 				player->alive = true;
-				if (insertObject(player, CHARACTER) == NULL) {
+				if (insertObject(player, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -66,19 +66,19 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 		while (count < MAX_OBJECT) {
 				object = &allObject[curObject];
-				if (object->type == EMPTY) {
+				if (object->type == OBJECT_EMPTY) {
 						object->type = type;
 						object->typeBuffer = buffer;
 						switch (type) {
-								case EMPTY:
+								case OBJECT_EMPTY:
 										break;
-								case CHARACTER:
+								case OBJECT_CHARACTER:
 										((PLAYER *)buffer)->object = object;
 										break;
-								case ITEM:
+								case OBJECT_ITEM:
 										((ITEM *)buffer)->object = object;
 										break;
-								case OBSTACLE:
+								case OBJECT_OBSTACLE:
 										((OBSTACLE *)buffer)->object = object;
 										break;
 								default:
@@ -185,7 +185,7 @@ void getItem() {
 		OBJECT* playerObj = myPlayer->object;
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &allObject[i];
-				if (curObj->type == ITEM) {
+				if (curObj->type == OBJECT_ITEM) {
 						if (hitObject(playerObj, curObj)) {
 								myPlayer->item = curObj->id;
 								break;
@@ -253,16 +253,16 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta) {
 static double getObjectSize(OBJECT* object) {
 		double size = 0;
 		switch (object->type) {
-				case CHARACTER:
+				case OBJECT_CHARACTER:
 						size = RANGE_CHARACTER;
 						break;
-				case ITEM:
+				case OBJECT_ITEM:
 						size = RANGE_ITEM;
 						break;
-				case OBSTACLE:
+				case OBJECT_OBSTACLE:
 						size = RANGE_ROCK;
 						break;
-				case EMPTY:
+				case OBJECT_EMPTY:
 				default:
 						break;
 		}

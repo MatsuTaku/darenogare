@@ -25,10 +25,10 @@ typedef enum {
 
 // オブジェクトタイプ列挙体
 typedef enum {
-		EMPTY,
-		CHARACTER,
-		ITEM,
-		OBSTACLE
+		OBJECT_EMPTY,
+		OBJECT_CHARACTER,
+		OBJECT_ITEM,
+		OBJECT_OBSTACLE
 } OBJECT_TYPE;
 
 /* プレイヤー */

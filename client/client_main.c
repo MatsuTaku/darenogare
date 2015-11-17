@@ -47,7 +47,7 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
-		/*
+
 		SDL_Joystick *joystick; //ジョイスティック用構造体
 		if(SDL_NumJoysticks() > 0){ //ジョイスティックが接続されたら
 				joystick = SDL_JoystickOpen(0); //ジョイスティックをオープン
@@ -55,7 +55,6 @@ int main(int argc,char *argv[])
 				fprintf(stderr,"failed to connect joystick\n");
 				return -1;
 		}
-		*/
 
 
 		/* ネットワーク処理スレッド作成 */
