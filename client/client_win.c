@@ -68,8 +68,8 @@ int drawWindow()//ゲーム画面の描画
 
 		gWorld = IMG_Load( gMapImgFile ); 
 		if ( gWorld == NULL ) {
-		printf("Failedreadmapimg\n");//読み込めない時のエラー表示
-		exit(-1);
+				printf("Failedreadmapimg\n");//読み込めない時のエラー表示
+				exit(-1);
 		}
 		SDL_Surface* image;
 		Rect fieldRect;
@@ -82,13 +82,13 @@ int drawWindow()//ゲーム画面の描画
 		fieldRect.dst.x = 0;
 		fieldRect.dst.y = 0;
 
-                /*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)*/
-                boxColor(gWorld,130,540,190,600,0xffffff);    
-                boxColor(gWorld,450,540,510,600,0xffffff);                            
-                boxColor(gWorld,770,540,830,600,0xffffff); 
-                boxColor(gWorld,1090,540,1150,600,0xffffff);                          
+		/*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)*/
+		boxColor(gWorld,130,540,190,600,0xffffff);    
+		boxColor(gWorld,450,540,510,600,0xffffff);                            
+		boxColor(gWorld,770,540,830,600,0xffffff); 
+		boxColor(gWorld,1090,540,1150,600,0xffffff);                          
 
-		
+
 		SDL_BlitSurface(image, &(fieldRect.src), gWorld, &(fieldRect.dst));
 		SDL_Flip(gWorld);//描画更新
 
@@ -130,11 +130,11 @@ int windowEvent() {
 
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
 								switch(event.jbutton.button) { //ボタン毎の処理
-										case 2: //ジェット噴射
+										case BUTTON_CIRCLE: //ジェット噴射
 												//速度上昇
 												acceleration();
 												break;
-										case 4: //ジェット逆噴射
+										case BUTTON_CROSS: //ジェット逆噴射
 												//速度下降（逆方向にブースト）
 												deceleration();
 												break;
@@ -143,13 +143,13 @@ int windowEvent() {
 
 						case SDL_JOYBUTTONUP: //ボタンが離された時
 								switch (event.jbutton.button) {
-										case 2:
-										case 4:
-												// 徐々に減速
+										case BUTTON_CIRCLE:
+										case BUTTON_CROSS:
 												inertialNavigation();
-												break;
-										case 6:	//アイテム使用
+										case BUTTON_TRIANGLE:	//アイテム使用
 												useItem();
+												break;
+										default:
 												break;
 								}
 								break;
@@ -163,6 +163,6 @@ int windowEvent() {
 								break;
 				}
 		}
-		
+
 		return endFlag;
 }
