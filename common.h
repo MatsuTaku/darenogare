@@ -113,18 +113,17 @@ typedef enum {
 		RANGE_CHARACTER = 20,
 		RANGE_ITEM = 15,
 		RANGE_ROCK = 10,
-}	OBJECT_RANGE;
+} OBJECT_RANGE;
 
 typedef enum {
-                ITEM_EMPTY   = 0,
-                ITEM_NOIZING = 1,
-                ITEM_LASER   = 2,
-                ITEM_MISSILE
-.00000000 = 3,
-                ITEM_MINIMUM = 4,
-                ITEM_BARRIER = 5,
-                ITEM_NUM = 6
-}ITEM_NUMBER ;
+                ITEM_EMPTY		= 0,
+                ITEM_NOIZING	= 1,
+                ITEM_LASER		= 2,
+                ITEM_MISSILE	= 3,
+                ITEM_MINIMUM	= 4,
+                ITEM_BARRIER	= 5,
+                ITEM_NUM		= 6
+} ITEM_NUMBER ;
 
 
 // 通信データ(client > server)
