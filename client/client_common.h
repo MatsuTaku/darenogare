@@ -17,5 +17,8 @@ extern mapData MAP;
 
 /* client_net.c */
 extern int clientID;
-
+extern Charatype gChara[CT_NUM];
+extern ITEM_NUMBER Item[ITEM_NUM];
+extern PLAYER player;
+extern POSITION positon;
 #endif
