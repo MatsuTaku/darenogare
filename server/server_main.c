@@ -32,6 +32,7 @@ int main(int argc,char *argv[])
 		endFlag = sendRecvManager();
 	};
 
+
 	ending();
 
 	return 0;
