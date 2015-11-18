@@ -63,6 +63,14 @@ typedef struct {
 
 /* PLAYER Values */
 typedef enum {
+		PLAYER_1 = 0,
+		PLAYER_2 = 1,
+		PLAYER_3 = 2,
+		PLAYER_4 = 3,
+		PLAYER_MAX = 4
+} PLAYER_NUMBER;
+
+typedef enum {
 		BOOST_NEUTRAL,
 		BOOST_GO,
 		BOOST_BACK
@@ -81,6 +89,7 @@ typedef enum {
 
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
+		PLAYER_NUMBER num;			// プレイヤー番号
 		double dir;			// 進行方向
 		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
