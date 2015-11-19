@@ -45,6 +45,7 @@ static SDL_Surface *gIconImage[CT_NUM];//アイコン
 static void drawObject();
 static void drawStatus();
 static int initImage();
+static void cutOutWindow();
 
 
 OBJECT allObject[MAX_OBJECT];
@@ -99,6 +100,7 @@ int drawWindow()//ゲーム画面の描画
 
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
+		cutOutWindow(); //画面の切り抜き
 
 		SDL_Flip(gMainWindow);//描画更新
 
@@ -277,7 +279,7 @@ void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	SDL_Surface *image_reangle;
-	double angle;
+	double a						timerEvent(frame++)ngle;
 	int i;
 	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
@@ -292,7 +294,7 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.w = gCharaImage[chara_id]->w;
 			src_rect.h = gCharaImage[chara_id]->h;
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
-			int dx = image_reangle->w - src_rect.w;
+			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
 			int dy = image_reangle->h - src_rect.h;
 			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
 			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
@@ -352,6 +354,9 @@ void drawStatus(void){ //ステータスの描画
 }
 
 
+void cutOutWindow(void){ //各プレイヤーの画面の作成
+		SDL_Rect src_rect;
+		SDL_Rect dst_rect;
 
 
 
