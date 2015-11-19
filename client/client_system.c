@@ -203,6 +203,7 @@ void getItem() {
 		}
 }
 
+
 void useItem() {	// アイテムの使用
 		if (myPlayer->item != ITEM_EMPTY) {
 				myPlayer->action = USE_ITEM;
@@ -213,6 +214,19 @@ void useItem() {	// アイテムの使用
 /**
  * 方向転換
  */
+void rotateTo(int x, int y) {
+		double range = sqrt(pow(x, 2) + pow(y, 2));
+		double px = (double)x / range;
+		double py = -(double)y / range;
+		double toAngle = acos(px) * ((-y >= 0) ? 1 : -1);
+		
+		double dAngle = toAngle - myPlayer->dir;
+		if (dAngle < -HALF_DEGRESS || dAngle >= HALF_DEGRESS)
+				rotateLeft();
+		else
+				rotateRight();
+}
+
 
 void rotateLeft() {
 		myPlayer->rotate = ROTATE_LEFT;
