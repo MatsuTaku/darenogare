@@ -31,9 +31,11 @@ static char gIcon4ImgFile[] = "";
 
 static int weitFlag = 0;
 static int myID;
+static POSITION mypos;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
+static SDL_Surface *gMyWindow; //各プレイヤーのウィンドウ
 static SDL_Surface *gWorld;//背景画像
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
@@ -277,6 +279,10 @@ void drawObject(void){ //オブジェクトの描画
 
 		  case OBJECT_CHARACTER: //キャラクター
 			chara_id = allObject[i].id; //キャラ番号
+			if(chara_id == myID){ //自分の居場所を保存
+			  mypos.x = allObject[i].pos.x;
+			  mypos.y = allObject[i].pos.y;
+			}
 			angle = allPlayer[chara_id].dir; //キャラの向き
 			src_rect.w = gCharaImage[chara_id]->w;
 			src_rect.h = gCharaImage[chara_id]->h;
@@ -343,6 +349,15 @@ void drawStatus(void){ //ステータスの描画
 
 void cutOutWindow(void){ //各プレイヤーの画面の作成
 		SDL_Rect src_rect;
-		SDL_Rect dst_rect;
+		SDL_Rect dst_rect = {0, 0};		
+		src_rect.x = mypos.x - (VIEW_WIDTH/2);
+		src_rect.y = mypos.y - (VIEW_HEIGHT/2);
+		src_rect.w = VIEW_WIDTH;
+		src_rect.h = VIEW_HEIGHT;
+		SDL_BlitSurface(gMainWindow, &src_rect, gMyWindow, &dst_rect);
+}
+
+
+
 
 
