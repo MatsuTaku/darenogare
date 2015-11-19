@@ -18,6 +18,7 @@
 
 #define MAX_DATA		200				
 #define MAX_OBJECT		0xff
+#define CT_NUM 4
 
 typedef enum {
 		END_COMMAND
@@ -30,15 +31,6 @@ typedef enum {
 		OBJECT_ITEM,
 		OBJECT_OBSTACLE
 } OBJECT_TYPE;
-
-/* プレイヤー */
-typedef enum {
-		CT_PLAYER1	= 0,
-		CT_PLAYER2	= 1,
-		CT_PLAYER3	= 2,
-		CT_PLAYER4	= 3,      
-		CT_NUM		= 4,	/* タイプの数 */
-} Charatype;
 
 
 /* OBJECT Values */
@@ -88,6 +80,7 @@ typedef struct {
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
+		int id;
 } PLAYER;
 
 

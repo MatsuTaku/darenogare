@@ -6,6 +6,7 @@
 #include "client_common.h"
 #include "client_func.h"
 
+
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
 
@@ -13,7 +14,7 @@
 
 /*画像ファイルパス*/
 static char gMapImgFile[] = "Field.png";
-static char gObstacleImgFile[] = "obstacle.png";
+static char ObstacleImgFile[] = "obstacle.png";
 static char Item1ImgFile[] = "Thunder.png";
 static char Item2ImgFile[] = "";
 static char Item3ImgFile[] = "";
@@ -23,6 +24,10 @@ static char gChara1ImgFile[] = "";
 static char gChara2ImgFile[] = "";
 static char gChara3ImgFile[] = "";
 static char gChara4ImgFile[] = "";
+static char gIcon1ImgFile[] = "";
+static char gIcon2ImgFile[] = "";
+static char gIcon3ImgFile[] = "";
+static char gIcon4ImgFile[] = "";
 
 static int weitFlag = 0;
 static int myID;
@@ -30,10 +35,10 @@ static int myID;
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gWorld;//背景画像
-static SDL_Surface *gItem[ITEM_NUM];//アイテム
+static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
-static SDL_Surface *ObstacleImage[OBS_NUM] //障害物
-
+static SDL_Surface *ObstacleImage[1]; //障害物
+static SDL_Surface *gIconImage[CT_NUM];//アイコン
 
 /*関数*/
 static void drawObject();
@@ -84,15 +89,9 @@ int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
-		SDL_Rect Fieldrect = {0, 0, gWorld->w, gWorld->h};
-		SDL_BlitSurface(image, &fieldRect.src, gWorld, &fieldRect.dst);
-
-                /*アイテム欄の生成(黒で塗りつぶし)(1P,2P,3P,4P)
-                boxColor(gWorld,130,540,190,600,0xffffff);    
-                boxColor(gWorld,450,540,510,600,0xffffff);                            
-                boxColor(gWorld,770,540,830,600,0xffffff); 
-                boxColor(gWorld,1090,540,1150,600,0xffffff);                          
-		*/
+		SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
+		SDL_Rect dst_rect = {0, 0};
+		SDL_BlitSurface(gWorld, &src_rect, gMainWindow, &dst_rect);
 
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
@@ -188,28 +187,28 @@ int initImage(void){ //画像の読み込み
 			printf("not find world image\n");
 			return(-1);
 		}
-		gItem[0] = IMG_Load( Item1ImgFile );
-		if( gItem[0] == NULL ){
+		gItemImage[0] = IMG_Load( Item1ImgFile );
+		if( gItemImage[0] == NULL ){
 			printf("not find item1 image\n");
 			return(-1);
 		}
-		gItem[1] = IMG_Load( Item2ImgFile );
-		if( gItem[1] == NULL ){
+		gItemImage[1] = IMG_Load( Item2ImgFile );
+		if( gItemImage[1] == NULL ){
 			printf("not find item2 image\n");
 			return(-1);
 		}
-		gItem[2] = IMG_Load( Item3ImgFile );
-		if( gItem[2] == NULL ){
+		gItemImage[2] = IMG_Load( Item3ImgFile );
+		if( gItemImage[2] == NULL ){
 			printf("not find item3 image\n");
 			return(-1);
 		}
-		gItem[3] = IMG_Load( Item4ImgFile );
-		if( gItem[3] == NULL ){
+		gItemImage[3] = IMG_Load( Item4ImgFile );
+		if( gItemImage[3] == NULL ){
 			printf("not find item4 image\n");
 			return(-1);
 		}
-		gItem[4] = IMG_Load( Item1ImgFile );
-		if( gItem[4] == NULL ){
+		gItemImage[4] = IMG_Load( Item1ImgFile );
+		if( gItemImage[4] == NULL ){
 			printf("not find item5 image\n");
 			return(-1);
 		}
@@ -238,9 +237,29 @@ int initImage(void){ //画像の読み込み
 			printf("not find item2 image\n");
 			return(-1);
 		}
-		ObstacleImage = IMG_Load( gCharaImgFile );
-		if( ObstacleImage == NULL ){
+		ObstacleImage[0] = IMG_Load( ObstacleImgFile );
+		if( ObstacleImage[0] == NULL ){
 			printf("not find item2 image\n");
+			return(-1);
+		}
+		gIconImage[0] = IMG_Load( gIcon1ImgFile );
+		if( gIconImage == NULL){
+			printf("not find icon image\n");
+			return(-1);
+		}
+		gIconImage[1] = IMG_Load( gIcon2ImgFile );
+		if( gIconImage == NULL){
+			printf("not find icon image\n");
+			return(-1);
+		}
+		gIconImage[2] = IMG_Load( gIcon3ImgFile );
+		if( gIconImage == NULL){
+			printf("not find icon image\n");
+			return(-1);
+		}
+		gIconImage[3] = IMG_Load( gIcon4ImgFile );
+		if( gIconImage == NULL){
+			printf("not find icon image\n");
 			return(-1);
 		}
 }
@@ -251,12 +270,14 @@ void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	int i;
+	src_rect.x = 0;
+	src_rect.y = 0;
 
 	for(i=0; i<MAX_OBJECT; i++){
 		switch(allObject[i].type){
-		  int id = allObject[i].id;
 
 		  case OBJECT_CHARACTER: //キャラクター
+			int id = allObject[i].id;
 			src_rect.w = gCharaImage[id]->w;
 			src_rect.h = gCharaImage[id]->h;
 			dst_rect.x = allObject.pos.x - (gCharaImage[id]->w /2);
@@ -265,14 +286,16 @@ void drawObject(void){ //オブジェクトの描画
 			break;
 
 		  case OBJECT_ITEM: //アイテム
+		  	int id = allObject[i].id;
 			src_rect.w = gItemImage[id]->w;
 			src_rect.h = gItemImage[id]->h;
 			dst_rect.x = allObject.pos.x - (gItemImage[id]->w /2);
 			dst_rect.y = allObject.pos.y - (gItemImage[id]->h /2);
-			SDL_BlitSurface(gCharaImage[id], &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(gItemImage[id], &src_rect, gMainWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
+			int id = allObject[i].id;
 			src_rect.w = ObstacleImage[id]->w;
 			src_rect.h = ObstacleImage[id]->h;
 			dst_rect.x = allObject.pos.x - (ObstacleImage[id]->w /2);
@@ -283,10 +306,36 @@ void drawObject(void){ //オブジェクトの描画
 		  case OBJECT_EMPTY: //なし
 			break;
 		  }
+	}
 }
 
 void drawStatus(void){ //ステータスの描画
+		SDL_Rect src_rect;
+		SDL_Rect dst_rect;
+		src_rect.x = 0;
+		src_rect.y = 0;
 
+		int i;
+		int item_id;
+		int chara_id;
+
+		for(i=0; i<4; i++){
+		    chara_id = allPlayer.id;
+		    item_id = allPlayer.item;
+		    //アイコン
+		    src_rect.w = gIconImage[chara_id]->w;
+		    src_rect.h = gIconImage[chara_id]->h;
+		    dst_rect.x = chara_id*150;
+		    dst_rect.y = 600;
+		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gMainWindow, &dst_rect);
+		    //所持アイテム
+		    if(item_id == 0) break;
+		    src_rect.w = gItemImage[item_id]->w;
+		    src_rect.h = gItemImage[item_id]->h;
+		    dst_rect.x = (chara_id*150) + 50;
+		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
+		}
+}
 
 
 
