@@ -108,12 +108,17 @@ void destroyWindow(void) {
 int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
+		SDL_Joystick* joystick;
 
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+								joystick = SDL_JoystickOpen((int)event.jaxis.which);
+								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
+								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
 #ifndef NDEBUG
-								// printf("joypad axis[%1d]	value[%6d]\n", event.jaxis.axis, event.jaxis.value);
+								//printf("joypad axis[%1d]	value[%6d]\n", event.jaxis.axis, event.jaxis.value);
+								printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
 								if (event.jaxis.axis == 0) {	// 左右)
 										if (event.jaxis.value < -REACTION_VALUE) {	// left
