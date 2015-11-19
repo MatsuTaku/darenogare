@@ -2,10 +2,10 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_ttf.h>
+#include <SDL/SDL_rotozoom.h>
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
-
 
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
@@ -99,15 +99,10 @@ int drawWindow()//ゲーム画面の描画
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 
-		SDL_Flip(gWorld);//描画更新
+		SDL_Flip(gMainWindow);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
 }
-
-
-
-
-
 
 
 void destroyWindow(void) {
@@ -122,27 +117,20 @@ void destroyWindow(void) {
 int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
+		SDL_Joystick* joystick;
 
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+								joystick = SDL_JoystickOpen((int)event.jaxis.which);
+								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
+								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
+								double range = pow(xValue, 2) + pow(yValue, 2);
+								// if (range > pow(REACTION_VALUE, 2))
+								rotateTo(xValue, yValue);
 #ifndef NDEBUG
-								// printf("joypad axis[%1d]	value[%6d]\n", event.jaxis.axis, event.jaxis.value);
+								printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
-								if (event.jaxis.axis == 0) {	// 左右)
-										if (event.jaxis.value < -REACTION_VALUE) {	// left
-												rotateLeft();
-										} else if (event.jaxis.value > REACTION_VALUE) {	// right
-												rotateRight();
-										} else {
-												fixRotation();
-										}
-								} else if (event.jaxis.axis == 1) {	// 上下
-										if (event.jaxis.value < -REACTION_VALUE) {	// down
-										} else if (event.jaxis.value > REACTION_VALUE) {	// up
-										} else {
-										}
-								}
 								break;
 
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
@@ -249,22 +237,22 @@ int initImage(void){ //画像の読み込み
 			return(-1);
 		}
 		gIconImage[0] = IMG_Load( gIcon1ImgFile );
-		if( gIconImage == NULL){
+		if( gIconImage[0] == NULL){
 			printf("not find icon image\n");
 			return(-1);
 		}
 		gIconImage[1] = IMG_Load( gIcon2ImgFile );
-		if( gIconImage == NULL){
+		if( gIconImage[1] == NULL){
 			printf("not find icon image\n");
 			return(-1);
 		}
 		gIconImage[2] = IMG_Load( gIcon3ImgFile );
-		if( gIconImage == NULL){
+		if( gIconImage[2] == NULL){
 			printf("not find icon image\n");
 			return(-1);
 		}
 		gIconImage[3] = IMG_Load( gIcon4ImgFile );
-		if( gIconImage == NULL){
+		if( gIconImage[3] == NULL){
 			printf("not find icon image\n");
 			return(-1);
 		}
@@ -275,6 +263,8 @@ int initImage(void){ //画像の読み込み
 void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
+	SDL_Surface *image_reangle;
+	double angle;
 	int i;
 	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
@@ -284,12 +274,16 @@ void drawObject(void){ //オブジェクトの描画
 		switch(allObject[i].type){
 
 		  case OBJECT_CHARACTER: //キャラクター
-			chara_id = allObject[i].id;
+			chara_id = allObject[i].id; //キャラ番号
+			angle = allPlayer[chara_id].dir; //キャラの向き
 			src_rect.w = gCharaImage[chara_id]->w;
 			src_rect.h = gCharaImage[chara_id]->h;
-			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2);
-			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2);
-			SDL_BlitSurface(gCharaImage[chara_id], &src_rect, gMainWindow, &dst_rect);
+			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
+			int dx = image_reangle->w - src_rect.w;
+			int dy = image_reangle->h - src_rect.h;
+			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
+			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
+			SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect);
 			break;
 
 		  case OBJECT_ITEM: //アイテム
@@ -343,11 +337,3 @@ void drawStatus(void){ //ステータスの描画
 		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
 		}
 }
-
-
-
-
-
-
-
-
