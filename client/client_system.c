@@ -19,7 +19,7 @@ static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 
 
-/*
+/**
  *	ゲームシステムの初期化
  *	return: Error = -1
  */
@@ -39,6 +39,7 @@ int initGameSystem(int myId, int playerNum) {
 
 		for (i = 0; i < playerNum; i++) {
 				PLAYER *player = &allPlayer[i];
+				player->num = i;
 				player->item = 0;
 				player->dir = 0;
 				player->ver.vx = 0;
@@ -143,7 +144,7 @@ void updateEvent() {
  * input: 単位角速度
  */
 static void rotateDirection(double sign) {
-		double toDir = myPlayer->dir + sign * ((ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
+		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
 		while (toDir > PI) {
 				toDir -= 2 * PI;
 		}
@@ -151,6 +152,9 @@ static void rotateDirection(double sign) {
 				toDir += 2 * PI;
 		}
 		myPlayer->dir = toDir;
+#ifndef NDEBUG
+		// printf("player direction[%.2f°]\n", myPlayer->dir / PI * HALF_DEGRESS);
+#endif	
 }
 
 
@@ -175,7 +179,7 @@ static void setPlayerPosition() {
 		pos->x += myPlayer->ver.vx;
 		pos->y += myPlayer->ver.vy;
 #ifndef NDEBUG
-		printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
+		// printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
 #endif
 }
 

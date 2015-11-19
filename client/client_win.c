@@ -123,6 +123,9 @@ int windowEvent() {
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+#ifndef NDEBUG
+								// printf("joypad axis[%1d]	value[%6d]\n", event.jaxis.axis, event.jaxis.value);
+#endif
 								if (event.jaxis.axis == 0) {	// 左右)
 										if (event.jaxis.value < -REACTION_VALUE) {	// left
 												rotateLeft();
