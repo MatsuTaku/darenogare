@@ -46,6 +46,9 @@ static void drawStatus();
 static int initImage();
 
 
+OBJECT allObject[MAX_OBJECT];
+PLAYER allPlayer[MAX_CLIENTS];
+
 typedef struct {
 		SDL_Rect src;
 		SDL_Rect dst;
@@ -273,6 +276,7 @@ void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	int i;
+	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
 	src_rect.y = 0;
 
@@ -280,30 +284,30 @@ void drawObject(void){ //オブジェクトの描画
 		switch(allObject[i].type){
 
 		  case OBJECT_CHARACTER: //キャラクター
-			int id = allObject[i].id;
-			src_rect.w = gCharaImage[id]->w;
-			src_rect.h = gCharaImage[id]->h;
-			dst_rect.x = allObject.pos.x - (gCharaImage[id]->w /2);
-			dst_rect.y = allObject.pos.y - (gCharaImage[id]->h /2);
-			SDL_BlitSurface(gCharaImage[id], &src_rect, gMainWindow, &dst_rect);
+			chara_id = allObject[i].id;
+			src_rect.w = gCharaImage[chara_id]->w;
+			src_rect.h = gCharaImage[chara_id]->h;
+			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2);
+			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2);
+			SDL_BlitSurface(gCharaImage[chara_id], &src_rect, gMainWindow, &dst_rect);
 			break;
 
 		  case OBJECT_ITEM: //アイテム
-		  	int id = allObject[i].id;
-			src_rect.w = gItemImage[id]->w;
-			src_rect.h = gItemImage[id]->h;
-			dst_rect.x = allObject.pos.x - (gItemImage[id]->w /2);
-			dst_rect.y = allObject.pos.y - (gItemImage[id]->h /2);
-			SDL_BlitSurface(gItemImage[id], &src_rect, gMainWindow, &dst_rect);
+		  	item_id = allObject[i].id;
+			src_rect.w = gItemImage[item_id]->w;
+			src_rect.h = gItemImage[item_id]->h;
+			dst_rect.x = allObject[i].pos.x - (gItemImage[item_id]->w /2);
+			dst_rect.y = allObject[i].pos.y - (gItemImage[item_id]->h /2);
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
-			int id = allObject[i].id;
-			src_rect.w = ObstacleImage[id]->w;
-			src_rect.h = ObstacleImage[id]->h;
-			dst_rect.x = allObject.pos.x - (ObstacleImage[id]->w /2);
-			dst_rect.y = allObject.pos.y - (ObstacleImage[id]->h /2);
-			SDL_BlitSurface(ObstacleImage[id], &src_rect, gMainWindow, &dst_rect);
+			obstacle_id = allObject[i].id;
+			src_rect.w = ObstacleImage[obstacle_id]->w;
+			src_rect.h = ObstacleImage[obstacle_id]->h;
+			dst_rect.x = allObject[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
+			dst_rect.y = allObject[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
+			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gMainWindow, &dst_rect);
 			break;
 
 		  case OBJECT_EMPTY: //なし
@@ -323,8 +327,8 @@ void drawStatus(void){ //ステータスの描画
 		int chara_id;
 
 		for(i=0; i<4; i++){
-		    chara_id = allPlayer.id;
-		    item_id = allPlayer.item;
+		    chara_id = allPlayer[i].id;
+		    item_id = allPlayer[i].item;
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
