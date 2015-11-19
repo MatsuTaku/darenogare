@@ -26,6 +26,7 @@ extern int initGameSystem(int myId, int playerNum);
 extern void updateEvent();
 extern void getItem();
 extern void useItem();
+extern void rotateTo(int, int);
 extern void rotateLeft();
 extern void rotateRight();
 extern void fixRotation();

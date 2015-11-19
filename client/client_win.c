@@ -7,7 +7,6 @@
 #include "client_common.h"
 #include "client_func.h"
 
-
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
 
@@ -108,11 +107,6 @@ int drawWindow()//ゲーム画面の描画
 }
 
 
-
-
-
-
-
 void destroyWindow(void) {
 		SDL_Quit();
 }
@@ -125,27 +119,20 @@ void destroyWindow(void) {
 int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
+		SDL_Joystick* joystick;
 
 		if (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+								joystick = SDL_JoystickOpen((int)event.jaxis.which);
+								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
+								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
+								double range = pow(xValue, 2) + pow(yValue, 2);
+								// if (range > pow(REACTION_VALUE, 2))
+								rotateTo(xValue, yValue);
 #ifndef NDEBUG
-								// printf("joypad axis[%1d]	value[%6d]\n", event.jaxis.axis, event.jaxis.value);
+								printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
-								if (event.jaxis.axis == 0) {	// 左右)
-										if (event.jaxis.value < -REACTION_VALUE) {	// left
-												rotateLeft();
-										} else if (event.jaxis.value > REACTION_VALUE) {	// right
-												rotateRight();
-										} else {
-												fixRotation();
-										}
-								} else if (event.jaxis.axis == 1) {	// 上下
-										if (event.jaxis.value < -REACTION_VALUE) {	// down
-										} else if (event.jaxis.value > REACTION_VALUE) {	// up
-										} else {
-										}
-								}
 								break;
 
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
@@ -357,9 +344,5 @@ void drawStatus(void){ //ステータスの描画
 void cutOutWindow(void){ //各プレイヤーの画面の作成
 		SDL_Rect src_rect;
 		SDL_Rect dst_rect;
-
-
-
-
 
 
