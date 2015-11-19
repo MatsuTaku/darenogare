@@ -100,7 +100,7 @@ int drawWindow()//ゲーム画面の描画
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 
-		SDL_Flip(gWorld);//描画更新
+		SDL_Flip(gMainWindow);//描画更新
 
 		return endFlag; //endflagは1で返す(継続)
 }
