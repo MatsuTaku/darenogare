@@ -2,6 +2,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_ttf.h>
+#include <SDL/SDL_rotozoom.h>
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
@@ -290,7 +291,7 @@ void drawObject(void){ //オブジェクトの描画
 			angle = allPlayer[chara_id].dir; //キャラの向き
 			src_rect.w = gCharaImage[chara_id]->w;
 			src_rect.h = gCharaImage[chara_id]->h;
-			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle., 1.0, 1); //角度の変更
+			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
 			int dx = image_reangle->w - src_rect.w;
 			int dy = image_reangle->h - src_rect.h;
 			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
