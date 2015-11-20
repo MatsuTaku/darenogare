@@ -13,21 +13,21 @@
 #define REACTION_VALUE	0x3fff
 
 /*画像ファイルパス*/
-static char gMapImgFile[] = "Field.png";
-static char ObstacleImgFile[] = "obstacle.png";
-static char Item1ImgFile[] = "Thunder.png";
-static char Item2ImgFile[] = "";
-static char Item3ImgFile[] = "";
-static char Item4ImgFile[] = "";
-static char Item5ImgFile[] = "";
-static char gChara1ImgFile[] = "";
-static char gChara2ImgFile[] = "";
-static char gChara3ImgFile[] = "";
-static char gChara4ImgFile[] = "";
-static char gIcon1ImgFile[] = "";
-static char gIcon2ImgFile[] = "";
-static char gIcon3ImgFile[] = "";
-static char gIcon4ImgFile[] = "";
+static char gMapImgFile[] = "IMG/Field.png"; //背景画像
+static char ObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
+static char Item1ImgFile[] = "IMG/Thunder.png";
+static char Item2ImgFile[] = "IMG/";
+static char Item3ImgFile[] = "IMG/";
+static char Item4ImgFile[] = "IMG/";
+static char Item5ImgFile[] = "IMG/";
+static char gChara1ImgFile[] = "IMG/1Pship.png"; //操作キャラ画像
+static char gChara2ImgFile[] = "IMG/2Pship.png";
+static char gChara3ImgFile[] = "IMG/3Pship.png";
+static char gChara4ImgFile[] = "IMG/4Pship.png";
+static char gIcon1ImgFile[] = "IMG/1Picon.png"; //キャラのアイコン
+static char gIcon2ImgFile[] = "IMG/2Picon.png";
+static char gIcon3ImgFile[] = "IMG/3Picon.png";
+static char gIcon4ImgFile[] = "IMG/4Picon.png";
 
 static int weitFlag = 0;
 static int myID;
