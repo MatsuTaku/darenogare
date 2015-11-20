@@ -9,6 +9,7 @@
 
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
+    
 
 #define REACTION_VALUE	0x3fff
 
@@ -28,6 +29,7 @@ static char gIcon1ImgFile[] = "IMG/1Picon.png"; //キャラのアイコン
 static char gIcon2ImgFile[] = "IMG/2Picon.png";
 static char gIcon3ImgFile[] = "IMG/3Picon.png";
 static char gIcon4ImgFile[] = "IMG/4Picon.png";
+static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテム欄
 
 static int weitFlag = 0;
 static int myID;
@@ -35,18 +37,21 @@ static POSITION mypos;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
-static SDL_Surface *gMyWindow; //各プレイヤーのウィンドウ
+static SDL_Surface *gWorldWindow; //各プレイヤーのマップウィンドウ
+static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
 static SDL_Surface *gWorld;//背景画像
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
 static SDL_Surface *gIconImage[CT_NUM];//アイコン
+static SDL_Surface *gItemBox; //アイテム欄
 
 /*関数*/
 static void drawObject();
 static void drawStatus();
 static int initImage();
-static void cutOutWindow();
+static void combineWindow();
+static void clearWindow();
 
 
 OBJECT allObject[MAX_OBJECT];
@@ -95,13 +100,11 @@ int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
-		SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
-		SDL_Rect dst_rect = {0, 0};
-		SDL_BlitSurface(gWorld, &src_rect, gMainWindow, &dst_rect);
 
+		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
-		cutOutWindow(); //画面の切り抜き
+		combineWindow(); //画面の切り抜き
 
 		SDL_Flip(gMainWindow);//描画更新
 
@@ -263,12 +266,29 @@ int initImage(void){ //画像の読み込み
 }
 
 
+void clearWindow(void){ //ウィンドウのクリア
+
+	//ワールドウィンドウ
+	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
+	SDL_Rect dst_rect = {0, 0};
+	SDL_BlitSurface(gWorld, &src_rect, gWorldWindow, &dst_rect);
+
+	//ステータスウィンドウ
+	src_rect.w = gItemBox->w;
+	src_rect.h = gItemBox->h;
+	int i;
+	for(i=0; i < CT_NUM; i++){
+	  dst_rect.x = i*(gItemBox->w);
+	  SDL_BlitSurface(gStatusWindow, &src_rect, gStatusWindow, &dst_rect);
+	  }
+}
+
 
 void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	SDL_Surface *image_reangle;
-	double a						timerEvent(frame++)ngle;
+	double angle;
 	int i;
 	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
@@ -291,7 +311,7 @@ void drawObject(void){ //オブジェクトの描画
 			int dy = image_reangle->h - src_rect.h;
 			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
 			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
-			SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_ITEM: //アイテム
@@ -300,7 +320,7 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.h = gItemImage[item_id]->h;
 			dst_rect.x = allObject[i].pos.x - (gItemImage[item_id]->w /2);
 			dst_rect.y = allObject[i].pos.y - (gItemImage[item_id]->h /2);
-			SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
@@ -309,7 +329,7 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.h = ObstacleImage[obstacle_id]->h;
 			dst_rect.x = allObject[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
 			dst_rect.y = allObject[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
-			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_EMPTY: //なし
@@ -323,6 +343,7 @@ void drawStatus(void){ //ステータスの描画
 		SDL_Rect dst_rect;
 		src_rect.x = 0;
 		src_rect.y = 0;
+		dst_rect.y = 50;
 
 		int i;
 		int item_id;
@@ -334,27 +355,27 @@ void drawStatus(void){ //ステータスの描画
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
-		    dst_rect.x = chara_id*150;
-		    dst_rect.y = 600;
-		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gMainWindow, &dst_rect);
+		    dst_rect.x = chara_id*(gItemBox->w);
+		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 		    //所持アイテム
 		    if(item_id == 0) break;
 		    src_rect.w = gItemImage[item_id]->w;
 		    src_rect.h = gItemImage[item_id]->h;
-		    dst_rect.x = (chara_id*150) + 50;
-		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
+		    dst_rect.x += 50;
+		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
 		}
 }
 
 
-void cutOutWindow(void){ //各プレイヤーの画面の作成
+void combineWindow(void){ //各プレイヤーの画面の作成
 		SDL_Rect src_rect;
 		SDL_Rect dst_rect = {0, 0};		
 		src_rect.x = mypos.x - (VIEW_WIDTH/2);
 		src_rect.y = mypos.y - (VIEW_HEIGHT/2);
 		src_rect.w = VIEW_WIDTH;
 		src_rect.h = VIEW_HEIGHT;
-		SDL_BlitSurface(gMainWindow, &src_rect, gMyWindow, &dst_rect);
+		SDL_BlitSurface(gWorldWindow, &src_rect, gMainWindow, &dst_rect);
+		//ここからステータスウィンドウも組み合わせる
 }
 
 
