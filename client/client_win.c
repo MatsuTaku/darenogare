@@ -16,11 +16,11 @@
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/Field.png"; //背景画像
 static char ObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
-static char Item1ImgFile[] = "IMG/Thunder.png";
-static char Item2ImgFile[] = "IMG/";
-static char Item3ImgFile[] = "IMG/";
-static char Item4ImgFile[] = "IMG/";
-static char Item5ImgFile[] = "IMG/";
+static char Item1ImgFile[] = "IMG/noizing.png";
+static char Item2ImgFile[] = "IMG/Laser.png";
+static char Item3ImgFile[] = "IMG/missile.png";
+static char Item4ImgFile[] = "IMG/minimum.png";
+static char Item5ImgFile[] = "IMG/barrier.png";
 static char gChara1ImgFile[] = "IMG/1Pship.png"; //操作キャラ画像
 static char gChara2ImgFile[] = "IMG/2Pship.png";
 static char gChara3ImgFile[] = "IMG/3Pship.png";
