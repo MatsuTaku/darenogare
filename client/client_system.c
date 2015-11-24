@@ -4,11 +4,18 @@
 
 #define nextObj(a)	((a + 1) % MAX_OBJECT)
 
+ASSEMBLY allAssembly;
+OBJECT* object;
+PLAYER* player;
+OBSTACLE* obstacle;
+PLAYER* myPlayer;
+/*
 OBJECT allObject[MAX_OBJECT];
 PLAYER allPlayer[MAX_CLIENTS];
-PLAYER* myPlayer;
+OBSTACLE allObstacle[MAX_OBSTACLE];
+*/
 
-int curObject;
+int curObjNum;
 
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
@@ -25,27 +32,30 @@ static double getRange(OBJECT* alpha, OBJECT* beta);
  */
 int initGameSystem(int myId, int playerNum) {
 		int i;
+		object = allAssembly.object;
+		player = allAssembly.player;
+		obstacle = allAssembly.obstacle;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* object = &allObject[i];
-				object->type = OBJECT_EMPTY;
-				object->typeBuffer = NULL;
-				object->pos.x = 0;
-				object->pos.y = 0;
+				OBJECT* curObjNum = &object[i];
+				curObjNum->type = OBJECT_EMPTY;
+				curObjNum->typeBuffer = NULL;
+				curObjNum->pos.x = 0;
+				curObjNum->pos.y = 0;
 		}
-		curObject = 0;
+		curObjNum = 0;
 
-		myPlayer = &allPlayer[myId];
+		myPlayer = &player[myId];
 
 		for (i = 0; i < playerNum; i++) {
-				PLAYER *player = &allPlayer[i];
-				player->num = i;
-				player->item = 0;
-				player->dir = 0;
-				player->ver.vx = 0;
-				player->ver.vy = 0;
-				player->alive = true;
-				if (insertObject(player, OBJECT_CHARACTER) == NULL) {
+				PLAYER* curPlayer = &player[i];
+				curPlayer->num = i;
+				curPlayer->item = 0;
+				curPlayer->dir = 0;
+				curPlayer->ver.vx = 0;
+				curPlayer->ver.vy = 0;
+				curPlayer->alive = true;
+				if (insertObject(curPlayer, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -63,13 +73,13 @@ int initGameSystem(int myId, int playerNum) {
  */
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		int count = 0;
-		OBJECT* object = NULL;
+		OBJECT* curObject = NULL;
 
 		while (count < MAX_OBJECT) {
-				object = &allObject[curObject];
+				curObject = &object[curObjNum];
 				if (object->type == OBJECT_EMPTY) {
-						object->type = type;
-						object->typeBuffer = buffer;
+						curObject->type = type;
+						curObject->typeBuffer = buffer;
 						switch (type) {
 								case OBJECT_EMPTY:
 										break;
@@ -85,14 +95,14 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 								default:
 										break;
 						}
-						curObject = nextObj(curObject);
-						return object;
+						curObjNum = nextObj(curObjNum);
+						return curObject;
 				}
-				curObject = nextObj(curObject);
+				curObjNum = nextObj(curObjNum);
 				count++;
 		}
 
-		return object;
+		return NULL;
 }
 
 
@@ -192,7 +202,7 @@ void getItem() {
 		OBJECT* playerObj = myPlayer->object;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObj = &allObject[i];
+				OBJECT* curObj = &object[i];
 				if (curObj->type == OBJECT_ITEM) {
 						if (hitObject(playerObj, curObj)) {
 								// MARK

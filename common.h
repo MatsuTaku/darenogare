@@ -12,16 +12,19 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
+#define RETENTION_FRAME	10
 
-#define MAX_CLIENTS		4				
+#define MAX_CLIENTS		0x04				
 #define MAX_NAME_SIZE	10 				
 
 #define MAX_DATA		200				
 #define MAX_OBJECT		0xff
+#define MAX_OBSTACLE	0x3f
+#define MAX_ITEM		0x6f
 #define CT_NUM 4
 
 typedef enum {
-		END_COMMAND
+		END_COMMAND = 1
 } COMMANDS;
 
 // オブジェクトタイプ列挙体
@@ -81,7 +84,7 @@ typedef enum {
 
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
-		PLAYER_NUMBER num;			// プレイヤー番号
+		PLAYER_NUMBER num;	// プレイヤー番号
 		double dir;			// 進行方向
 		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
@@ -127,15 +130,38 @@ typedef enum {
 } ITEM_NUMBER ;
 
 
-// 通信データ(client > server)
+
+// すべてのオブジェクトの集合体
 typedef struct {
-		int id;			// ユーザーID
+		OBJECT object[MAX_OBJECT];
+		PLAYER player[MAX_CLIENTS];
+		OBSTACLE obstacle[MAX_OBSTACLE];
+		ITEM item[MAX_ITEM];
+} ASSEMBLY;
+
+
+// 通信データ(client -> server)
+typedef struct {
+		int endFlag;	// 終了フラグ
+		int clientId;			// ユーザーID
+		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
-} entityState;
+} entityStateSet;
+
+
+// 通信データ(server -> client)
+typedef struct {
+		int endFlag;
+		int clientId;
+		POSITION pos;
+		PLAYER player;
+		int killEnemy;
+		int deadFlag;
+} entityStateGet;
 
 
 typedef struct {
-		int a;	
+		int test;
 } mapData;
 
 

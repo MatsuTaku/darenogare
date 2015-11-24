@@ -77,8 +77,8 @@ int sendRecvManager(void) //ネットワークメインモジュール
     fd_set	readOK;
     int		i, command;
     int		endFlag = 1;
-    entityState data;
-    memset (&data, 0, sizeof(entityState));
+    entityStateSet data;
+    memset (&data, 0, sizeof(entityStateSet));
 
     readOK = gMask;
     if(select(gWidth,&readOK,NULL,NULL,NULL) < 0){ //読み込み可能なFDを探す
@@ -87,9 +87,8 @@ int sendRecvManager(void) //ネットワークメインモジュール
 
     for(i=0;i<gClientNum;i++){ //全てのクライアントに対して
 		if(FD_ISSET(gClients[i].fd,&readOK)){ //読み込み可能なFDがあれば
-			recvData(i, &data, sizeof(entityState)); //受信
-			plane[i] = data;
-	    		endFlag = executeCommand(i); //コマンド処理
+			recvData(i, &data, sizeof(entityStateSet)); //受信
+			endFlag = executeCommand(i, &data); //コマンド処理
 	    	if(endFlag == 0)break; //終了コマンドが押されたら脱ループ
 		}
     }

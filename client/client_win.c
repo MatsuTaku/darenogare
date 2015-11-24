@@ -125,7 +125,7 @@ int windowEvent() {
 								joystick = SDL_JoystickOpen((int)event.jaxis.which);
 								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
 								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
-								double range = pow(xValue, 2) + pow(yValue, 2);
+								// double range = pow(xValue, 2) + pow(yValue, 2);
 								// if (range > pow(REACTION_VALUE, 2))
 								rotateTo(xValue, yValue);
 #ifndef NDEBUG

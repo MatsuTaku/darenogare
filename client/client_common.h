@@ -29,14 +29,11 @@ enum joypadButton {
 		BUTTON_START	= 11
 };
 
-extern entityState rocket;
+extern entityStateSet rocket;
 extern mapData MAP;
 
 /* client_net.c */
 extern int clientID;
-extern ITEM_NUMBER Item[ITEM_NUM];
-extern PLAYER player;
-extern POSITION positon;
 
 
 #endif

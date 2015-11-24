@@ -7,7 +7,7 @@
 #define	BUF_SIZE	100
 
 
-entityState rocket;
+entityStateSet rocket;
 mapData MAP;
 
 static int	gSocket;	
@@ -72,7 +72,7 @@ int sendRecvManager(void)
 		recvData(&MAP,sizeof(MAP)); //受信
 		endFlag = executeCommand(command);
     }
-    sendData(&rocket, sizeof(entityState)); //プレイヤーのステータスを送信
+    sendData(&rocket, sizeof(entityStateSet)); //プレイヤーのステータスを送信
     return endFlag;
 }
 
