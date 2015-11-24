@@ -313,16 +313,6 @@ int initImage(void){ //画像の読み込み
 
 void clearWindow(void){ //ウィンドウのクリア
 
-	/*
-	//透過
-	SDL_SetColorKey(gWorldWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gWorldWindow->format, 255, 255, 255));
-	SDL_SetColorKey(gStatusWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gStatusWindow->format, 255, 255, 255));
-	SDL_SetColorKey(gMainWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gMainWindow->format, 255, 255, 255));
-	gWorldWindow = SDL_DisplayFormat(gWorldWindow);
-	gStatusWindow = SDL_DisplayFormat(gStatusWindow);
-	gMainWindow = SDL_DisplayFormat(gMainWindow);
-	*/
-
 	//ワールドウィンドウ
 	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
 	SDL_Rect dst_rect = {0, 0};
@@ -333,7 +323,8 @@ void clearWindow(void){ //ウィンドウのクリア
 	src_rect.h = gItemBox->h;
 	int i;
 	for(i=0; i < CT_NUM; i++){
-	  dst_rect.x = i*(gItemBox->w);
+	  dst_rect.x = i*(gItemBox->w) + 10;
+	  dst_rect.y = gMainWindow->h - gStatusWindow->h;
 	  SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 	  }
 
@@ -394,6 +385,7 @@ void drawObject(void){ //オブジェクトの描画
 			break;
 		  }
 	}
+	if(image_reangle != NULL)
 	SDL_FreeSurface(image_reangle);
 }
 
@@ -402,7 +394,7 @@ void drawStatus(void){ //ステータスの描画
 		SDL_Rect dst_rect;
 		src_rect.x = 0;
 		src_rect.y = 0;
-		dst_rect.y = 50;
+		dst_rect.y = 30;
 
 		int i;
 		int item_id;
