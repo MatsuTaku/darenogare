@@ -9,41 +9,49 @@
 
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
+    
 
 #define REACTION_VALUE	0x3fff
 
 /*画像ファイルパス*/
-static char gMapImgFile[] = "Field.png";
-static char ObstacleImgFile[] = "obstacle.png";
-static char Item1ImgFile[] = "Thunder.png";
-static char Item2ImgFile[] = "";
-static char Item3ImgFile[] = "";
-static char Item4ImgFile[] = "";
-static char Item5ImgFile[] = "";
-static char gChara1ImgFile[] = "";
-static char gChara2ImgFile[] = "";
-static char gChara3ImgFile[] = "";
-static char gChara4ImgFile[] = "";
-static char gIcon1ImgFile[] = "";
-static char gIcon2ImgFile[] = "";
-static char gIcon3ImgFile[] = "";
-static char gIcon4ImgFile[] = "";
+static char gMapImgFile[] = "IMG/Field.png"; //背景画像
+static char ObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
+static char Item1ImgFile[] = "IMG/noizing.png";
+static char Item2ImgFile[] = "IMG/Laser.png";
+static char Item3ImgFile[] = "IMG/missile.png";
+static char Item4ImgFile[] = "IMG/minimum.png";
+static char Item5ImgFile[] = "IMG/barrier.png";
+static char gChara1ImgFile[] = "IMG/1Pship.png"; //操作キャラ画像
+static char gChara2ImgFile[] = "IMG/2Pship.png";
+static char gChara3ImgFile[] = "IMG/3Pship.png";
+static char gChara4ImgFile[] = "IMG/4Pship.png";
+static char gIcon1ImgFile[] = "IMG/1Picon.png"; //キャラのアイコン
+static char gIcon2ImgFile[] = "IMG/2Picon.png";
+static char gIcon3ImgFile[] = "IMG/3Picon.png";
+static char gIcon4ImgFile[] = "IMG/4Picon.png";
+static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテム欄
 
 static int weitFlag = 0;
 static int myID;
+static POSITION mypos;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
+static SDL_Surface *gWorldWindow; //各プレイヤーのマップウィンドウ
+static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
 static SDL_Surface *gWorld;//背景画像
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
 static SDL_Surface *gIconImage[CT_NUM];//アイコン
+static SDL_Surface *gItemBox; //アイテム欄
 
 /*関数*/
 static void drawObject();
 static void drawStatus();
 static int initImage();
+static void combineWindow();
+static void clearWindow();
 
 
 OBJECT allObject[MAX_OBJECT];
@@ -92,12 +100,11 @@ int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
-		SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
-		SDL_Rect dst_rect = {0, 0};
-		SDL_BlitSurface(gWorld, &src_rect, gMainWindow, &dst_rect);
 
+		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
+		combineWindow(); //画面の切り抜き
 
 		SDL_Flip(gMainWindow);//描画更新
 
@@ -259,6 +266,23 @@ int initImage(void){ //画像の読み込み
 }
 
 
+void clearWindow(void){ //ウィンドウのクリア
+
+	//ワールドウィンドウ
+	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
+	SDL_Rect dst_rect = {0, 0};
+	SDL_BlitSurface(gWorld, &src_rect, gWorldWindow, &dst_rect);
+
+	//ステータスウィンドウ
+	src_rect.w = gItemBox->w;
+	src_rect.h = gItemBox->h;
+	int i;
+	for(i=0; i < CT_NUM; i++){
+	  dst_rect.x = i*(gItemBox->w);
+	  SDL_BlitSurface(gStatusWindow, &src_rect, gStatusWindow, &dst_rect);
+	  }
+}
+
 
 void drawObject(void){ //オブジェクトの描画
 	SDL_Rect src_rect;
@@ -275,15 +299,19 @@ void drawObject(void){ //オブジェクトの描画
 
 		  case OBJECT_CHARACTER: //キャラクター
 			chara_id = allObject[i].id; //キャラ番号
+			if(chara_id == myID){ //自分の居場所を保存
+			  mypos.x = allObject[i].pos.x;
+			  mypos.y = allObject[i].pos.y;
+			}
 			angle = allPlayer[chara_id].dir; //キャラの向き
 			src_rect.w = gCharaImage[chara_id]->w;
 			src_rect.h = gCharaImage[chara_id]->h;
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
-			int dx = image_reangle->w - src_rect.w;
+			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
 			int dy = image_reangle->h - src_rect.h;
 			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
 			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
-			SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_ITEM: //アイテム
@@ -292,7 +320,7 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.h = gItemImage[item_id]->h;
 			dst_rect.x = allObject[i].pos.x - (gItemImage[item_id]->w /2);
 			dst_rect.y = allObject[i].pos.y - (gItemImage[item_id]->h /2);
-			SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
@@ -301,7 +329,7 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.h = ObstacleImage[obstacle_id]->h;
 			dst_rect.x = allObject[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
 			dst_rect.y = allObject[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
-			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gMainWindow, &dst_rect);
+			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_EMPTY: //なし
@@ -315,6 +343,7 @@ void drawStatus(void){ //ステータスの描画
 		SDL_Rect dst_rect;
 		src_rect.x = 0;
 		src_rect.y = 0;
+		dst_rect.y = 50;
 
 		int i;
 		int item_id;
@@ -326,14 +355,30 @@ void drawStatus(void){ //ステータスの描画
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
-		    dst_rect.x = chara_id*150;
-		    dst_rect.y = 600;
-		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gMainWindow, &dst_rect);
+		    dst_rect.x = chara_id*(gItemBox->w);
+		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 		    //所持アイテム
 		    if(item_id == 0) break;
 		    src_rect.w = gItemImage[item_id]->w;
 		    src_rect.h = gItemImage[item_id]->h;
-		    dst_rect.x = (chara_id*150) + 50;
-		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
+		    dst_rect.x += 50;
+		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
 		}
 }
+
+
+void combineWindow(void){ //各プレイヤーの画面の作成
+		SDL_Rect src_rect;
+		SDL_Rect dst_rect = {0, 0};		
+		src_rect.x = mypos.x - (VIEW_WIDTH/2);
+		src_rect.y = mypos.y - (VIEW_HEIGHT/2);
+		src_rect.w = VIEW_WIDTH;
+		src_rect.h = VIEW_HEIGHT;
+		SDL_BlitSurface(gWorldWindow, &src_rect, gMainWindow, &dst_rect);
+		//ここからステータスウィンドウも組み合わせる
+}
+
+
+
+
+
