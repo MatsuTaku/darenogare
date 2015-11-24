@@ -7,8 +7,8 @@
 #include "client_common.h"
 #include "client_func.h"
 
-#define VIEW_WIDTH	1280
-#define VIEW_HEIGHT	720
+#define VIEW_WIDTH	640
+#define VIEW_HEIGHT	360
     
 
 #define REACTION_VALUE	0x3fff
@@ -33,7 +33,6 @@ static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテム欄
 
 static int weitFlag = 0;
 static int myID;
-static POSITION mypos;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
@@ -50,7 +49,7 @@ static SDL_Surface *gItemBox; //アイテム欄
 static void drawObject();
 static void drawStatus();
 static int initImage();
-static void combineWindow();
+static void combineWindow(POSITION* myPos);
 static void clearWindow();
 
 
@@ -67,6 +66,7 @@ OBJECT object;
 
 int initWindows(int clientID, int num) //ウィンドウ生成
 {
+
 		int i;
 		char *s, title[10];
 		myID = clientID;
@@ -81,11 +81,37 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 				printf("failed to initialize SDL.\n");
 				return -1;
 		}
-
+		//MainWindow
 		if ((gMainWindow = SDL_SetVideoMode(VIEW_WIDTH, VIEW_HEIGHT, 32, SDL_SWSURFACE)) == NULL) {
 				printf("failed to initialize videomode.\n");
 				return -1;
 		}
+
+		Uint32 rMask, gMask, bMask, aMask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		rMask = 0xff000000;
+		gMask = 0x00ff0000;
+		bMask = 0x0000ff00;
+		aMask = 0x000000ff;
+#else
+		rMask = 0x000000ff;
+		gMask = 0x0000ff00;
+		bMask = 0x00ff0000;
+		aMask = 0xff000000;
+#endif
+		//WorldWindow
+		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gWorld->w, gWorld->h, 32, 0,0,0,0)) == NULL)
+{
+			printf("failed to initialize worldwindow");
+			return -1;
+		}
+		//StatusWindow
+		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, rMask, gMask, bMask, aMask)) == NULL)
+{
+			printf("failed to initialize statuswindow");
+			return -1;
+		}
+
 		sprintf(title, "%d", clientID);
 		SDL_WM_SetCaption(title,NULL);
 
@@ -104,7 +130,7 @@ int drawWindow()//ゲーム画面の描画
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
-		combineWindow(); //画面の切り抜き
+		combineWindow(&myPlayer->object->pos); //サーフェスの合体
 
 		SDL_Flip(gMainWindow);//描画更新
 
@@ -113,6 +139,20 @@ int drawWindow()//ゲーム画面の描画
 
 
 void destroyWindow(void) {
+	SDL_FreeSurface(gMainWindow);
+	SDL_FreeSurface (gWorldWindow);
+	SDL_FreeSurface (gStatusWindow);
+	SDL_FreeSurface (gWorld);
+	SDL_FreeSurface (ObstacleImage[0]);
+	SDL_FreeSurface (gItemBox);
+	int i;
+	for(i = 0; i < ITEM_NUM; i++){
+	    SDL_FreeSurface (gItemImage[i]);
+	}
+	for(i = 0; i < CT_NUM; i++){
+	    SDL_FreeSurface (gCharaImage[i]);
+	    SDL_FreeSurface (gIconImage[i]);
+	}
 		SDL_Quit();
 }
 
@@ -136,7 +176,7 @@ int windowEvent() {
 								// if (range > pow(REACTION_VALUE, 2))
 								rotateTo(xValue, yValue);
 #ifndef NDEBUG
-								printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+								// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
 								break;
 
@@ -208,7 +248,7 @@ int initImage(void){ //画像の読み込み
 			printf("not find item4 image\n");
 			return(-1);
 		}
-		gItemImage[4] = IMG_Load( Item1ImgFile );
+		gItemImage[4] = IMG_Load( Item5ImgFile );
 		if( gItemImage[4] == NULL ){
 			printf("not find item5 image\n");
 			return(-1);
@@ -220,53 +260,68 @@ int initImage(void){ //画像の読み込み
 		}
 		gCharaImage[0] = IMG_Load( gChara1ImgFile );
 		if( gCharaImage[0] == NULL ){
-			printf("not find item2 image\n");
+			printf("not find chara1 image\n");
 			return(-1);
 		}
 		gCharaImage[1] = IMG_Load( gChara2ImgFile );
 		if( gCharaImage[1] == NULL ){
-			printf("not find item2 image\n");
+			printf("not find chara2 image\n");
 			return(-1);
 		}
 		gCharaImage[2] = IMG_Load( gChara3ImgFile );
 		if( gCharaImage[2] == NULL ){
-			printf("not find item2 image\n");
+			printf("not find chara3 image\n");
 			return(-1);
 		}
 		gCharaImage[3] = IMG_Load( gChara4ImgFile );
 		if( gCharaImage[3] == NULL ){
-			printf("not find item2 image\n");
+			printf("not find chara4 image\n");
 			return(-1);
 		}
 		ObstacleImage[0] = IMG_Load( ObstacleImgFile );
 		if( ObstacleImage[0] == NULL ){
-			printf("not find item2 image\n");
+			printf("not find obstacle image\n");
 			return(-1);
 		}
 		gIconImage[0] = IMG_Load( gIcon1ImgFile );
 		if( gIconImage[0] == NULL){
-			printf("not find icon image\n");
+			printf("not find icon1 image\n");
 			return(-1);
 		}
 		gIconImage[1] = IMG_Load( gIcon2ImgFile );
 		if( gIconImage[1] == NULL){
-			printf("not find icon image\n");
+			printf("not find icon2 image\n");
 			return(-1);
 		}
 		gIconImage[2] = IMG_Load( gIcon3ImgFile );
 		if( gIconImage[2] == NULL){
-			printf("not find icon image\n");
+			printf("not find icon3 image\n");
 			return(-1);
 		}
 		gIconImage[3] = IMG_Load( gIcon4ImgFile );
 		if( gIconImage[3] == NULL){
-			printf("not find icon image\n");
+			printf("not find icon4 image\n");
+			return(-1);
+		}
+		gItemBox = IMG_Load( gItemBoxImgFile );
+		if( gItemBox == NULL){
+			printf("not find itembox image\n");
 			return(-1);
 		}
 }
 
 
 void clearWindow(void){ //ウィンドウのクリア
+
+	/*
+	//透過
+	SDL_SetColorKey(gWorldWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gWorldWindow->format, 255, 255, 255));
+	SDL_SetColorKey(gStatusWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gStatusWindow->format, 255, 255, 255));
+	SDL_SetColorKey(gMainWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gMainWindow->format, 255, 255, 255));
+	gWorldWindow = SDL_DisplayFormat(gWorldWindow);
+	gStatusWindow = SDL_DisplayFormat(gStatusWindow);
+	gMainWindow = SDL_DisplayFormat(gMainWindow);
+	*/
 
 	//ワールドウィンドウ
 	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
@@ -279,8 +334,14 @@ void clearWindow(void){ //ウィンドウのクリア
 	int i;
 	for(i=0; i < CT_NUM; i++){
 	  dst_rect.x = i*(gItemBox->w);
-	  SDL_BlitSurface(gStatusWindow, &src_rect, gStatusWindow, &dst_rect);
+	  SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 	  }
+
+	//メインウィンドウ
+	src_rect.w = gMainWindow->w;
+	dst_rect.h = gMainWindow->h;
+	SDL_FillRect(gMainWindow, NULL, 0xffffff);
+
 }
 
 
@@ -293,20 +354,17 @@ void drawObject(void){ //オブジェクトの描画
 	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
 	src_rect.y = 0;
-
 	for(i=0; i<MAX_OBJECT; i++){
 		switch(allObject[i].type){
 
 		  case OBJECT_CHARACTER: //キャラクター
-			chara_id = allObject[i].id; //キャラ番号
-			if(chara_id == myID){ //自分の居場所を保存
-			  mypos.x = allObject[i].pos.x;
-			  mypos.y = allObject[i].pos.y;
-			}
-			angle = allPlayer[chara_id].dir; //キャラの向き
-			src_rect.w = gCharaImage[chara_id]->w;
-			src_rect.h = gCharaImage[chara_id]->h;
+			chara_id = ((PLAYER*)allObject[i].typeBuffer)->num; //キャラ番号
+			angle = allPlayer[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
+			src_rect.x = 0;
+			src_rect.y = 0;
+			src_rect.w = image_reangle->w;
+			src_rect.h = image_reangle->h;
 			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
 			int dy = image_reangle->h - src_rect.h;
 			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
@@ -336,6 +394,7 @@ void drawObject(void){ //オブジェクトの描画
 			break;
 		  }
 	}
+	SDL_FreeSurface(image_reangle);
 }
 
 void drawStatus(void){ //ステータスの描画
@@ -364,18 +423,29 @@ void drawStatus(void){ //ステータスの描画
 		    dst_rect.x += 50;
 		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
 		}
+		SDL_Flip(gStatusWindow);//描画更新
 }
 
 
-void combineWindow(void){ //各プレイヤーの画面の作成
-		SDL_Rect src_rect;
-		SDL_Rect dst_rect = {0, 0};		
-		src_rect.x = mypos.x - (VIEW_WIDTH/2);
-		src_rect.y = mypos.y - (VIEW_HEIGHT/2);
-		src_rect.w = VIEW_WIDTH;
-		src_rect.h = VIEW_HEIGHT;
-		SDL_BlitSurface(gWorldWindow, &src_rect, gMainWindow, &dst_rect);
-		//ここからステータスウィンドウも組み合わせる
+void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
+		//マップを組み合わせる
+		Rect world;
+		world.src.x = myPos->x - (VIEW_WIDTH/2);
+		world.src.y = myPos->y - (VIEW_HEIGHT/2);
+		world.src.w = VIEW_WIDTH;
+		world.src.h = VIEW_HEIGHT - gStatusWindow->h;
+		world.dst.x = 0;
+		world.dst.y = 0;
+		SDL_BlitSurface(gWorldWindow, &world.src, gMainWindow, &world.dst);
+		//ステータスウィンドウも組み合わせる
+		Rect status;
+		status.src.x = 0;
+		status.src.y = 0;
+		status.src.w = gStatusWindow->w;
+		status.src.h = gStatusWindow->h;
+		status.dst.x = 0;
+		status.dst.y = VIEW_HEIGHT - gStatusWindow->h;
+		SDL_BlitSurface(gStatusWindow, &status.src, gMainWindow, &status.dst);
 }
 
 

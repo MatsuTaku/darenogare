@@ -32,6 +32,10 @@ enum joypadButton {
 extern entityState rocket;
 extern mapData MAP;
 
+/* client_system.c */
+extern OBJECT allObject[MAX_OBJECT];
+extern PLAYER allPlayer[MAX_CLIENTS];
+extern PLAYER* myPlayer;
 /* client_net.c */
 extern int clientID;
 extern ITEM_NUMBER Item[ITEM_NUM];

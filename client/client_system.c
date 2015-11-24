@@ -30,8 +30,8 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* object = &allObject[i];
 				object->type = OBJECT_EMPTY;
 				object->typeBuffer = NULL;
-				object->pos.x = 0;
-				object->pos.y = 0;
+				object->pos.x = 640;
+				object->pos.y = 360;
 		}
 		curObject = 0;
 
