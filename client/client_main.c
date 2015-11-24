@@ -70,7 +70,7 @@ int main(int argc,char *argv[])
 		Uint32 toTime = SDL_GetTicks() + loopInterval;
 		while(endFlag){
 				endFlag = windowEvent();
-
+				if(endFlag == 0) break;
 				nowTime = SDL_GetTicks();
 				if (nowTime >= toTime) {
 						timerEvent(frame++);

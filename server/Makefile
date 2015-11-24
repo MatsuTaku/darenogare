@@ -3,7 +3,7 @@ TARGET	=	server
 NDEBUG	=	-DNDEBUG
 
 .c.o:
-	gcc -c $<
+	gcc -c -g $<
 #	gcc -c $(NDEBUG) $<
 
 all: $(TARGET)
