@@ -15,20 +15,10 @@
 
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/Field.png"; //背景画像
-static char ObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
-static char Item1ImgFile[] = "IMG/noizing.png";
-static char Item2ImgFile[] = "IMG/Laser.png";
-static char Item3ImgFile[] = "IMG/missile.png";
-static char Item4ImgFile[] = "IMG/minimum.png";
-static char Item5ImgFile[] = "IMG/barrier.png";
-static char gChara1ImgFile[] = "IMG/1Pship.png"; //操作キャラ画像
-static char gChara2ImgFile[] = "IMG/2Pship.png";
-static char gChara3ImgFile[] = "IMG/3Pship.png";
-static char gChara4ImgFile[] = "IMG/4Pship.png";
-static char gIcon1ImgFile[] = "IMG/1Picon.png"; //キャラのアイコン
-static char gIcon2ImgFile[] = "IMG/2Picon.png";
-static char gIcon3ImgFile[] = "IMG/3Picon.png";
-static char gIcon4ImgFile[] = "IMG/4Picon.png";
+static char gObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
+static char gItemImgFile[ITEM_NUM][20] = {"IMG/noizing.png","IMG/Laser.png", "IMG/missile.png","IMG/minimum.png","IMG/barrier.png"};
+static char gCharaImgFile[CT_NUM][20] ={"IMG/1Pship.png","IMG/2Pship.png","IMG/3Pship.png","IMG/4Pship.png"};
+static char gIconImgFile[CT_NUM][20] = {"IMG/1Picon.png", "IMG/2Picon.png", "IMG/3Picon.png", "IMG/4Picon.png"};
 static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテム欄
 
 static int weitFlag = 0;
@@ -106,7 +96,7 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 			return -1;
 		}
 		//StatusWindow
-		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, rMask, gMask, bMask, aMask)) == NULL)
+		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL)
 {
 			printf("failed to initialize statuswindow");
 			return -1;
@@ -221,97 +211,54 @@ int windowEvent() {
 
 
 
-/**** static *****/
+
+		/********* static *************/
+
 int initImage(void){ //画像の読み込み
+		int i;
 		gWorld = IMG_Load( gMapImgFile ); 
-		if ( gWorld == NULL ) {
+		if ( gWorld == NULL ) { //マップ画像
 			printf("not find world image\n");
 			return(-1);
 		}
-		gItemImage[0] = IMG_Load( Item1ImgFile );
-		if( gItemImage[0] == NULL ){
-			printf("not find item1 image\n");
-			return(-1);
-		}
-		gItemImage[1] = IMG_Load( Item2ImgFile );
-		if( gItemImage[1] == NULL ){
-			printf("not find item2 image\n");
-			return(-1);
-		}
-		gItemImage[2] = IMG_Load( Item3ImgFile );
-		if( gItemImage[2] == NULL ){
-			printf("not find item3 image\n");
-			return(-1);
-		}
-		gItemImage[3] = IMG_Load( Item4ImgFile );
-		if( gItemImage[3] == NULL ){
-			printf("not find item4 image\n");
-			return(-1);
-		}
-		gItemImage[4] = IMG_Load( Item5ImgFile );
-		if( gItemImage[4] == NULL ){
-			printf("not find item5 image\n");
-			return(-1);
-		}
-		gWorld = IMG_Load( gMapImgFile );
-		if( gWorld == NULL ){
-			printf("not find world image\n");
-			return(-1);
-		}
-		gCharaImage[0] = IMG_Load( gChara1ImgFile );
-		if( gCharaImage[0] == NULL ){
-			printf("not find chara1 image\n");
-			return(-1);
-		}
-		gCharaImage[1] = IMG_Load( gChara2ImgFile );
-		if( gCharaImage[1] == NULL ){
-			printf("not find chara2 image\n");
-			return(-1);
-		}
-		gCharaImage[2] = IMG_Load( gChara3ImgFile );
-		if( gCharaImage[2] == NULL ){
-			printf("not find chara3 image\n");
-			return(-1);
-		}
-		gCharaImage[3] = IMG_Load( gChara4ImgFile );
-		if( gCharaImage[3] == NULL ){
-			printf("not find chara4 image\n");
-			return(-1);
-		}
-		ObstacleImage[0] = IMG_Load( ObstacleImgFile );
-		if( ObstacleImage[0] == NULL ){
+		ObstacleImage[0] = IMG_Load( gObstacleImgFile );
+		if( ObstacleImage[0] == NULL ){ //障害物画像
 			printf("not find obstacle image\n");
 			return(-1);
 		}
-		gIconImage[0] = IMG_Load( gIcon1ImgFile );
-		if( gIconImage[0] == NULL){
-			printf("not find icon1 image\n");
-			return(-1);
-		}
-		gIconImage[1] = IMG_Load( gIcon2ImgFile );
-		if( gIconImage[1] == NULL){
-			printf("not find icon2 image\n");
-			return(-1);
-		}
-		gIconImage[2] = IMG_Load( gIcon3ImgFile );
-		if( gIconImage[2] == NULL){
-			printf("not find icon3 image\n");
-			return(-1);
-		}
-		gIconImage[3] = IMG_Load( gIcon4ImgFile );
-		if( gIconImage[3] == NULL){
-			printf("not find icon4 image\n");
-			return(-1);
-		}
-		gItemBox = IMG_Load( gItemBoxImgFile );
+		gItemBox = IMG_Load( gItemBoxImgFile ); //アイテムボックス
 		if( gItemBox == NULL){
 			printf("not find itembox image\n");
 			return(-1);
+		}
+		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
+		    gItemImage[i] = IMG_Load( gItemImgFile[i] );
+		    if( gItemImage[i] == NULL ){
+			printf("not find item%dimage\n", i+1);
+			return(-1);
+		     }
+		}
+		for(i = 0; i < CT_NUM; i++){ //キャラクター画像
+		    gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
+		    if( gCharaImage[i] == NULL ){
+			printf("not find chara%dimage\n", i+1);
+			return(-1);
+		    }
+		}
+		for(i = 0; i < CT_NUM; i++){ //アイコン画像
+		    gIconImage[i] = IMG_Load( gIconImgFile[i] );
+		    if( gIconImage[i] == NULL ){
+			printf("not find icon%dimage\n", i+1);
+			return(-1);
+		    }
 		}
 }
 
 
 void clearWindow(void){ //ウィンドウのクリア
+
+	//メインウィンドウ
+	SDL_FillRect(gMainWindow, NULL, 0xffffff);
 
 	//ワールドウィンドウ
 	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
@@ -323,15 +270,10 @@ void clearWindow(void){ //ウィンドウのクリア
 	src_rect.h = gItemBox->h;
 	int i;
 	for(i=0; i < CT_NUM; i++){
-	  dst_rect.x = i*(gItemBox->w) + 10;
-	  dst_rect.y = gMainWindow->h - gStatusWindow->h;
+	  dst_rect.x = i*(gItemBox->w);
 	  SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 	  }
 
-	//メインウィンドウ
-	src_rect.w = gMainWindow->w;
-	dst_rect.h = gMainWindow->h;
-	SDL_FillRect(gMainWindow, NULL, 0xffffff);
 
 }
 
@@ -394,26 +336,28 @@ void drawStatus(void){ //ステータスの描画
 		SDL_Rect dst_rect;
 		src_rect.x = 0;
 		src_rect.y = 0;
-		dst_rect.y = 30;
+		dst_rect.y = 0;
 
 		int i;
 		int item_id;
 		int chara_id;
 
-		for(i=0; i<4; i++){
-		    chara_id = allPlayer[i].id;
-		    item_id = allPlayer[i].item;
+		for(i=0; i<2; i++){
+		    chara_id = ((PLAYER*)allObject[i].typeBuffer)->num; //キャラ番号
+		    item_id = ((PLAYER*)allObject[i].typeBuffer)->item; //アイテム番号
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
-		    dst_rect.x = chara_id*(gItemBox->w);
+		    dst_rect.x = chara_id*gItemBox->w;
+			printf("i am %d\n",chara_id);
 		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 		    //所持アイテム
-		    if(item_id == 0) break;
-		    src_rect.w = gItemImage[item_id]->w;
-		    src_rect.h = gItemImage[item_id]->h;
-		    dst_rect.x += 50;
-		    SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+		    if(item_id != ITEM_EMPTY){
+			src_rect.w = gItemImage[item_id]->w;
+			src_rect.h = gItemImage[item_id]->h;
+			dst_rect.x += 50;
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+		    }
 		}
 		SDL_Flip(gStatusWindow);//描画更新
 }
@@ -422,8 +366,8 @@ void drawStatus(void){ //ステータスの描画
 void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
 		//マップを組み合わせる
 		Rect world;
-		world.src.x = myPos->x - (VIEW_WIDTH/2);
-		world.src.y = myPos->y - (VIEW_HEIGHT/2);
+		world.src.x = myPos->x - (gMainWindow->w/2);
+		world.src.y = myPos->y - (gMainWindow->h/2);
 		world.src.w = VIEW_WIDTH;
 		world.src.h = VIEW_HEIGHT - gStatusWindow->h;
 		world.dst.x = 0;
@@ -436,7 +380,7 @@ void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
 		status.src.w = gStatusWindow->w;
 		status.src.h = gStatusWindow->h;
 		status.dst.x = 0;
-		status.dst.y = VIEW_HEIGHT - gStatusWindow->h;
+		status.dst.y = gMainWindow->h - gStatusWindow->h;
 		SDL_BlitSurface(gStatusWindow, &status.src, gMainWindow, &status.dst);
 }
 

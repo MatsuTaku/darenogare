@@ -123,7 +123,7 @@ typedef enum {
 		ITEM_MISSILE	= 3,
 		ITEM_MINIMUM	= 4,
 		ITEM_BARRIER	= 5,
-		ITEM_NUM		= 6
+		ITEM_NUM		= 5
 } ITEM_NUMBER ;
 
 
