@@ -86,6 +86,7 @@ typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
 		PLAYER_NUMBER num;	// プレイヤー番号
 		double dir;			// 進行方向
+		double toDir;		// 目標旋回角度
 		VEROCITY ver;		// 速度ベクトル
 		int alive;			// 生存フラグ
 		BOOST_FLAG boost;	// 噴射フラグ

@@ -52,6 +52,7 @@ int initGameSystem(int myId, int playerNum) {
 				curPlayer->num = i;
 				curPlayer->item = 0;
 				curPlayer->dir = 0;
+				curPlayer->toDir = 0;
 				curPlayer->ver.vx = 0;
 				curPlayer->ver.vy = 0;
 				curPlayer->alive = true;
@@ -157,15 +158,20 @@ void updateEvent() {
  */
 static void rotateDirection(double sign) {
 		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
-		while (toDir > PI) {
+		double da = myPlayer->dir - myPlayer->toDir;
+		double db = toDir - myPlayer->toDir;
+		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
+				toDir = myPlayer->toDir;
+				printf("fix\n");
+		}
+		// -PI ~ PI 
+		while (toDir > PI) 
 				toDir -= 2 * PI;
-		}
-		while (toDir <= -PI) {
+		while (toDir <= -PI) 
 				toDir += 2 * PI;
-		}
 		myPlayer->dir = toDir;
 #ifndef NDEBUG
-		printf("player direction[%.2f°]\n", myPlayer->dir / PI * HALF_DEGRESS);
+		printf("player direction[%.2f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
 #endif	
 }
 
@@ -231,11 +237,15 @@ void rotateTo(int x, int y) {
 		double px = (double)x / range;
 		double py = -(double)y / range;
 		double toAngle = acos(px) * ((py >= 0) ? 1 : -1);
+		if (toAngle > PI)	toAngle -= 2 * PI;
+		myPlayer->toDir = toAngle;
 #ifndef NDEBUG
 		printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
 #endif
 		double dAngle = toAngle - myPlayer->dir;
-		if (dAngle < -PI || dAngle >= PI)
+		if (dAngle == 0)
+				fixRotation();
+		else if (dAngle <= -PI || (0 < dAngle && dAngle <= PI))
 				rotateLeft();
 		else
 				rotateRight();
