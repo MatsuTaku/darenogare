@@ -231,8 +231,9 @@ void rotateTo(int x, int y) {
 		double px = (double)x / range;
 		double py = -(double)y / range;
 		double toAngle = acos(px) * ((py >= 0) ? 1 : -1);
-
-printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
+#ifndef NDEBUG
+		printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
+#endif
 		double dAngle = toAngle - myPlayer->dir;
 		if (dAngle < -PI || dAngle >= PI)
 				rotateLeft();
@@ -259,14 +260,23 @@ void fixRotation() {
  */
 void acceleration() {
 		myPlayer->boost = BOOST_GO;
+#ifndef NDEBUG
+		printf("Acceleration.\n");
+#endif
 }
 
 void deceleration() {
 		myPlayer->boost = BOOST_BACK;
+#ifndef NDEBUG
+		printf("Deceleration.\n");
+#endif
 }
 
 void inertialNavigation() {
 		myPlayer->boost = BOOST_NEUTRAL;
+#ifndef NDEBUG
+		printf("Inertial navigation.\n");
+#endif
 }
 
 

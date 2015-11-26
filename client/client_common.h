@@ -7,7 +7,7 @@
 #define BOOST_ACCELE	1	// one frame
 #define PI				3.141592
 #define HALF_DEGRESS	180	
-#define ANGULAR_VEROCITY	240	// 秒間100度
+#define ANGULAR_VEROCITY	360	// 角速度
 #define ACCELE_GO	40		// 加速度
 #define ACCELE_BRAKE	-30	// 減速度
 // #define RESISTANCE		-0	// 抵抗
