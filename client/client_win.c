@@ -327,8 +327,7 @@ void drawObject(void){ //オブジェクトの描画
 			break;
 		  }
 	}
-	if(image_reangle != NULL)
-	SDL_FreeSurface(image_reangle);
+	if(image_reangle != NULL) {SDL_FreeSurface(image_reangle);}
 }
 
 void drawStatus(void){ //ステータスの描画
@@ -337,19 +336,17 @@ void drawStatus(void){ //ステータスの描画
 		src_rect.x = 0;
 		src_rect.y = 0;
 		dst_rect.y = 0;
-
 		int i;
 		int item_id;
 		int chara_id;
 
-		for(i=0; i<2; i++){
+		for(i=0; i<1; i++){
 		    chara_id = ((PLAYER*)allObject[i].typeBuffer)->num; //キャラ番号
 		    item_id = ((PLAYER*)allObject[i].typeBuffer)->item; //アイテム番号
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
 		    dst_rect.x = chara_id*gItemBox->w;
-			printf("i am %d\n",chara_id);
 		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 		    //所持アイテム
 		    if(item_id != ITEM_EMPTY){
