@@ -4,11 +4,18 @@
 
 #define nextObj(a)	((a + 1) % MAX_OBJECT)
 
-OBJECT allObject[MAX_OBJECT];
-PLAYER allPlayer[MAX_CLIENTS];
+ASSEMBLY allAssembly;
+OBJECT* object;
+PLAYER* player;
+OBSTACLE* obstacle;
 PLAYER* myPlayer;
+/*
+   OBJECT allObject[MAX_OBJECT];
+   PLAYER allPlayer[MAX_CLIENTS];
+   OBSTACLE allObstacle[MAX_OBSTACLE];
+ */
 
-int curObject;
+int curObjNum;
 
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
@@ -25,27 +32,31 @@ static double getRange(OBJECT* alpha, OBJECT* beta);
  */
 int initGameSystem(int myId, int playerNum) {
 		int i;
+		object = allAssembly.object;
+		player = allAssembly.player;
+		obstacle = allAssembly.obstacle;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* object = &allObject[i];
-				object->type = OBJECT_EMPTY;
-				object->typeBuffer = NULL;
-				object->pos.x = 640;
-				object->pos.y = 360;
+				OBJECT* curObjNum = &object[i];
+				curObjNum->type = OBJECT_EMPTY;
+				curObjNum->typeBuffer = NULL;
+				curObjNum->pos.x = 640;
+				curObjNum->pos.y = 360;
 		}
-		curObject = 0;
+		curObjNum = 0;
 
-		myPlayer = &allPlayer[myId];
+		myPlayer = &player[myId];
 
 		for (i = 0; i < playerNum; i++) {
-				PLAYER *player = &allPlayer[i];
-				player->num = i;
-				player->item = 0;
-				player->dir = 0;
-				player->ver.vx = 0;
-				player->ver.vy = 0;
-				player->alive = true;
-				if (insertObject(player, OBJECT_CHARACTER) == NULL) {
+				PLAYER* curPlayer = &player[i];
+				curPlayer->num = i;
+				curPlayer->item = 0;
+				curPlayer->dir = 0;
+				curPlayer->toDir = 0;
+				curPlayer->ver.vx = 0;
+				curPlayer->ver.vy = 0;
+				curPlayer->alive = true;
+				if (insertObject(curPlayer, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -63,13 +74,13 @@ int initGameSystem(int myId, int playerNum) {
  */
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		int count = 0;
-		OBJECT* object = NULL;
+		OBJECT* curObject = NULL;
 
 		while (count < MAX_OBJECT) {
-				object = &allObject[curObject];
+				curObject = &object[curObjNum];
 				if (object->type == OBJECT_EMPTY) {
-						object->type = type;
-						object->typeBuffer = buffer;
+						curObject->type = type;
+						curObject->typeBuffer = buffer;
 						switch (type) {
 								case OBJECT_EMPTY:
 										break;
@@ -85,14 +96,14 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 								default:
 										break;
 						}
-						curObject = nextObj(curObject);
-						return object;
+						curObjNum = nextObj(curObjNum);
+						return curObject;
 				}
-				curObject = nextObj(curObject);
+				curObjNum = nextObj(curObjNum);
 				count++;
 		}
 
-		return object;
+		return NULL;
 }
 
 
@@ -103,14 +114,15 @@ void updateEvent() {
 		switch (myPlayer->action) {
 				case NONE:	break;
 				case USE_ITEM:
-						break;
+							break;
 				default:
-						break;
+							break;
 		}
 
 		/* 旋回 */
 		switch (myPlayer->rotate) {
-				case ROTATE_NEUTRAL:	break;
+				case ROTATE_NEUTRAL:	
+						break;
 				case ROTATE_LEFT:
 						rotateDirection(1);
 						break;
@@ -123,7 +135,8 @@ void updateEvent() {
 
 		/* 加減速 */
 		switch (myPlayer->boost) {
-				case BOOST_NEUTRAL:	break;
+				case BOOST_NEUTRAL:	
+						break;
 				case BOOST_GO:
 						accelerateVerocity(ACCELE_GO);
 						break;
@@ -145,15 +158,20 @@ void updateEvent() {
  */
 static void rotateDirection(double sign) {
 		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
-		while (toDir > PI) {
+		double da = myPlayer->dir - myPlayer->toDir;
+		double db = toDir - myPlayer->toDir;
+		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
+				toDir = myPlayer->toDir;
+				printf("fix\n");
+		}
+		// -PI ~ PI 
+		while (toDir > PI) 
 				toDir -= 2 * PI;
-		}
-		while (toDir < -PI) {
+		while (toDir <= -PI) 
 				toDir += 2 * PI;
-		}
 		myPlayer->dir = toDir;
 #ifndef NDEBUG
-		// printf("player direction[%.2f°]\n", myPlayer->dir / PI * HALF_DEGRESS);
+		printf("player direction[%.2f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
 #endif	
 }
 
@@ -192,7 +210,7 @@ void getItem() {
 		OBJECT* playerObj = myPlayer->object;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObj = &allObject[i];
+				OBJECT* curObj = &object[i];
 				if (curObj->type == OBJECT_ITEM) {
 						if (hitObject(playerObj, curObj)) {
 								// MARK
@@ -218,10 +236,16 @@ void rotateTo(int x, int y) {
 		double range = sqrt(pow(x, 2) + pow(y, 2));
 		double px = (double)x / range;
 		double py = -(double)y / range;
-		double toAngle = acos(px) * ((-y >= 0) ? 1 : -1);
-		
+		double toAngle = acos(px) * ((py >= 0) ? 1 : -1);
+		if (toAngle > PI)	toAngle -= 2 * PI;
+		myPlayer->toDir = toAngle;
+#ifndef NDEBUG
+		printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
+#endif
 		double dAngle = toAngle - myPlayer->dir;
-		if (dAngle < -HALF_DEGRESS || dAngle >= HALF_DEGRESS)
+		if (dAngle == 0)
+				fixRotation();
+		else if (dAngle <= -PI || (0 < dAngle && dAngle <= PI))
 				rotateLeft();
 		else
 				rotateRight();
@@ -246,14 +270,23 @@ void fixRotation() {
  */
 void acceleration() {
 		myPlayer->boost = BOOST_GO;
+#ifndef NDEBUG
+		printf("Acceleration.\n");
+#endif
 }
 
 void deceleration() {
 		myPlayer->boost = BOOST_BACK;
+#ifndef NDEBUG
+		printf("Deceleration.\n");
+#endif
 }
 
 void inertialNavigation() {
 		myPlayer->boost = BOOST_NEUTRAL;
+#ifndef NDEBUG
+		printf("Inertial navigation.\n");
+#endif
 }
 
 
@@ -299,5 +332,5 @@ static double getObjectSize(OBJECT* object) {
  *	return: 距離の2乗
  */
 static double getRange(OBJECT* alpha, OBJECT* beta) {
-		 return pow(alpha->pos.x - beta->pos.x, 2) + pow(alpha->pos.y - beta->pos.y, 2);
+		return pow(alpha->pos.x - beta->pos.x, 2) + pow(alpha->pos.y - beta->pos.y, 2);
 }

@@ -4,8 +4,6 @@
 
 #include"../common.h"
 
-entityState plane[4];
-mapData MAP;
 
 /* server_net.c */
 extern int gClientNum;
@@ -14,5 +12,11 @@ extern ITEM_NUMBER Item[ITEM_NUM];
 extern PLAYER player;
 extern POSITION positon;
 #define ALL_CLIENTS	-1   
+/* server_command.c */
+/* serer_system.c */
+extern OBJECT allOBject[MAX_OBJECT];
+extern PLAYER allPlayer[MAX_CLIENTS];
+extern OBSTACLE allObstacle[MAX_OBSTACLE];
+extern ITEM allItem[MAX_ITEM];
 
 #endif

@@ -7,9 +7,10 @@
 #include "client_common.h"
 #include "client_func.h"
 
-#define VIEW_WIDTH	640
-#define VIEW_HEIGHT	360
 
+#define VIEW_WIDTH	1280
+#define VIEW_HEIGHT	720
+   
 #define REACTION_VALUE	0x3fff
 
 /*画像ファイルパス*/
@@ -47,15 +48,10 @@ static void combineWindow(POSITION* myPos);
 static void clearWindow();
 
 
-OBJECT allObject[MAX_OBJECT];
-PLAYER allPlayer[MAX_CLIENTS];
-
 typedef struct {
 		SDL_Rect src;
 		SDL_Rect dst;
 } Rect;
-
-OBJECT object;
 
 
 int initWindows(int clientID, int num) //ウィンドウ生成
@@ -97,8 +93,7 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 		aMask = 0xff000000;
 #endif
 		//WorldWindow
-		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gWorld->w, gWorld->h, 32, 0,0,0,0)) == NULL)
-{
+		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gWorld->w, gWorld->h, 32, 0,0,0,0)) == NULL) {
 			printf("failed to initialize worldwindow");
 			return -1;
 		}
@@ -123,7 +118,6 @@ int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
-		
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
@@ -170,8 +164,10 @@ int windowEvent() {
 								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
 								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
 								double range = pow(xValue, 2) + pow(yValue, 2);
-								// if (range > pow(REACTION_VALUE, 2))
-								rotateTo(xValue, yValue);
+								if (range > pow(REACTION_VALUE, 2))
+										rotateTo(xValue, yValue);
+								else
+										fixRotation();
 #ifndef NDEBUG
 								// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
@@ -298,11 +294,10 @@ void clearWindow(void){ //ウィンドウのクリア
 	  SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 	  }
 
-
 }
 
 
-void drawObject(void){ //オブジェクトの描画
+void drawObject(void) { //オブジェクトの描画
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	SDL_Surface *image_reangle;
@@ -311,12 +306,12 @@ void drawObject(void){ //オブジェクトの描画
 	int chara_id, item_id, obstacle_id;
 	src_rect.x = 0;
 	src_rect.y = 0;
-	for(i=0; i<MAX_OBJECT; i++){
-		switch(allObject[i].type){
 
+	for(i=0; i<MAX_OBJECT; i++){
+		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
-			chara_id = ((PLAYER*)allObject[i].typeBuffer)->num; //キャラ番号
-			angle = allPlayer[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
+			chara_id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
+			angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
 			src_rect.x = 0;
 			src_rect.y = 0;
@@ -324,26 +319,26 @@ void drawObject(void){ //オブジェクトの描画
 			src_rect.h = image_reangle->h;
 			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
 			int dy = image_reangle->h - src_rect.h;
-			dst_rect.x = allObject[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
-			dst_rect.y = allObject[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
+			dst_rect.x = object[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
+			dst_rect.y = object[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
 			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_ITEM: //アイテム
-		  	item_id = allObject[i].id;
+		  	item_id = object[i].id;
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
-			dst_rect.x = allObject[i].pos.x - (gItemImage[item_id]->w /2);
-			dst_rect.y = allObject[i].pos.y - (gItemImage[item_id]->h /2);
+			dst_rect.x = object[i].pos.x - (gItemImage[item_id]->w /2);
+			dst_rect.y = object[i].pos.y - (gItemImage[item_id]->h /2);
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
-			obstacle_id = allObject[i].id;
+			obstacle_id = object[i].id;
 			src_rect.w = ObstacleImage[obstacle_id]->w;
 			src_rect.h = ObstacleImage[obstacle_id]->h;
-			dst_rect.x = allObject[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
-			dst_rect.y = allObject[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
+			dst_rect.x = object[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
+			dst_rect.y = object[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
 			SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 
@@ -364,9 +359,9 @@ void drawStatus(void){ //ステータスの描画
 		int item_id;
 		int chara_id;
 
-		for(i=0; i<1; i++){
-		    chara_id = ((PLAYER*)allObject[i].typeBuffer)->num; //キャラ番号
-		    item_id = ((PLAYER*)allObject[i].typeBuffer)->item; //アイテム番号
+		for(i=0; i<MAX_CLIENTS; i++){
+		    chara_id = player[i].num;	// キャラ番号
+		    item_id = player[i].item;	// アイテム番号
 		    //アイコン
 		    src_rect.w = gIconImage[chara_id]->w;
 		    src_rect.h = gIconImage[chara_id]->h;
@@ -404,8 +399,3 @@ void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
 		status.dst.y = gMainWindow->h - gStatusWindow->h;
 		SDL_BlitSurface(gStatusWindow, &status.src, gMainWindow, &status.dst);
 }
-
-
-
-
-
