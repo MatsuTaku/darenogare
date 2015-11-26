@@ -10,10 +10,10 @@ PLAYER* player;
 OBSTACLE* obstacle;
 PLAYER* myPlayer;
 /*
-OBJECT allObject[MAX_OBJECT];
-PLAYER allPlayer[MAX_CLIENTS];
-OBSTACLE allObstacle[MAX_OBSTACLE];
-*/
+   OBJECT allObject[MAX_OBJECT];
+   PLAYER allPlayer[MAX_CLIENTS];
+   OBSTACLE allObstacle[MAX_OBSTACLE];
+ */
 
 int curObjNum;
 
@@ -113,14 +113,15 @@ void updateEvent() {
 		switch (myPlayer->action) {
 				case NONE:	break;
 				case USE_ITEM:
-						break;
+							break;
 				default:
-						break;
+							break;
 		}
 
 		/* 旋回 */
 		switch (myPlayer->rotate) {
-				case ROTATE_NEUTRAL:	break;
+				case ROTATE_NEUTRAL:	
+						break;
 				case ROTATE_LEFT:
 						rotateDirection(1);
 						break;
@@ -133,7 +134,8 @@ void updateEvent() {
 
 		/* 加減速 */
 		switch (myPlayer->boost) {
-				case BOOST_NEUTRAL:	break;
+				case BOOST_NEUTRAL:	
+						break;
 				case BOOST_GO:
 						accelerateVerocity(ACCELE_GO);
 						break;
@@ -158,12 +160,12 @@ static void rotateDirection(double sign) {
 		while (toDir > PI) {
 				toDir -= 2 * PI;
 		}
-		while (toDir < -PI) {
+		while (toDir <= -PI) {
 				toDir += 2 * PI;
 		}
 		myPlayer->dir = toDir;
 #ifndef NDEBUG
-		// printf("player direction[%.2f°]\n", myPlayer->dir / PI * HALF_DEGRESS);
+		printf("player direction[%.2f°]\n", myPlayer->dir / PI * HALF_DEGRESS);
 #endif	
 }
 
@@ -228,10 +230,11 @@ void rotateTo(int x, int y) {
 		double range = sqrt(pow(x, 2) + pow(y, 2));
 		double px = (double)x / range;
 		double py = -(double)y / range;
-		double toAngle = acos(px) * ((-y >= 0) ? 1 : -1);
-		
+		double toAngle = acos(px) * ((py >= 0) ? 1 : -1);
+
+printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
 		double dAngle = toAngle - myPlayer->dir;
-		if (dAngle < -HALF_DEGRESS || dAngle >= HALF_DEGRESS)
+		if (dAngle < -PI || dAngle >= PI)
 				rotateLeft();
 		else
 				rotateRight();
@@ -309,5 +312,5 @@ static double getObjectSize(OBJECT* object) {
  *	return: 距離の2乗
  */
 static double getRange(OBJECT* alpha, OBJECT* beta) {
-		 return pow(alpha->pos.x - beta->pos.x, 2) + pow(alpha->pos.y - beta->pos.y, 2);
+		return pow(alpha->pos.x - beta->pos.x, 2) + pow(alpha->pos.y - beta->pos.y, 2);
 }

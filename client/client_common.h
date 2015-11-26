@@ -7,9 +7,9 @@
 #define BOOST_ACCELE	1	// one frame
 #define PI				3.141592
 #define HALF_DEGRESS	180	
-#define ANGULAR_VEROCITY	180	// 秒間100度
-#define ACCELE_GO	10		// 加速度
-#define ACCELE_BRAKE	-5	// 減速度
+#define ANGULAR_VEROCITY	240	// 秒間100度
+#define ACCELE_GO	40		// 加速度
+#define ACCELE_BRAKE	-30	// 減速度
 // #define RESISTANCE		-0	// 抵抗
 
 
@@ -33,8 +33,10 @@ extern entityStateSet rocket;
 extern mapData MAP;
 
 /* client_system.c */
-extern OBJECT allObject[MAX_OBJECT];
-extern PLAYER allPlayer[MAX_CLIENTS];
+extern ASSEMBLY allAssembly;
+extern OBJECT* object;
+extern PLAYER* player;
+extern OBSTACLE* obstacle;
 extern PLAYER* myPlayer;
 /* client_net.c */
 extern int clientID;
