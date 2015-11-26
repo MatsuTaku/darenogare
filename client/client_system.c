@@ -157,7 +157,7 @@ void updateEvent() {
  * input: 単位角速度
  */
 static void rotateDirection(double sign) {
-		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY / HALF_DEGRESS * PI) / FPS);
+		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY * PI / HALF_DEGRESS) / FPS);
 		double da = myPlayer->dir - myPlayer->toDir;
 		double db = toDir - myPlayer->toDir;
 		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
@@ -171,7 +171,7 @@ static void rotateDirection(double sign) {
 				toDir += 2 * PI;
 		myPlayer->dir = toDir;
 #ifndef NDEBUG
-		printf("player direction[%.2f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
+		printf("player direction[%3.0f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
 #endif	
 }
 
@@ -182,10 +182,11 @@ static void rotateDirection(double sign) {
  */
 static void accelerateVerocity(double accel) {
 		double direction = myPlayer->dir;
-
-		VEROCITY* ver = &(myPlayer->ver);
-		ver->vx += accel * cos(direction) / FPS;
-		ver->vy += accel * sin(direction) / FPS;
+#ifndef NDEBUG
+		printf("dir: %3.0f	cos: %.6f	sin: %.6f\n", direction * HALF_DEGRESS / PI, cos(direction), sin(direction));
+#endif
+		myPlayer->ver.vx += accel * cos(direction) / FPS;
+		myPlayer->ver.vy += accel * -sin(direction) / FPS;
 }
 
 
@@ -240,7 +241,7 @@ void rotateTo(int x, int y) {
 		if (toAngle > PI)	toAngle -= 2 * PI;
 		myPlayer->toDir = toAngle;
 #ifndef NDEBUG
-		printf("toAngle: %f\n", toAngle / PI * HALF_DEGRESS);
+		printf("toAngle: %3.0f\n", toAngle * HALF_DEGRESS / PI);
 #endif
 		double dAngle = toAngle - myPlayer->dir;
 		if (dAngle == 0)
