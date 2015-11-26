@@ -13,12 +13,15 @@
 #define REACTION_VALUE	0x3fff
 
 /*画像ファイルパス*/
-static char gMapImgFile[] = "IMG/Field.png"; //背景画像
-static char gObstacleImgFile[] = "IMG/obstacle.png"; //隕石画像
+static char gMapImgFile[] = "IMG/Field.png";
+static char gObstacleImgFile[] = "IMG/obstacle.png";
+static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gItemImgFile[ITEM_NUM][20] = {"IMG/noizing.png","IMG/Laser.png", "IMG/missile.png","IMG/minimum.png","IMG/barrier.png"};
 static char gCharaImgFile[CT_NUM][20] ={"IMG/1Pship.png","IMG/2Pship.png","IMG/3Pship.png","IMG/4Pship.png"};
 static char gIconImgFile[CT_NUM][20] = {"IMG/1Picon.png", "IMG/2Picon.png", "IMG/3Picon.png", "IMG/4Picon.png"};
-static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテム欄
+static char gNameImgFile[CT_NUM][20] = {"IMG/1Pname.png","IMG/2Pname.png","IMG/3Pname.png","IMG/4Pname.png"};
+
+
 
 static int weitFlag = 0;
 static int myID;
@@ -33,6 +36,7 @@ static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
 static SDL_Surface *gIconImage[CT_NUM];//アイコン
 static SDL_Surface *gItemBox; //アイテム欄
+static SDL_Surface *gNameImage[CT_NUM]; //キャラクター名
 
 /*関数*/
 static void drawObject();
@@ -243,6 +247,13 @@ int initImage(void){ //画像の読み込み
 		    gIconImage[i] = IMG_Load( gIconImgFile[i] );
 		    if( gIconImage[i] == NULL ){
 			printf("not find icon%dimage\n", i+1);
+			return(-1);
+		    }
+		}
+		for(i = 0; i < CT_NUM; i++){ //アイコン画像
+		    gNameImage[i] = IMG_Load( gNameImgFile[i] );
+		    if( gNameImage[i] == NULL ){
+			printf("not find name%dPimage\n", i+1);
 			return(-1);
 		    }
 		}
