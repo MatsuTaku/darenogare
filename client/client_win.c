@@ -9,7 +9,6 @@
 
 #define VIEW_WIDTH	640
 #define VIEW_HEIGHT	360
-    
 
 #define REACTION_VALUE	0x3fff
 
@@ -26,12 +25,13 @@ static char gNameImgFile[CT_NUM][20] = {"IMG/1Pname.png","IMG/2Pname.png","IMG/3
 
 static int weitFlag = 0;
 static int myID;
+static POSITION center;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gWorldWindow; //各プレイヤーのマップウィンドウ
 static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
-static SDL_Surface *gWorld;//背景画像
+static SDL_Surface *gWorld;//背景画像のサーフェス
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[CT_NUM];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
@@ -70,6 +70,9 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 				printf("failed to load image.\n");
 				return -1;
 		}
+		//背景の中心を設定
+		center.x = gWorld->w/2;
+		center.y = gWorld->h/2;
 
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 				printf("failed to initialize SDL.\n");
@@ -120,7 +123,7 @@ int drawWindow()//ゲーム画面の描画
 {
 		int endFlag = 1;
 
-
+		
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
@@ -272,8 +275,18 @@ void clearWindow(void){ //ウィンドウのクリア
 	SDL_FillRect(gMainWindow, NULL, 0xffffff);
 
 	//ワールドウィンドウ
+/*	if(allPlayer.pos.x >= center.x){
+		int wx = center.x + abs((center.x - allPlayer.pos.x)/2);
+	}else{
+		int wx = center.x - abs((center.x - allPlayer.pos.x)/2);
+	}
+	if(allPlayer.pos.y >= center.y){
+		int wy = center.y + abs((center.y - allPlayer.pos.y)/2);
+	}else{
+		int wy = center.y - abs((center.y - allPlayer.pos.y)/2);
+	}*/
 	SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
-	SDL_Rect dst_rect = {0, 0};
+	SDL_Rect dst_rect = { 0, 0};
 	SDL_BlitSurface(gWorld, &src_rect, gWorldWindow, &dst_rect);
 
 	//ステータスウィンドウ
