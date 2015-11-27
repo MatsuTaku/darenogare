@@ -40,8 +40,8 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* curObjNum = &object[i];
 				curObjNum->type = OBJECT_EMPTY;
 				curObjNum->typeBuffer = NULL;
-				curObjNum->pos.x = 640;
-				curObjNum->pos.y = 360;
+				curObjNum->pos.x = 3200;
+				curObjNum->pos.y = 1800;
 		}
 		curObjNum = 0;
 
