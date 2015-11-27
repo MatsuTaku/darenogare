@@ -72,7 +72,7 @@ static void initPlayer(PLAYER* player) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		setPos(object, 640, 360);
+		setPos(object, 3200, 1800);
 }
 
 
