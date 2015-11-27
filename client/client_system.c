@@ -120,6 +120,17 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 void updateEvent() {
 		/** Player value change method */
 		updatePlayer();
+
+		// test appearance
+		OBSTACLE* curObs;
+		int i;
+		for (i = 0; i < MAX_OBSTACLE; i++) {
+				curObs = &obstacle[curObsNum];
+				insertObject(curObs, OBJECT_OBSTACLE);
+				curObs->angle = rand() % (PI * 10000) / 10000 - PI;
+				curObs->verocity = 0;
+				setPos(curObs->object, rand() % 3000, rand() % 3000;
+		}
 }
 
 
