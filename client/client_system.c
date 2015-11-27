@@ -11,12 +11,16 @@ OBSTACLE* obstacle;
 PLAYER* myPlayer;
 
 int curObjNum;
+int numObstacle, curObsNum;
 
+static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
+static void updatePlayer();
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
+static void setPos(OBJECT* object, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
@@ -34,7 +38,7 @@ int initGameSystem(int myId, int playerNum) {
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &object[i];
-				curObj->type = OBJECT_EMPTY;
+				initObject(curObj);
 		}
 		curObjNum = 0;
 
@@ -54,6 +58,13 @@ int initGameSystem(int myId, int playerNum) {
 }
 
 
+static void initObject(OBJECT* object) {
+		object->type = OBJECT_EMPTY;
+		object->id = 0;
+		setPos(object, 0, 0);
+}
+
+
 static void initPlayer(PLAYER* player) {
 		player->item = ITEM_EMPTY;
 		player->dir = PI / 2;
@@ -61,8 +72,7 @@ static void initPlayer(PLAYER* player) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		player->object->pos.x = 640;
-		player->object->pos.y = 360;
+		setPos(object, 640, 360);
 }
 
 
@@ -109,6 +119,11 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 void updateEvent() {
 		/** Player value change method */
+		updatePlayer();
+}
+
+
+static void updatePlayer() {
 		/* プレイヤーの行動 */
 		// MARK
 		switch (myPlayer->action) {
@@ -162,7 +177,6 @@ static void rotateDirection(double sign) {
 		double db = toDir - myPlayer->toDir;
 		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
 				toDir = myPlayer->toDir;
-				printf("fix\n");
 		}
 		// -PI ~ PI 
 		while (toDir > PI) 
@@ -217,6 +231,7 @@ void getItem() {
 						if (hitObject(playerObj, curObj)) {
 								// MARK
 								myPlayer->item = curObj->id;
+								initObject(curObj);
 								break;
 						}
 				}
@@ -289,6 +304,15 @@ void inertialNavigation() {
 #ifndef NDEBUG
 		printf("Inertial navigation.\n");
 #endif
+}
+
+
+/** 
+ * オブジェクト座標設定
+ */
+static void setPos(OBJECT* object, int x, int y) {
+		object->pos.x = x;
+		object->pos.y = y;
 }
 
 

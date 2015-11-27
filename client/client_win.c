@@ -184,7 +184,8 @@ int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
 
-		while (SDL_PollEvent(&event)) {	// イベント所得
+		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
+		while (SDL_PollEvent(&event)) {
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
 						 		break;
