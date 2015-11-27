@@ -21,18 +21,16 @@ int main(int argc,char *argv[])
 		SDL_Thread* networkThread;
 		SDL_TimerID drawTimer;
 
-		if(argc == 1){
+		if (argc == 1) {
 				serverName = localHostName;
-		}
-		else if(argc == 2){
+		} else if (argc == 2) {
 				serverName = argv[1];
-		}
-		else{
+		} else {
 				fprintf(stderr, "Usage: %s, Cannot find a Server Name.\n", argv[0]);
 				return -1;
 		}
 
-		if(setUpClient(serverName,&clientID,&num)==-1){
+		if (setUpClient(serverName,&clientID,&num) == -1) {
 				fprintf(stderr,"setup failed : SetUpClient\n");
 				return -1;
 		}
@@ -42,17 +40,8 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
-		if(initWindows(clientID,num)==-1){
+		if (initWindows(clientID,num) == -1) {
 				fprintf(stderr,"setup failed : InitWindows\n");
-				return -1;
-		}
-
-
-		SDL_Joystick *joystick; //ジョイスティック用構造体
-		if(SDL_NumJoysticks() > 0){ //ジョイスティックが接続されたら
-				joystick = SDL_JoystickOpen(0); //ジョイスティックをオープン
-		} else{ //接続に失敗
-				fprintf(stderr,"failed to connect joystick\n");
 				return -1;
 		}
 

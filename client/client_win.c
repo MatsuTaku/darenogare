@@ -7,6 +7,7 @@
 #include "client_common.h"
 #include "client_func.h"
 
+<<<<<<< HEAD
 
 #define WINDOW_WIDTH	960
 #define WINDOW_HEIGHT	540
@@ -15,21 +16,50 @@
 #define WORLD_HEIGHT   3600
    
 #define REACTION_VALUE	0x3fff
+=======
+#define VIEW_WIDTH	1280
+#define VIEW_HEIGHT	720
+
+#define REACTION_VALUE	0x6fff
+>>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
 
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/Field.png";
 static char gObstacleImgFile[] = "IMG/obstacle.png";
 static char gItemBoxImgFile[] = "IMG/Itembox.png";
-static char gItemImgFile[ITEM_NUM][20] = {"IMG/noizing.png","IMG/Laser.png", "IMG/missile.png","IMG/minimum.png","IMG/barrier.png"};
-static char gCharaImgFile[CT_NUM][20] ={"IMG/1Pship.png","IMG/2Pship.png","IMG/3Pship.png","IMG/4Pship.png"};
-static char gIconImgFile[CT_NUM][20] = {"IMG/1Picon.png", "IMG/2Picon.png", "IMG/3Picon.png", "IMG/4Picon.png"};
-static char gNameImgFile[CT_NUM][20] = {"IMG/1Pname.png","IMG/2Pname.png","IMG/3Pname.png","IMG/4Pname.png"};
-
+static char gItemImgFile[ITEM_NUM][20] = {
+		"IMG/noizing.png",
+		"IMG/Laser.png", 
+		"IMG/missile.png",
+		"IMG/minimum.png",
+		"IMG/barrier.png"
+};
+static char gCharaImgFile[CT_NUM][20] ={
+		"IMG/1Pship.png",
+		"IMG/2Pship.png",
+		"IMG/3Pship.png",
+		"IMG/4Pship.png"
+};
+static char gIconImgFile[CT_NUM][20] = {
+		"IMG/1Picon.png", 
+		"IMG/2Picon.png", 
+		"IMG/3Picon.png", 
+		"IMG/4Picon.png"
+};
+static char gNameImgFile[CT_NUM][20] = {
+		"IMG/1Pname.png",
+		"IMG/2Pname.png",
+		"IMG/3Pname.png",
+		"IMG/4Pname.png"
+};
 
 
 static int weitFlag = 0;
 static int myID;
 static POSITION center;
+
+/* ジョイスティック */
+SDL_Joystick* joystick;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
@@ -57,20 +87,18 @@ typedef struct {
 } Rect;
 
 
-int initWindows(int clientID, int num) //ウィンドウ生成
-{
-
+int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
 		char *s, title[10];
 		myID = clientID;
 
 		assert(0<num && num<=MAX_CLIENTS);
-		if (initImage() < 0){//画像の読み込み
+		if (initImage() < 0) {//画像の読み込み
 				printf("failed to load image.\n");
 				return -1;
 		}
 
-		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+		if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 				printf("failed to initialize SDL.\n");
 				return -1;
 		}
@@ -81,15 +109,20 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 		}
 
 		//WorldWindow
+<<<<<<< HEAD
 		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, WORLD_WIDTH, WORLD_HEIGHT, 32, 0,0,0,0)) == NULL) {
 			printf("failed to initialize worldwindow");
 			return -1;
+=======
+		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gWorld->w, gWorld->h, 32, 0,0,0,0)) == NULL) {
+				printf("failed to initialize worldwindow");
+				return -1;
+>>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
 		}
 		//StatusWindow
-		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL)
-{
-			printf("failed to initialize statuswindow");
-			return -1;
+		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL) {
+				printf("failed to initialize statuswindow");
+				return -1;
 		}
 
 		//中心を設定
@@ -103,11 +136,20 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 
 		SDL_Flip(gMainWindow);
 
+
+		// initalize Joystick
+		SDL_JoystickEventState(SDL_ENABLE);
+		if (SDL_NumJoysticks() > 0) {
+				joystick = SDL_JoystickOpen(0);
+		} else {
+				fprintf(stderr, "Failed to connect joystick! Eror: %s\n", SDL_GetError());
+				return -1;
+		}
+
 		return 0;
 }
 
-int drawWindow()//ゲーム画面の描画
-{
+int drawWindow() {	//ゲーム画面の描画
 		int endFlag = 1;
 
 		clearWindow(); //ウィンドウのクリア
@@ -122,20 +164,24 @@ int drawWindow()//ゲーム画面の描画
 
 
 void destroyWindow(void) {
-	SDL_FreeSurface(gMainWindow);
-	SDL_FreeSurface (gWorldWindow);
-	SDL_FreeSurface (gStatusWindow);
-	SDL_FreeSurface (gWorld);
-	SDL_FreeSurface (ObstacleImage[0]);
-	SDL_FreeSurface (gItemBox);
-	int i;
-	for(i = 0; i < ITEM_NUM; i++){
-	    SDL_FreeSurface (gItemImage[i]);
-	}
-	for(i = 0; i < CT_NUM; i++){
-	    SDL_FreeSurface (gCharaImage[i]);
-	    SDL_FreeSurface (gIconImage[i]);
-	}
+		SDL_FreeSurface(gMainWindow);
+		SDL_FreeSurface (gWorldWindow);
+		SDL_FreeSurface (gStatusWindow);
+		SDL_FreeSurface (gWorld);
+		SDL_FreeSurface (ObstacleImage[0]);
+		SDL_FreeSurface (gItemBox);
+		int i;
+		for(i = 0; i < ITEM_NUM; i++){
+				SDL_FreeSurface (gItemImage[i]);
+		}
+		for(i = 0; i < CT_NUM; i++){
+				SDL_FreeSurface (gCharaImage[i]);
+				SDL_FreeSurface (gIconImage[i]);
+		}
+
+		if (joystick != NULL)
+				SDL_JoystickClose(joystick);
+
 		SDL_Quit();
 }
 
@@ -147,25 +193,15 @@ void destroyWindow(void) {
 int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
-		SDL_Joystick* joystick;
 
-		if (SDL_PollEvent(&event)) {	// イベント所得
+		while (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-								joystick = SDL_JoystickOpen((int)event.jaxis.which);
-								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
-								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
-								double range = pow(xValue, 2) + pow(yValue, 2);
-								if (range > pow(REACTION_VALUE, 2))
-										rotateTo(xValue, yValue);
-								else
-										fixRotation();
-#ifndef NDEBUG
-								// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
-#endif
-								break;
-
+						 		break;
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
+#ifndef NDEBUG
+								printf("press buton: %d\n", event.jbutton.button);
+#endif
 								switch(event.jbutton.button) { //ボタン毎の処理
 										case BUTTON_CIRCLE: //ジェット噴射
 												//速度上昇
@@ -177,7 +213,6 @@ int windowEvent() {
 												break;
 								}
 								break;
-
 						case SDL_JOYBUTTONUP: //ボタンが離された時
 								switch (event.jbutton.button) {
 										case BUTTON_CIRCLE:
@@ -201,67 +236,78 @@ int windowEvent() {
 				}
 		}
 
+		// get analog stick method
+		Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
+		Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
+		double range = pow(xValue, 2) + pow(yValue, 2);
+		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
+				rotateTo(xValue, yValue);
+#ifndef NDEBUG
+				printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+#endif
+		} else
+				fixRotation();
+
 		return endFlag;
 }
 
 
-
-
-		/********* static *************/
+/********* static *************/
 
 int initImage(void){ //画像の読み込み
 		int i;
 		gWorld = IMG_Load( gMapImgFile ); 
 		if ( gWorld == NULL ) { //マップ画像
-			printf("not find world image\n");
-			return(-1);
+				printf("not find world image\n");
+				return(-1);
 		}
 		ObstacleImage[0] = IMG_Load( gObstacleImgFile );
 		if( ObstacleImage[0] == NULL ){ //障害物画像
-			printf("not find obstacle image\n");
-			return(-1);
+				printf("not find obstacle image\n");
+				return(-1);
 		}
 		gItemBox = IMG_Load( gItemBoxImgFile ); //アイテムボックス
 		if( gItemBox == NULL){
-			printf("not find itembox image\n");
-			return(-1);
+				printf("not find itembox image\n");
+				return(-1);
 		}
 		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
-		    gItemImage[i] = IMG_Load( gItemImgFile[i] );
-		    if( gItemImage[i] == NULL ){
-			printf("not find item%dimage\n", i+1);
-			return(-1);
-		     }
+				gItemImage[i] = IMG_Load( gItemImgFile[i] );
+				if( gItemImage[i] == NULL ){
+						printf("not find item%dimage\n", i+1);
+						return(-1);
+				}
 		}
 		for(i = 0; i < CT_NUM; i++){ //キャラクター画像
-		    gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
-		    if( gCharaImage[i] == NULL ){
-			printf("not find chara%dimage\n", i+1);
-			return(-1);
-		    }
+				gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
+				if( gCharaImage[i] == NULL ){
+						printf("not find chara%dimage\n", i+1);
+						return(-1);
+				}
 		}
 		for(i = 0; i < CT_NUM; i++){ //アイコン画像
-		    gIconImage[i] = IMG_Load( gIconImgFile[i] );
-		    if( gIconImage[i] == NULL ){
-			printf("not find icon%dimage\n", i+1);
-			return(-1);
-		    }
+				gIconImage[i] = IMG_Load( gIconImgFile[i] );
+				if( gIconImage[i] == NULL ){
+						printf("not find icon%dimage\n", i+1);
+						return(-1);
+				}
 		}
 		for(i = 0; i < CT_NUM; i++){ //アイコン画像
-		    gNameImage[i] = IMG_Load( gNameImgFile[i] );
-		    if( gNameImage[i] == NULL ){
-			printf("not find name%dPimage\n", i+1);
-			return(-1);
-		    }
+				gNameImage[i] = IMG_Load( gNameImgFile[i] );
+				if( gNameImage[i] == NULL ){
+						printf("not find name%dPimage\n", i+1);
+						return(-1);
+				}
 		}
 }
 
 
 void clearWindow(void){ //ウィンドウのクリア
 
-	//メインウィンドウ
-	SDL_FillRect(gMainWindow, NULL, 0xffffff);
+		//メインウィンドウ
+		SDL_FillRect(gMainWindow, NULL, 0xffffff);
 
+<<<<<<< HEAD
 	//ワールドウィンドウ
 	SDL_FillRect(gWorldWindow, NULL, 0xffffff);
 	SDL_SetColorKey(gWorldWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gWorldWindow->format, 255, 255,
@@ -275,11 +321,27 @@ void clearWindow(void){ //ウィンドウのクリア
 	  dst_rect.x = i*(gItemBox->w);
 	  SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 	  }
+=======
+		//ワールドウィンドウ
+		SDL_Rect src_rect = {0, 0, gWorld->w, gWorld->h};
+		SDL_Rect dst_rect = {0, 0};
+		SDL_BlitSurface(gWorld, &src_rect, gWorldWindow, &dst_rect);
+
+		//ステータスウィンドウ
+		src_rect.w = gItemBox->w;
+		src_rect.h = gItemBox->h;
+		int i;
+		for(i=0; i < CT_NUM; i++){
+				dst_rect.x = i*(gItemBox->w);
+				SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
+		}
+>>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
 
 }
 
 
 void drawObject(void) { //オブジェクトの描画
+<<<<<<< HEAD
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	SDL_Surface *image_reangle;
@@ -331,6 +393,57 @@ void drawObject(void) { //オブジェクトの描画
 	if(image_reangle != NULL){
 		SDL_FreeSurface(image_reangle);
 	}
+=======
+		SDL_Rect src_rect;
+		SDL_Rect dst_rect;
+		SDL_Surface *image_reangle;
+		double angle;
+		int i;
+		int chara_id, item_id, obstacle_id;
+		src_rect.x = 0;
+		src_rect.y = 0;
+
+		for(i=0; i<MAX_OBJECT; i++){
+				switch(object[i].type){
+						case OBJECT_CHARACTER: //キャラクター
+								chara_id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
+								angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
+								image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
+								src_rect.x = 0;
+								src_rect.y = 0;
+								src_rect.w = image_reangle->w;
+								src_rect.h = image_reangle->h;
+								int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
+								int dy = image_reangle->h - src_rect.h;
+								dst_rect.x = object[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
+								dst_rect.y = object[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
+								SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
+								break;
+
+						case OBJECT_ITEM: //アイテム
+								item_id = object[i].id;
+								src_rect.w = gItemImage[item_id]->w;
+								src_rect.h = gItemImage[item_id]->h;
+								dst_rect.x = object[i].pos.x - (gItemImage[item_id]->w /2);
+								dst_rect.y = object[i].pos.y - (gItemImage[item_id]->h /2);
+								SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
+								break;
+
+						case OBJECT_OBSTACLE: //障害物
+								obstacle_id = object[i].id;
+								src_rect.w = ObstacleImage[obstacle_id]->w;
+								src_rect.h = ObstacleImage[obstacle_id]->h;
+								dst_rect.x = object[i].pos.x - (ObstacleImage[obstacle_id]->w /2);
+								dst_rect.y = object[i].pos.y - (ObstacleImage[obstacle_id]->h /2);
+								SDL_BlitSurface(ObstacleImage[obstacle_id], &src_rect, gWorldWindow, &dst_rect);
+								break;
+
+						case OBJECT_EMPTY: //なし
+								break;
+				}
+		}
+		if(image_reangle != NULL) {SDL_FreeSurface(image_reangle);}
+>>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
 }
 
 void drawStatus(void){ //ステータスの描画
@@ -343,21 +456,21 @@ void drawStatus(void){ //ステータスの描画
 		int chara_id;
 
 		for(i=0; i<MAX_CLIENTS; i++){
-		    chara_id = player[i].num;	// キャラ番号
-		    item_id = player[i].item;	// アイテム番号
-		    //アイコン
-		    src_rect.w = gIconImage[chara_id]->w;
-		    src_rect.h = gIconImage[chara_id]->h;
-		    dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
-		    dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
-		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
-		    //所持アイテム
-		    if(item_id != ITEM_EMPTY){
-			src_rect.w = gItemImage[item_id]->w;
-			src_rect.h = gItemImage[item_id]->h;
-			dst_rect.x += gItemBox->w/2;
-			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
-		    }
+
+				chara_id = player[i].num;	// キャラ番号
+				item_id = player[i].item;	// アイテム番号
+				//アイコン
+				src_rect.w = gIconImage[chara_id]->w;
+				src_rect.h = gIconImage[chara_id]->h;
+				dst_rect.x = chara_id*gItemBox->w;
+				SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
+				//所持アイテム
+				if(item_id != ITEM_EMPTY){
+						src_rect.w = gItemImage[item_id]->w;
+						src_rect.h = gItemImage[item_id]->h;
+						dst_rect.x += 50;
+						SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+				}
 		}
 		SDL_Flip(gStatusWindow);//描画更新
 }

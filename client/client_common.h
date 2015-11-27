@@ -5,7 +5,7 @@
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
-#define PI				3.141592
+#define PI				3.14159265
 #define HALF_DEGRESS	180	
 #define ANGULAR_VEROCITY	360	// 角速度
 #define ACCELE_GO	40		// 加速度
