@@ -7,22 +7,13 @@
 #include "client_common.h"
 #include "client_func.h"
 
-<<<<<<< HEAD
 
 #define WINDOW_WIDTH	960
 #define WINDOW_HEIGHT	540
 
 #define WORLD_WIDTH    6400
 #define WORLD_HEIGHT   3600
-   
-#define REACTION_VALUE	0x3fff
-=======
-#define VIEW_WIDTH	1280
-#define VIEW_HEIGHT	720
-
 #define REACTION_VALUE	0x6fff
->>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
-
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/Field.png";
 static char gObstacleImgFile[] = "IMG/obstacle.png";
