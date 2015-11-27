@@ -33,16 +33,8 @@ int initGameSystem(int myId, int playerNum) {
 		obstacle = allAssembly.obstacle;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-<<<<<<< HEAD
-				OBJECT* curObjNum = &object[i];
-				curObjNum->type = OBJECT_EMPTY;
-				curObjNum->typeBuffer = NULL;
-				curObjNum->pos.x = 3200;
-				curObjNum->pos.y = 1800;
-=======
 				OBJECT* curObj = &object[i];
 				curObj->type = OBJECT_EMPTY;
->>>>>>> ed762398a7676c002a1e41784ba9f2e2f566393d
 		}
 		curObjNum = 0;
 
@@ -69,8 +61,8 @@ static void initPlayer(PLAYER* player) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		player->object->pos.x = 640;
-		player->object->pos.y = 360;
+		player->object->pos.x = 3200;
+		player->object->pos.y = 1800;
 }
 
 
