@@ -11,7 +11,6 @@ OBSTACLE* obstacle;
 PLAYER* myPlayer;
 
 int curObjNum;
-int numObstacle, curObsNum;
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player);
@@ -53,6 +52,17 @@ int initGameSystem(int myId, int playerNum) {
 				curPlayer->num = i;
 				initPlayer(curPlayer);
 		}
+		// test appearance
+		for (i = 0; i < MAX_OBSTACLE; i++) {
+				OBSTACLE* curObs = &obstacle[i];
+				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
+						return -1;
+				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
+				curObs->verocity.vx = 0;
+				curObs->verocity.vy = 0;
+				setPos(curObs->object, rand() % 3000, rand() % 3000);
+				printf("obs x: %d, y: %d\n", curObs->object->pos.x, curObs->object->pos.y);
+		}
 
 		return 0;
 }
@@ -88,7 +98,7 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
-				if (object->type == OBJECT_EMPTY) {
+				if (curObject->type == OBJECT_EMPTY) {
 						curObject->type = type;
 						curObject->typeBuffer = buffer;
 						switch (type) {
@@ -121,16 +131,6 @@ void updateEvent() {
 		/** Player value change method */
 		updatePlayer();
 
-		// test appearance
-		OBSTACLE* curObs;
-		int i;
-		for (i = 0; i < MAX_OBSTACLE; i++) {
-				curObs = &obstacle[curObsNum];
-				insertObject(curObs, OBJECT_OBSTACLE);
-				curObs->angle = rand() % (PI * 10000) / 10000 - PI;
-				curObs->verocity = 0;
-				setPos(curObs->object, rand() % 3000, rand() % 3000;
-		}
 }
 
 
