@@ -10,7 +10,7 @@
 #define VIEW_WIDTH	1280
 #define VIEW_HEIGHT	720
 
-#define REACTION_VALUE	0x3fff
+#define REACTION_VALUE	0x6fff
 
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/Field.png";
@@ -46,6 +46,9 @@ static char gNameImgFile[CT_NUM][20] = {
 static int weitFlag = 0;
 static int myID;
 
+/* ジョイスティック */
+SDL_Joystick* joystick;
+
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gWorldWindow; //各プレイヤーのマップウィンドウ
@@ -72,20 +75,18 @@ typedef struct {
 } Rect;
 
 
-int initWindows(int clientID, int num) //ウィンドウ生成
-{
-
+int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
 		char *s, title[10];
 		myID = clientID;
 
 		assert(0<num && num<=MAX_CLIENTS);
-		if (initImage() < 0){//画像の読み込み
+		if (initImage() < 0) {//画像の読み込み
 				printf("failed to load image.\n");
 				return -1;
 		}
 
-		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+		if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 				printf("failed to initialize SDL.\n");
 				return -1;
 		}
@@ -113,8 +114,7 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 				return -1;
 		}
 		//StatusWindow
-		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL)
-		{
+		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL) {
 				printf("failed to initialize statuswindow");
 				return -1;
 		}
@@ -126,11 +126,20 @@ int initWindows(int clientID, int num) //ウィンドウ生成
 
 		SDL_Flip(gMainWindow);
 
+
+		// initalize Joystick
+		SDL_JoystickEventState(SDL_ENABLE);
+		if (SDL_NumJoysticks() > 0) {
+				joystick = SDL_JoystickOpen(0);
+		} else {
+				fprintf(stderr, "Failed to connect joystick! Eror: %s\n", SDL_GetError());
+				return -1;
+		}
+
 		return 0;
 }
 
-int drawWindow()//ゲーム画面の描画
-{
+int drawWindow() {	//ゲーム画面の描画
 		int endFlag = 1;
 
 		clearWindow(); //ウィンドウのクリア
@@ -159,6 +168,10 @@ void destroyWindow(void) {
 				SDL_FreeSurface (gCharaImage[i]);
 				SDL_FreeSurface (gIconImage[i]);
 		}
+
+		if (joystick != NULL)
+				SDL_JoystickClose(joystick);
+
 		SDL_Quit();
 }
 
@@ -170,24 +183,15 @@ void destroyWindow(void) {
 int windowEvent() {
 		SDL_Event event;
 		int endFlag = 1;
-		SDL_Joystick* joystick;
 
-		if (SDL_PollEvent(&event)) {	// イベント所得
+		while (SDL_PollEvent(&event)) {	// イベント所得
 				switch(event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-								joystick = SDL_JoystickOpen((int)event.jaxis.which);
-								Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
-								Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
-								double range = pow(xValue, 2) + pow(yValue, 2);
-								if (range > pow(REACTION_VALUE, 2))
-										rotateTo(xValue, yValue);
-								else
-										fixRotation();
-#ifndef NDEBUG
-								// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
-#endif
-								break;
+						 		break;
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
+#ifndef NDEBUG
+								printf("press buton: %d\n", event.jbutton.button);
+#endif
 								switch(event.jbutton.button) { //ボタン毎の処理
 										case BUTTON_CIRCLE: //ジェット噴射
 												//速度上昇
@@ -222,10 +226,20 @@ int windowEvent() {
 				}
 		}
 
+		// get analog stick method
+		Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
+		Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
+		double range = pow(xValue, 2) + pow(yValue, 2);
+		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
+				rotateTo(xValue, yValue);
+#ifndef NDEBUG
+				printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+#endif
+		} else
+				fixRotation();
+
 		return endFlag;
 }
-
-
 
 
 /********* static *************/

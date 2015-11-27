@@ -9,14 +9,10 @@ OBJECT* object;
 PLAYER* player;
 OBSTACLE* obstacle;
 PLAYER* myPlayer;
-/*
-   OBJECT allObject[MAX_OBJECT];
-   PLAYER allPlayer[MAX_CLIENTS];
-   OBSTACLE allObstacle[MAX_OBSTACLE];
- */
 
 int curObjNum;
 
+static void initPlayer(PLAYER* player);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
@@ -37,11 +33,8 @@ int initGameSystem(int myId, int playerNum) {
 		obstacle = allAssembly.obstacle;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObjNum = &object[i];
-				curObjNum->type = OBJECT_EMPTY;
-				curObjNum->typeBuffer = NULL;
-				curObjNum->pos.x = 640;
-				curObjNum->pos.y = 360;
+				OBJECT* curObj = &object[i];
+				curObj->type = OBJECT_EMPTY;
 		}
 		curObjNum = 0;
 
@@ -49,20 +42,27 @@ int initGameSystem(int myId, int playerNum) {
 
 		for (i = 0; i < playerNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				curPlayer->num = i;
-				curPlayer->item = 0;
-				curPlayer->dir = 0;
-				curPlayer->toDir = 0;
-				curPlayer->ver.vx = 0;
-				curPlayer->ver.vy = 0;
-				curPlayer->alive = true;
 				if (insertObject(curPlayer, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
+				curPlayer->num = i;
+				initPlayer(curPlayer);
 		}
 
 		return 0;
+}
+
+
+static void initPlayer(PLAYER* player) {
+		player->item = ITEM_EMPTY;
+		player->dir = PI / 2;
+		player->toDir = player->dir;
+		player->ver.vx = 0;
+		player->ver.vy = 0;
+		player->alive = true;
+		player->object->pos.x = 640;
+		player->object->pos.y = 360;
 }
 
 
@@ -171,7 +171,7 @@ static void rotateDirection(double sign) {
 				toDir += 2 * PI;
 		myPlayer->dir = toDir;
 #ifndef NDEBUG
-		printf("player direction[%3.0f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
+		// printf("player direction[%3.0f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
 #endif	
 }
 
@@ -182,11 +182,12 @@ static void rotateDirection(double sign) {
  */
 static void accelerateVerocity(double accel) {
 		double direction = myPlayer->dir;
-#ifndef NDEBUG
-		printf("dir: %3.0f	cos: %.6f	sin: %.6f\n", direction * HALF_DEGRESS / PI, cos(direction), sin(direction));
-#endif
 		myPlayer->ver.vx += accel * cos(direction) / FPS;
 		myPlayer->ver.vy += accel * -sin(direction) / FPS;
+#ifndef NDEBUG
+		double v = sqrt(pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2));
+		printf("plyaer verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", v, myPlayer->ver.vx, myPlayer->ver.vy);
+#endif
 }
 
 
@@ -241,7 +242,7 @@ void rotateTo(int x, int y) {
 		if (toAngle > PI)	toAngle -= 2 * PI;
 		myPlayer->toDir = toAngle;
 #ifndef NDEBUG
-		printf("toAngle: %3.0f\n", toAngle * HALF_DEGRESS / PI);
+		// printf("toAngle: %3.0f\n", toAngle * HALF_DEGRESS / PI);
 #endif
 		double dAngle = toAngle - myPlayer->dir;
 		if (dAngle == 0)
