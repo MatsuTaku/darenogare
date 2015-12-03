@@ -61,8 +61,8 @@ static void initPlayer(PLAYER* player) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		player->object->pos.x = 3200;
-		player->object->pos.y = 1800;
+		player->object->pos.x = 6400;
+		player->object->pos.y = 3600;
 }
 
 
