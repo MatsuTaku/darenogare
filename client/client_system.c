@@ -13,7 +13,7 @@ PLAYER* myPlayer;
 int curObjNum;
 
 static void initObject(OBJECT* object);
-static void initPlayer(PLAYER* player);
+static void initPlayer(PLAYER* player, int num);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void updatePlayer();
 static void rotateDirection(double sign);
@@ -49,9 +49,9 @@ int initGameSystem(int myId, int playerNum) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
-				curPlayer->num = i;
-				initPlayer(curPlayer);
+				initPlayer(curPlayer, i);
 		}
+
 		// test appearance
 		for (i = 0; i < MAX_OBSTACLE; i++) {
 				OBSTACLE* curObs = &obstacle[i];
@@ -60,7 +60,7 @@ int initGameSystem(int myId, int playerNum) {
 				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
 				curObs->verocity.vx = 0;
 				curObs->verocity.vy = 0;
-				setPos(curObs->object, rand() % 3000, rand() % 3000);
+				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
 				printf("obs x: %d, y: %d\n", curObs->object->pos.x, curObs->object->pos.y);
 		}
 
@@ -75,14 +75,15 @@ static void initObject(OBJECT* object) {
 }
 
 
-static void initPlayer(PLAYER* player) {
+static void initPlayer(PLAYER* player, int num) {
+		player->num = num;
 		player->item = ITEM_EMPTY;
 		player->dir = PI / 2;
 		player->toDir = player->dir;
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		setPos(object, 3200, 1800);
+		setPos(object, 0, 0);
 }
 
 
@@ -320,10 +321,12 @@ void inertialNavigation() {
 
 /** 
  * オブジェクト座標設定
+ *	マップの中央を原点
  */
 static void setPos(OBJECT* object, int x, int y) {
-		object->pos.x = x;
-		object->pos.y = y;
+		int diffToCenter = WORLD_SIZE / 2;
+		object->pos.x = diffToCenter + x;
+		object->pos.y = diffToCenter + y;
 }
 
 

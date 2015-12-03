@@ -73,6 +73,7 @@ static void drawObject();
 static void drawStatus();
 static int initImage();
 static void combineWindow(POSITION* myPos);
+static void adjustWindowPosition(POSITION* windowPos, POSITION* pos);
 static void clearWindow();
 
 
@@ -186,7 +187,7 @@ int windowEvent() {
 
 		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
 		while (SDL_PollEvent(&event)) {
-				switch(event.type) { 
+				switch (event.type) { 
 						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
 						 		break;
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
@@ -368,6 +369,15 @@ void drawObject(void) { //オブジェクトの描画
 		SDL_FreeSurface(image_reangle);
 	}
 }
+
+
+static void adjustWindowPosition(POSITION* windowPos, POSITION* pos) {
+		int diffWidth = WINDOW_WIDTH / 2;
+		int diffHeight = WINDOW_HEIGHT / 2;
+		windowPos->x = diffWidth + pos->x;
+		windowPos->y = diffHeight + pos->y;
+}
+
 
 void drawStatus(void){ //ステータスの描画
 		SDL_Rect src_rect;
