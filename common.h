@@ -23,6 +23,9 @@
 #define MAX_ITEM		0x6f
 #define CT_NUM 4
 
+#define MAP_SIZE	10000
+#define WORLD_SIZE 		20000
+
 typedef enum {
 		END_COMMAND = 1
 } COMMANDS;
