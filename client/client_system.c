@@ -12,11 +12,14 @@ PLAYER* myPlayer;
 
 int curObjNum;
 
-static void initPlayer(PLAYER* player);
+static void initObject(OBJECT* object);
+static void initPlayer(PLAYER* player, int num);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
+static void updatePlayer();
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
+static void setPos(OBJECT* object, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
@@ -34,7 +37,7 @@ int initGameSystem(int myId, int playerNum) {
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &object[i];
-				curObj->type = OBJECT_EMPTY;
+				initObject(curObj);
 		}
 		curObjNum = 0;
 
@@ -46,23 +49,41 @@ int initGameSystem(int myId, int playerNum) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
-				curPlayer->num = i;
-				initPlayer(curPlayer);
+				initPlayer(curPlayer, i);
+		}
+
+		// test appearance
+		for (i = 0; i < MAX_OBSTACLE; i++) {
+				OBSTACLE* curObs = &obstacle[i];
+				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
+						return -1;
+				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
+				curObs->verocity.vx = 0;
+				curObs->verocity.vy = 0;
+				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
+				printf("obs x: %d, y: %d\n", curObs->object->pos.x, curObs->object->pos.y);
 		}
 
 		return 0;
 }
 
 
-static void initPlayer(PLAYER* player) {
+static void initObject(OBJECT* object) {
+		object->type = OBJECT_EMPTY;
+		object->id = 0;
+		setPos(object, 0, 0);
+}
+
+
+static void initPlayer(PLAYER* player, int num) {
+		player->num = num;
 		player->item = ITEM_EMPTY;
 		player->dir = PI / 2;
 		player->toDir = player->dir;
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		player->object->pos.x = 3200;
-		player->object->pos.y = 1800;
+		setPos(object, 0, 0);
 }
 
 
@@ -78,7 +99,7 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
-				if (object->type == OBJECT_EMPTY) {
+				if (curObject->type == OBJECT_EMPTY) {
 						curObject->type = type;
 						curObject->typeBuffer = buffer;
 						switch (type) {
@@ -109,6 +130,12 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 
 void updateEvent() {
 		/** Player value change method */
+		updatePlayer();
+
+}
+
+
+static void updatePlayer() {
 		/* プレイヤーの行動 */
 		// MARK
 		switch (myPlayer->action) {
@@ -162,7 +189,6 @@ static void rotateDirection(double sign) {
 		double db = toDir - myPlayer->toDir;
 		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
 				toDir = myPlayer->toDir;
-				printf("fix\n");
 		}
 		// -PI ~ PI 
 		while (toDir > PI) 
@@ -217,6 +243,7 @@ void getItem() {
 						if (hitObject(playerObj, curObj)) {
 								// MARK
 								myPlayer->item = curObj->id;
+								initObject(curObj);
 								break;
 						}
 				}
@@ -289,6 +316,17 @@ void inertialNavigation() {
 #ifndef NDEBUG
 		printf("Inertial navigation.\n");
 #endif
+}
+
+
+/** 
+ * オブジェクト座標設定
+ *	マップの中央を原点
+ */
+static void setPos(OBJECT* object, int x, int y) {
+		int diffToCenter = WORLD_SIZE / 2;
+		object->pos.x = diffToCenter + x;
+		object->pos.y = diffToCenter + y;
 }
 
 
