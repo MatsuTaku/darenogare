@@ -62,6 +62,7 @@ int initGameSystem(int myId, int playerNum) {
 				curObs->verocity.vy = 0;
 				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
 				printf("obs x: %d, y: %d\n", curObs->object->pos.x, curObs->object->pos.y);
+			printf("player x:%d, y: %d\n",myPlayer->object->pos.x, myPlayer->object->pos.y);
 		}
 
 		return 0;
@@ -84,6 +85,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->ver.vy = 0;
 		player->alive = true;
 		setPos(object, 0, 0);
+		printf("%d\n",player->object->pos.x);
 }
 
 
@@ -96,7 +98,6 @@ static void initPlayer(PLAYER* player, int num) {
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		int count = 0;
 		OBJECT* curObject = NULL;
-
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
 				if (curObject->type == OBJECT_EMPTY) {
@@ -106,7 +107,7 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 								case OBJECT_EMPTY:
 										break;
 								case OBJECT_CHARACTER:
-										((PLAYER *)buffer)->object = object;
+										((PLAYER *)buffer)->object = object; printf("a\n");
 										break;
 								case OBJECT_ITEM:
 										((ITEM *)buffer)->object = object;

@@ -12,8 +12,6 @@
 #define WINDOW_WIDTH	960
 #define WINDOW_HEIGHT	540
 
-#define WORLD_WIDTH    12800
-#define WORLD_HEIGHT   7200
 
 #define REACTION_VALUE	0x6fff
 
@@ -74,7 +72,7 @@ static void drawObject();
 static void drawStatus();
 static int initImage();
 static void combineWindow(POSITION* myPos);
-static void adjustWindowPosition(POSITION* windowPos, POSITION* pos);
+static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static int judgeRange(POSITION *objPos, POSITION *myPos);
 static int measureDist(POSITION *objPos, POSITION *myPos);
@@ -91,6 +89,7 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
 		char *s, title[10];
 		myID = clientID;
+		printf("コンパイル %d\n", myPlayer->object->pos.x);
 
 		assert(0<num && num<=MAX_CLIENTS);
 		if (initImage() < 0) {//画像の読み込み
@@ -109,7 +108,7 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 		}
 
 		//WorldWindow
-		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, WINDOW_WIDTH, WINDOW_HEIGHT, 32, 0,0,0,0)) == NULL) {
+		if((gWorldWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, WINDOW_WIDTH, WINDOW_HEIGHT, 32, 0xff000000,0x00ff0000,0x0000ff00,0x000000ff)) == NULL) {
 			printf("failed to initialize worldwindow");
 			return -1;
 
@@ -120,9 +119,6 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 				return -1;
 		}
 
-		//中心を設定
-		center.x = WORLD_WIDTH/2;
-		center.y = WORLD_HEIGHT/2;
 
 		sprintf(title, "%d", clientID);
 		SDL_WM_SetCaption(title,NULL);
@@ -150,6 +146,8 @@ int drawWindow() {	//ゲーム画面の描画
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
+		myPlayer->object->pos.y = 0;
+		myPlayer->object->pos.x = 0;
 		combineWindow(&myPlayer->object->pos); //サーフェスの合体
 
 		SDL_Flip(gMainWindow);//描画更新
@@ -304,7 +302,10 @@ void clearWindow(void){ //ウィンドウのクリア
 	SDL_FillRect(gMainWindow, NULL, 0xffffff);
 
 	//ワールドウィンドウ
-	
+	SDL_FillRect(gWorldWindow, NULL, 0x000000);
+	SDL_SetColorKey(gWorldWindow, SDL_SRCCOLORKEY, SDL_MapRGB(gWorldWindow->format, 0, 0,
+0)); // 黒を透過色に指定
+	gWorldWindow = SDL_DisplayFormat(gWorldWindow);
 
 	//ステータスウィンドウ
 	SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
@@ -328,9 +329,12 @@ void drawObject(void) { //オブジェクトの描画
 	POSITION objPos;
 	src_rect.x = 0;
 	src_rect.y = 0;
+	POSITION* myPos = &myPlayer->object->pos;
+	POSITION diffPos;
 
 	for(i=0; i<MAX_OBJECT; i++){
-	    if(judgeRange(&object[i].pos, &myPlayer->object->pos) > 0){ //表示範囲内にあれば
+	//printf("i = %d  type %d\n", i,object[i].type);
+	    //if(judgeRange(&object[i].pos, myPos) > 0){ //表示範囲内にあれば
 		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
 			chara_id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
@@ -342,8 +346,10 @@ void drawObject(void) { //オブジェクトの描画
 			src_rect.h = image_reangle->h;
 			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
 			int dy = image_reangle->h - src_rect.h;
-			dst_rect.x = object[i].pos.x - (gCharaImage[chara_id]->w /2) - dx/2;
-			dst_rect.y = object[i].pos.y - (gCharaImage[chara_id]->h /2) - dy/2; 
+			diffPos.x = object[i].pos.x - myPos->x - (gCharaImage[chara_id]->w /2) - dx/2;		
+			diffPos.y = object[i].pos.y - myPos->y - (gCharaImage[chara_id]->h /2) - dy/2;		
+			adjustWindowPosition(&dst_rect, &diffPos);
+			//printf("draw chara\n");
 			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
 
@@ -351,22 +357,28 @@ void drawObject(void) { //オブジェクトの描画
 		  	item_id = object[i].id;
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
-			dst_rect.x = object[i].pos.x - gItemImage[item_id]->w/2;
-			dst_rect.y = object[i].pos.y - gItemImage[item_id]->h/2;
+			diffPos.x = object[i].pos.x - gItemImage[item_id]->w/2;
+			diffPos.y = object[i].pos.y - gItemImage[item_id]->h/2;
+			adjustWindowPosition(&dst_rect, &diffPos);
+			printf("draw item\n");
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
 			src_rect.w = ObstacleImage[0]->w;
 			src_rect.h = ObstacleImage[0]->h;
-			dst_rect.x = object[i].pos.x - (ObstacleImage[0]->w /2);
-			dst_rect.y = object[i].pos.y - (ObstacleImage[0]->h /2);
+			diffPos.x = object[i].pos.x - (ObstacleImage[0]->w /2);
+			diffPos.y = object[i].pos.y - (ObstacleImage[0]->h /2);
+			adjustWindowPosition(&dst_rect, &diffPos);
+			//printf("draw obstacle\n");
+			dst_rect.x = 200;
+			dst_rect.y = 200;
 			SDL_BlitSurface(ObstacleImage[0], &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_EMPTY: //なし
 			break;
-		  }
+		//  }
 	    }
 	}
 	if(image_reangle != NULL){
@@ -375,7 +387,7 @@ void drawObject(void) { //オブジェクトの描画
 }
 
 
-static void adjustWindowPosition(POSITION* windowPos, POSITION* pos) {
+static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos) {
 		int diffWidth = WINDOW_WIDTH / 2;
 		int diffHeight = WINDOW_HEIGHT / 2;
 		windowPos->x = diffWidth + pos->x;
@@ -416,27 +428,32 @@ void drawStatus(void){ //ステータスの描画
 
 void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
 		
+		int asp = 100;
 		//背景を貼り付ける
 		Rect ground;
-		ground.src.x = gWorld->w/2 + (myPos->x - center.x)/100 - gMainWindow->w/2;
-		ground.src.y = gWorld->h/2 + (myPos->y - center.y)/100 - gMainWindow->h/2;
-		printf("貼付けx:%d y:%d\n", ground.src.x,ground.src.y);
+		POSITION bgPos;
+		bgPos.x = myPos->x/asp;
+		bgPos.y = myPos->y/asp;
+		int diffWidth = (gWorld->w - WINDOW_WIDTH) / 2;
+		int diffHeight = (gWorld->h - WINDOW_HEIGHT) / 2;
+		ground.src.x = diffWidth + bgPos.x;
+		ground.src.y = diffHeight + bgPos.y;
 		ground.src.w = gMainWindow->w;
 		ground.src.h = gMainWindow->h;
 		ground.dst.x = 0;
 		ground.dst.y = 0;
 		SDL_BlitSurface(gWorld, &ground.src, gMainWindow, &ground.dst);
+
 		//マップを組み合わせる
 		Rect world;
-		world.src.x = myPos->x - (gMainWindow->w/2);
-		world.src.y = myPos->y - (gMainWindow->h/2);
+		world.src.x = 0;
+		world.src.y = 0;
 		world.src.w = WINDOW_WIDTH;
 		world.src.h = WINDOW_HEIGHT;
-		printf("x:%d\ny:%d\n", myPos->x, myPos->y);
-		if(myPos->x > WORLD_WIDTH || myPos->x < 0) printf("gameover\n");
 		world.dst.x = 0;
 		world.dst.y = 0;
 		SDL_BlitSurface(gWorldWindow, &world.src, gMainWindow, &world.dst);
+
 		//ステータスを組み合わせる
 		Rect status;
 		status.src.x = 0;
@@ -463,16 +480,6 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 		}
 		return -1;
 }
-/*
-POSITION measureDist(POSITION *objPos, POSITION *myPos)
-{ //オブジェクトとの距離を測る
-	Pos dst;
-	//相対距離を測る
-	dst.x = myPos->x + (objPos->x - myPos->x)/hiritu;
-	dst.y = myPos->y + (objPos->y - myPos->y)/hiritu;
-	return(dst);
-}
-*/	
 	
 			
 
