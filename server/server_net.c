@@ -87,9 +87,10 @@ int sendRecvManager(void) //ネットワークメインモジュール
 
     for(i=0;i<gClientNum;i++){ //全てのクライアントに対して
 		if(FD_ISSET(gClients[i].fd,&readOK)){ //読み込み可能なFDがあれば
-			recvData(i, &data, sizeof(entityStateSet)); //受信
-			endFlag = executeCommand(i, &data); //コマンド処理
-	    	if(endFlag == 0)break; //終了コマンドが押されたら脱ループ
+			     recvData(i, &data, sizeof(entityStateSet)); //受信
+			     endFlag = executeCommand(i, &data); //コマンド処理
+	    	                 if(endFlag == 0)
+                                    break; //終了コマンドが押されたら脱ループ
 		}
     }
     return endFlag;
@@ -119,16 +120,26 @@ void sendData(int pos,void *data,int dataSize)
     }
 }
 
-
+void terminate_server(void) {//サーバ閉鎖をする関数
+  int i;
+  for (i = 0; i < gClientNum; i++) {
+    close(gClients[i].fd);
+  }
+  fprintf(stderr, "All connections are closed.\n");
+  exit(0);
+}
 
 
 void ending(void)
 {
-    int	i;
+    int i;
 
-    printf("... Connection closed\n");
-    for(i=0;i<gClientNum;i++)close(gClients[i].fd); //クライアントを終了させる
-}
+     printf("... Connection closed\n");
+       for(i=0;i < gClientNum;i++)
+            close(gClients[i].fd); //クライアントを終了させる   
+    
+         
+}  
 
 
 /*****

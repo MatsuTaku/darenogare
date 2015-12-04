@@ -14,22 +14,21 @@ int executeCommand(int pos, entityStateSet* state)
 {
 		assert(0<=pos && pos<MAX_CLIENTS); //送信元が正しいか確認
 		assert(state != NULL);	// データが入っているか
-		int	endFlag = 1; //エンドフラグ（0で終了、非0で継続）
+		
+                int endFlag = 1; //エンドフラグ（0で終了、非0で継続）
 		entityStateSet* setEntity[MAX_CLIENTS];
 
 		setEntity[pos] = state;
 
 #ifndef NDEBUG
-		/*
+	
 		   printf("#####\n");
 		   printf("ExecuteCommand()\n");
-		 */
+		 
 #endif
 
 		if (state->endFlag == 1) {
-				endFlag = 0;
-		} else {
-		}
-
-		return endFlag;
+                    endFlag = 0;
+		} 
+        return endFlag;
 }
