@@ -19,8 +19,8 @@
 
 #define MAX_DATA		200				
 #define MAX_OBJECT		0xff
-#define MAX_OBSTACLE	0x3f
-#define MAX_ITEM		0x6f
+#define MAX_OBSTACLE	0x6f
+#define MAX_ITEM		0x3f
 #define CT_NUM 4
 
 #define MAP_SIZE	10000
