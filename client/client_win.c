@@ -89,7 +89,6 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
 		char *s, title[10];
 		myID = clientID;
-		printf("コンパイル %d\n", myPlayer->object->pos.x);
 
 		assert(0<num && num<=MAX_CLIENTS);
 		if (initImage() < 0) {//画像の読み込み
@@ -146,8 +145,6 @@ int drawWindow() {	//ゲーム画面の描画
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
-		myPlayer->object->pos.y = 0;
-		myPlayer->object->pos.x = 0;
 		combineWindow(&myPlayer->object->pos); //サーフェスの合体
 
 		SDL_Flip(gMainWindow);//描画更新
@@ -333,15 +330,12 @@ void drawObject(void) { //オブジェクトの描画
 	POSITION diffPos;
 
 	for(i=0; i<MAX_OBJECT; i++){
-	//printf("i = %d  type %d\n", i,object[i].type);
-	    //if(judgeRange(&object[i].pos, myPos) > 0){ //表示範囲内にあれば
+	    if(judgeRange(&object[i].pos, myPos) > 0){ //表示範囲内にあれば
 		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
 			chara_id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
 			angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
-			src_rect.x = 0;
-			src_rect.y = 0;
 			src_rect.w = image_reangle->w;
 			src_rect.h = image_reangle->h;
 			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
@@ -349,7 +343,6 @@ void drawObject(void) { //オブジェクトの描画
 			diffPos.x = object[i].pos.x - myPos->x - (gCharaImage[chara_id]->w /2) - dx/2;		
 			diffPos.y = object[i].pos.y - myPos->y - (gCharaImage[chara_id]->h /2) - dy/2;		
 			adjustWindowPosition(&dst_rect, &diffPos);
-			//printf("draw chara\n");
 			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
 
@@ -357,28 +350,24 @@ void drawObject(void) { //オブジェクトの描画
 		  	item_id = object[i].id;
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
-			diffPos.x = object[i].pos.x - gItemImage[item_id]->w/2;
-			diffPos.y = object[i].pos.y - gItemImage[item_id]->h/2;
+			diffPos.x = object[i].pos.x - myPos->x - gItemImage[item_id]->w/2;
+			diffPos.y = object[i].pos.y - myPos->y - gItemImage[item_id]->h/2;
 			adjustWindowPosition(&dst_rect, &diffPos);
-			printf("draw item\n");
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
 			
 		  case OBJECT_OBSTACLE: //障害物
 			src_rect.w = ObstacleImage[0]->w;
 			src_rect.h = ObstacleImage[0]->h;
-			diffPos.x = object[i].pos.x - (ObstacleImage[0]->w /2);
-			diffPos.y = object[i].pos.y - (ObstacleImage[0]->h /2);
+			diffPos.x = object[i].pos.x - myPos->x - (ObstacleImage[0]->w /2);
+			diffPos.y = object[i].pos.y - myPos->y - (ObstacleImage[0]->h /2);
 			adjustWindowPosition(&dst_rect, &diffPos);
-			//printf("draw obstacle\n");
-			dst_rect.x = 200;
-			dst_rect.y = 200;
 			SDL_BlitSurface(ObstacleImage[0], &src_rect, gWorldWindow, &dst_rect);
 			break;
 
 		  case OBJECT_EMPTY: //なし
 			break;
-		//  }
+		  }
 	    }
 	}
 	if(image_reangle != NULL){
@@ -388,8 +377,8 @@ void drawObject(void) { //オブジェクトの描画
 
 
 static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos) {
-		int diffWidth = WINDOW_WIDTH / 2;
-		int diffHeight = WINDOW_HEIGHT / 2;
+		int diffWidth = WINDOW_WIDTH / 2; //y軸の中心
+		int diffHeight = WINDOW_HEIGHT / 2; //x軸の中心
 		windowPos->x = diffWidth + pos->x;
 		windowPos->y = diffHeight + pos->y;
 }
@@ -428,7 +417,7 @@ void drawStatus(void){ //ステータスの描画
 
 void combineWindow(POSITION* myPos){ //各プレイヤーの画面の作成
 		
-		int asp = 100;
+		int asp = 30;
 		//背景を貼り付ける
 		Rect ground;
 		POSITION bgPos;
@@ -474,7 +463,7 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 		if(objPos->x > (myPos->x - range_w)
 			&& objPos->x < (myPos->x + range_w)){ //横
 			if(objPos->y > (myPos->y - range_h)
-				&& objPos->x < (myPos->x + range_h)){ //縦
+				&& objPos->y < (myPos->y + range_h)){ //縦
 				return 1;
 			}
 		}
