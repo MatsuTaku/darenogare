@@ -112,6 +112,7 @@ typedef struct {
 typedef struct {
 		// MARK
 		OBJECT* object;
+		ITEM_NUMBER num;
 } ITEM;
 
 
