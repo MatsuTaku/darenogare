@@ -121,13 +121,13 @@ typedef enum {
 } OBJECT_RANGE;
 
 typedef enum {
-		ITEM_EMPTY		= 0,
+		ITEM_EMPTY      = 0,
 		ITEM_NOIZING	= 1,
-		ITEM_LASER		= 2,
+		ITEM_LASER	= 2,
 		ITEM_MISSILE	= 3,
 		ITEM_MINIMUM	= 4,
 		ITEM_BARRIER	= 5,
-		ITEM_NUM		= 5
+		ITEM_NUM	= 5
 } ITEM_NUMBER ;
 
 
