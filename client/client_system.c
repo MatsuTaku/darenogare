@@ -55,7 +55,7 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		// test appearance
-		for (i = 0; i < MAX_OBSTACLE; i++) {
+		for (i = 0; i < 0x2f; i++) {
 				OBSTACLE* curObs = &obstacle[i];
 				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
 						return -1;
@@ -63,6 +63,12 @@ int initGameSystem(int myId, int playerNum) {
 				curObs->verocity.vx = 0;
 				curObs->verocity.vy = 0;
 				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
+		}
+		for (i = 0; i < 0xf; i++) {
+				ITEM* curItem = &item[i];
+				if (insertObject(curItem, OBJECT_ITEM) == NULL)
+						return -1;
+				curItem->num = rand() % ITEM_NUM;
 		}
 
 		return 0;
