@@ -8,6 +8,7 @@ ASSEMBLY allAssembly;
 OBJECT* object;
 PLAYER* player;
 OBSTACLE* obstacle;
+ITEM* item;
 PLAYER* myPlayer;
 
 int curObjNum;
@@ -36,6 +37,7 @@ int initGameSystem(int myId, int playerNum) {
 		object = allAssembly.object;
 		player = allAssembly.player;
 		obstacle = allAssembly.obstacle;
+		item = allAssembly.item;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &object[i];
@@ -55,20 +57,21 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		// test appearance
-		for (i = 0; i < 0x2f; i++) {
+		for (i = 0; i < MAX_OBSTACLE; i++) {
 				OBSTACLE* curObs = &obstacle[i];
 				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
 						return -1;
 				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
-				curObs->verocity.vx = 0;
-				curObs->verocity.vy = 0;
-				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
+				curObs->ver = rand() % 21;
+				setPos(curObs->object, rand() % WORLD_SIZE - WORLD_SIZE / 2, rand() % WORLD_SIZE - WORLD_SIZE / 2);
 		}
-		for (i = 0; i < 0xf; i++) {
+
+		for (i = 0; i < MAX_ITEM; i++) {
 				ITEM* curItem = &item[i];
 				if (insertObject(curItem, OBJECT_ITEM) == NULL)
 						return -1;
 				curItem->num = rand() % ITEM_NUM;
+				setPos(curItem->object, rand() % MAP_SIZE - MAP_SIZE / 2, rand() % MAP_SIZE - MAP_SIZE / 2);
 		}
 
 		return 0;
@@ -248,7 +251,7 @@ void getItem() {
 				if (curObj->type == OBJECT_ITEM) {
 						if (hitObject(playerObj, curObj)) {
 								// MARK
-								myPlayer->item = curObj->id;
+								myPlayer->item = ((ITEM*)curObj->typeBuffer)->num;
 								initObject(curObj);
 								break;
 						}
