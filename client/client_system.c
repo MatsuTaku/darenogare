@@ -30,6 +30,8 @@ static double getRange(OBJECT* alpha, OBJECT* beta);
  *	return: Error = -1
  */
 int initGameSystem(int myId, int playerNum) {
+		srand((unsigned)time(NULL));
+
 		int i;
 		object = allAssembly.object;
 		player = allAssembly.player;
@@ -53,7 +55,7 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		// test appearance
-		for (i = 0; i < MAX_OBSTACLE; i++) {
+		for (i = 0; i < 0x2f; i++) {
 				OBSTACLE* curObs = &obstacle[i];
 				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
 						return -1;
@@ -61,7 +63,12 @@ int initGameSystem(int myId, int playerNum) {
 				curObs->verocity.vx = 0;
 				curObs->verocity.vy = 0;
 				setPos(curObs->object, rand() % WORLD_SIZE, rand() % WORLD_SIZE);
-				printf("obs x: %d, y: %d\n", curObs->object->pos.x, curObs->object->pos.y);
+		}
+		for (i = 0; i < 0xf; i++) {
+				ITEM* curItem = &item[i];
+				if (insertObject(curItem, OBJECT_ITEM) == NULL)
+						return -1;
+				curItem->num = rand() % ITEM_NUM;
 		}
 
 		return 0;
@@ -83,7 +90,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
-		setPos(object, 0, 0);
+		setPos(player->object, 0, 0);
 }
 
 
@@ -96,7 +103,6 @@ static void initPlayer(PLAYER* player, int num) {
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		int count = 0;
 		OBJECT* curObject = NULL;
-
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
 				if (curObject->type == OBJECT_EMPTY) {
@@ -106,13 +112,13 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 								case OBJECT_EMPTY:
 										break;
 								case OBJECT_CHARACTER:
-										((PLAYER *)buffer)->object = object;
+										((PLAYER *)buffer)->object = curObject;
 										break;
 								case OBJECT_ITEM:
-										((ITEM *)buffer)->object = object;
+										((ITEM *)buffer)->object = curObject;
 										break;
 								case OBJECT_OBSTACLE:
-										((OBSTACLE *)buffer)->object = object;
+										((OBSTACLE *)buffer)->object = curObject;
 										break;
 								default:
 										break;
@@ -324,9 +330,8 @@ void inertialNavigation() {
  *	マップの中央を原点
  */
 static void setPos(OBJECT* object, int x, int y) {
-		int diffToCenter = WORLD_SIZE / 2;
-		object->pos.x = diffToCenter + x;
-		object->pos.y = diffToCenter + y;
+		object->pos.x = x;
+		object->pos.y = y;
 }
 
 
