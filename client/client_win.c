@@ -345,9 +345,8 @@ void drawObject(void) { //オブジェクトの描画
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
-
 		  case OBJECT_ITEM: //アイテム
-		  	item_id = object[i].id;
+		  	item_id = ((ITEM *)object[i].typeBuffer)->num;
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
 			diffPos.x = object[i].pos.x - myPos->x - gItemImage[item_id]->w/2;
@@ -355,7 +354,6 @@ void drawObject(void) { //オブジェクトの描画
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gWorldWindow, &dst_rect);
 			break;
-			
 		  case OBJECT_OBSTACLE: //障害物
 			src_rect.w = ObstacleImage[0]->w;
 			src_rect.h = ObstacleImage[0]->h;
@@ -364,7 +362,6 @@ void drawObject(void) { //オブジェクトの描画
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(ObstacleImage[0], &src_rect, gWorldWindow, &dst_rect);
 			break;
-
 		  case OBJECT_EMPTY: //なし
 			break;
 		  }
@@ -469,12 +466,3 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 		}
 		return -1;
 }
-	
-			
-
-
-
-		
-
-
-
