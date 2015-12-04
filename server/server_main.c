@@ -31,9 +31,8 @@ int main(int argc,char *argv[])
 	while(endFlag){
 		endFlag = sendRecvManager();
 	};
-
-
-	ending();
-
-	return 0;
+	 ending();
+         terminate_server();
+         exit(0);
+        return 0;
 }

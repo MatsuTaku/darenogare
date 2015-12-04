@@ -37,6 +37,7 @@ extern ASSEMBLY allAssembly;
 extern OBJECT* object;
 extern PLAYER* player;
 extern OBSTACLE* obstacle;
+extern ITEM* item;
 extern PLAYER* myPlayer;
 /* client_net.c */
 extern int clientID;

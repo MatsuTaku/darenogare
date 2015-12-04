@@ -59,6 +59,41 @@ typedef struct {
 } VEROCITY;
 
 
+/* OBSTACLE Values */
+typedef struct {
+		OBJECT* object;
+		double angle;
+		double ver;
+} OBSTACLE;
+
+
+/* ITEM Values */
+typedef enum {
+		ITEM_EMPTY      = 0,
+		ITEM_NOIZING	= 1,
+		ITEM_LASER	= 2,
+		ITEM_MISSILE	= 3,
+		ITEM_MINIMUM	= 4,
+		ITEM_BARRIER	= 5,
+		ITEM_NUM	= 5
+} ITEM_NUMBER ;
+
+typedef struct {
+		// MARK
+		OBJECT* object;
+		ITEM_NUMBER num;
+} ITEM;
+
+
+/* Range of objects */
+typedef enum {
+
+		RANGE_CHARACTER = 20,
+		RANGE_ITEM = 15,
+		RANGE_ROCK = 10,
+} OBJECT_RANGE;
+
+
 /* PLAYER Values */
 typedef enum {
 		PLAYER_1 = 0,
@@ -98,42 +133,6 @@ typedef struct {
 		int item;			// 所有アイテム
 		int id;
 } PLAYER;
-
-
-/* OBSTACLE Values */
-typedef struct {
-		OBJECT* object;
-		double angle;
-		VEROCITY verocity;
-} OBSTACLE;
-
-
-/* ITEM Values */
-typedef struct {
-		// MARK
-		OBJECT* object;
-		ITEM_NUMBER num;
-} ITEM;
-
-
-/* Range of objects */
-typedef enum {
-
-		RANGE_CHARACTER = 20,
-		RANGE_ITEM = 15,
-		RANGE_ROCK = 10,
-} OBJECT_RANGE;
-
-typedef enum {
-		ITEM_EMPTY		= 0,
-		ITEM_NOIZING	= 1,
-		ITEM_LASER		= 2,
-		ITEM_MISSILE	= 3,
-		ITEM_MINIMUM	= 4,
-		ITEM_BARRIER	= 5,
-		ITEM_NUM		= 5
-} ITEM_NUMBER;
-
 
 
 
