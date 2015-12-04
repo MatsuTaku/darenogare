@@ -7,11 +7,8 @@
 #include "client_common.h"
 #include "client_func.h"
 
-
-
 #define WINDOW_WIDTH	960
 #define WINDOW_HEIGHT	540
-
 
 #define REACTION_VALUE	0x6fff
 
@@ -76,7 +73,6 @@ static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static int judgeRange(POSITION *objPos, POSITION *myPos);
 static int measureDist(POSITION *objPos, POSITION *myPos);
-
 
 
 typedef struct {
@@ -234,7 +230,7 @@ int windowEvent() {
 		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
 				rotateTo(xValue, yValue);
 #ifndef NDEBUG
-				printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+				// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
 		} else
 				fixRotation();

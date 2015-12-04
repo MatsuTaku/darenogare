@@ -63,7 +63,10 @@ int initGameSystem(int myId, int playerNum) {
 						return -1;
 				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
 				curObs->ver = rand() % 21;
-				setPos(curObs->object, rand() % WORLD_SIZE - WORLD_SIZE / 2, rand() % WORLD_SIZE - WORLD_SIZE / 2);
+				setPos(curObs->object, 
+				rand() % WORLD_SIZE - WORLD_SIZE / 2, 
+				rand() % WORLD_SIZE - WORLD_SIZE / 2
+				);
 		}
 
 		for (i = 0; i < MAX_ITEM; i++) {
@@ -71,7 +74,10 @@ int initGameSystem(int myId, int playerNum) {
 				if (insertObject(curItem, OBJECT_ITEM) == NULL)
 						return -1;
 				curItem->num = rand() % ITEM_NUM;
-				setPos(curItem->object, rand() % MAP_SIZE - MAP_SIZE / 2, rand() % MAP_SIZE - MAP_SIZE / 2);
+				setPos(curItem->object, 
+				rand() % MAP_SIZE - MAP_SIZE / 2, 
+				rand() % MAP_SIZE - MAP_SIZE / 2
+				);
 		}
 
 		return 0;
@@ -141,6 +147,26 @@ void updateEvent() {
 		/** Player value change method */
 		updatePlayer();
 
+		int i;
+		for (i = 0; i < MAX_OBJECT; i++) {
+				OBJECT* curObject = &object[i];
+				if (curObject->type != OBJECT_EMPTY) {
+						switch (curObject->type) {
+								case OBJECT_OBSTACLE:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->alive = false;
+												initObject(curObject);
+										}
+								case OBJECT_ITEM:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
+												initObject(curObject);
+										}
+								default:
+										break;
+						}
+		 		}
+		}
 }
 
 
@@ -380,5 +406,5 @@ static double getObjectSize(OBJECT* object) {
  *	return: 距離の2乗
  */
 static double getRange(OBJECT* alpha, OBJECT* beta) {
-		return pow(alpha->pos.x - beta->pos.x, 2) + pow(alpha->pos.y - beta->pos.y, 2);
+		return pow(beta->pos.x - alpha->pos.x, 2) + pow(beta->pos.y - alpha->pos.y, 2);
 }
