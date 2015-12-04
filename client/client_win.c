@@ -3,6 +3,7 @@
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
+#include <math.h>
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
@@ -336,12 +337,10 @@ void drawObject(void) { //オブジェクトの描画
 			chara_id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
 			angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
 			image_reangle = rotozoomSurface(gCharaImage[chara_id], angle, 1.0, 1); //角度の変更
-			src_rect.w = image_reangle->w;
-			src_rect.h = image_reangle->h;
-			int dx = image_reangle->w - src_rect.w; //回転によるずれの調整差分
-			int dy = image_reangle->h - src_rect.h;
-			diffPos.x = object[i].pos.x - myPos->x - (gCharaImage[chara_id]->w /2) - dx/2;		
-			diffPos.y = object[i].pos.y - myPos->y - (gCharaImage[chara_id]->h /2) - dy/2;		
+			int dx = image_reangle->w - gCharaImage[chara_id]->w; //回転によるずれの調整差分
+			int dy = image_reangle->h - gCharaImage[chara_id]->h;
+			diffPos.x = object[i].pos.x - myPos->x - (gCharaImage[chara_id]->w /2) - dx/2;
+			diffPos.y = object[i].pos.y - myPos->y - (gCharaImage[chara_id]->h /2) - dy/2;
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(image_reangle, &src_rect, gWorldWindow, &dst_rect);
 			break;
@@ -368,7 +367,13 @@ void drawObject(void) { //オブジェクトの描画
 		  case OBJECT_EMPTY: //なし
 			break;
 		  }
-	    }
+	    } /*else if(object[i].type == OBJECT_CHARACTER){
+		  double x,y;
+		  x = object[i].pos.x - myPos->x;
+		  y = object[i].pos.y - mypos->y;
+		  double angle = atan2(y,x); //角度を求める
+		  
+		  object[i]*/
 	}
 	if(image_reangle != NULL){
 		SDL_FreeSurface(image_reangle);

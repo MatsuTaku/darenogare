@@ -132,7 +132,8 @@ typedef enum {
 		ITEM_MINIMUM	= 4,
 		ITEM_BARRIER	= 5,
 		ITEM_NUM		= 5
-} ITEM_NUMBER ;
+} ITEM_NUMBER;
+
 
 
 
