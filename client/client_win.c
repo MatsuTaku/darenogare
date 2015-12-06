@@ -8,11 +8,10 @@
 #include "client_common.h"
 #include "client_func.h"
 
-
-
-#define WINDOW_WIDTH	960
-#define WINDOW_HEIGHT	540
-
+//#define WINDOW_WIDTH	960
+//#define WINDOW_HEIGHT	540
+#define WINDOW_WIDTH	1280
+#define WINDOW_HEIGHT	720
 
 #define REACTION_VALUE	0x6fff
 
@@ -84,7 +83,6 @@ static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static int judgeRange(POSITION *objPos, POSITION *myPos);
 static int measureDist(POSITION *objPos, POSITION *myPos);
-
 
 
 typedef struct {
@@ -234,7 +232,7 @@ int windowEvent() {
 		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
 				rotateTo(xValue, yValue);
 #ifndef NDEBUG
-				printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+				// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
 		} else
 				fixRotation();
@@ -382,9 +380,8 @@ chara = SDL_DisplayFormat(chara);
 			dst_rect.y = 0;
 			SDL_BlitSurface(chara, &chara_rect, gMainWindow, &dst_rect);
 			break;
-
 		  case OBJECT_ITEM: //アイテム
-		  	item_id = object[i].id;
+		  	item_id = ((ITEM *)object[i].typeBuffer)->num;
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
 			diffPos.x = object[i].pos.x - myPos->x - gItemImage[item_id]->w/2;
@@ -392,7 +389,6 @@ chara = SDL_DisplayFormat(chara);
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gMainWindow, &dst_rect);
 			break;
-			
 		  case OBJECT_OBSTACLE: //障害物
 			src_rect.w = ObstacleImage[0]->w;
 			src_rect.h = ObstacleImage[0]->h;
@@ -401,7 +397,6 @@ chara = SDL_DisplayFormat(chara);
 			adjustWindowPosition(&dst_rect, &diffPos);
 			SDL_BlitSurface(ObstacleImage[0], &src_rect, gMainWindow, &dst_rect);
 			break;
-
 		  case OBJECT_EMPTY: //なし
 			break;
 		  }
@@ -499,12 +494,3 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 		}
 		return -1;
 }
-	
-			
-
-
-
-		
-
-
-

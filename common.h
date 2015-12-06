@@ -35,7 +35,8 @@ typedef enum {
 		OBJECT_EMPTY,
 		OBJECT_CHARACTER,
 		OBJECT_ITEM,
-		OBJECT_OBSTACLE
+		OBJECT_OBSTACLE,
+		OBJECT_NUM
 } OBJECT_TYPE;
 
 
@@ -87,10 +88,9 @@ typedef struct {
 
 /* Range of objects */
 typedef enum {
-
-		RANGE_CHARACTER = 20,
-		RANGE_ITEM = 15,
-		RANGE_ROCK = 10,
+		RANGE_CHARACTER = 40,
+		RANGE_ITEM = 25,
+		RANGE_ROCK = 15,
 } OBJECT_RANGE;
 
 
@@ -140,8 +140,8 @@ typedef struct {
 typedef struct {
 		OBJECT object[MAX_OBJECT];
 		PLAYER player[MAX_CLIENTS];
-		OBSTACLE obstacle[MAX_OBSTACLE];
-		ITEM item[MAX_ITEM];
+// 		OBSTACLE obstacle[MAX_OBSTACLE];
+//		ITEM item[MAX_ITEM];
 } ASSEMBLY;
 
 

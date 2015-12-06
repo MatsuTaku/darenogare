@@ -9,6 +9,8 @@
 #define HALF_DEGRESS	180	
 #define ANGULAR_VEROCITY	360	// 角速度
 #define ACCELE_GO	40		// 加速度
+#define MAXIMUM_SPEED	25
+#define MAXIMUM_SPEED_OBSTACLE	20
 #define ACCELE_BRAKE	-30	// 減速度
 // #define RESISTANCE		-0	// 抵抗
 
@@ -36,8 +38,6 @@ extern mapData MAP;
 extern ASSEMBLY allAssembly;
 extern OBJECT* object;
 extern PLAYER* player;
-extern OBSTACLE* obstacle;
-extern ITEM* item;
 extern PLAYER* myPlayer;
 /* client_net.c */
 extern int clientID;
