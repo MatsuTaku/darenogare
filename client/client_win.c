@@ -7,8 +7,10 @@
 #include "client_common.h"
 #include "client_func.h"
 
-#define WINDOW_WIDTH	960
-#define WINDOW_HEIGHT	540
+//#define WINDOW_WIDTH	960
+//#define WINDOW_HEIGHT	540
+#define WINDOW_WIDTH	1280
+#define WINDOW_HEIGHT	720
 
 #define REACTION_VALUE	0x6fff
 

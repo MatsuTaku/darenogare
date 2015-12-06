@@ -35,7 +35,8 @@ typedef enum {
 		OBJECT_EMPTY,
 		OBJECT_CHARACTER,
 		OBJECT_ITEM,
-		OBJECT_OBSTACLE
+		OBJECT_OBSTACLE,
+		OBJECT_NUM
 } OBJECT_TYPE;
 
 
@@ -139,8 +140,8 @@ typedef struct {
 typedef struct {
 		OBJECT object[MAX_OBJECT];
 		PLAYER player[MAX_CLIENTS];
-		OBSTACLE obstacle[MAX_OBSTACLE];
-		ITEM item[MAX_ITEM];
+// 		OBSTACLE obstacle[MAX_OBSTACLE];
+//		ITEM item[MAX_ITEM];
 } ASSEMBLY;
 
 

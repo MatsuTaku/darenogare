@@ -7,14 +7,14 @@
 ASSEMBLY allAssembly;
 OBJECT* object;
 PLAYER* player;
-OBSTACLE* obstacle;
-ITEM* item;
 PLAYER* myPlayer;
+static int curObjNum;
 
-int curObjNum;
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
+static bool insertObstacle(double angle, double ver, POSITION* pos);
+static bool insertItem(int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void updatePlayer();
 static void rotateDirection(double sign);
@@ -36,8 +36,6 @@ int initGameSystem(int myId, int playerNum) {
 		int i;
 		object = allAssembly.object;
 		player = allAssembly.player;
-		obstacle = allAssembly.obstacle;
-		item = allAssembly.item;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObj = &object[i];
@@ -58,26 +56,28 @@ int initGameSystem(int myId, int playerNum) {
 
 		// test appearance
 		for (i = 0; i < MAX_OBSTACLE; i++) {
-				OBSTACLE* curObs = &obstacle[i];
-				if (insertObject(curObs, OBJECT_OBSTACLE) == NULL)
+				double angle = rand() % (int)(PI * 10000) / 10000 - PI;
+				double ver = rand() % MAXIMUM_SPEED + 1;
+				POSITION pos = {
+						rand() % MAP_SIZE - MAP_SIZE / 2,
+						rand() % MAP_SIZE - MAP_SIZE / 2
+				};
+				if (!insertObstacle(angle, ver, &pos)) {
+						fprintf(stderr, "Failed to insert obstacle\n");
 						return -1;
-				curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
-				curObs->ver = rand() % 21;
-				setPos(curObs->object, 
-				rand() % WORLD_SIZE - WORLD_SIZE / 2, 
-				rand() % WORLD_SIZE - WORLD_SIZE / 2
-				);
+				}
 		}
 
 		for (i = 0; i < MAX_ITEM; i++) {
-				ITEM* curItem = &item[i];
-				if (insertObject(curItem, OBJECT_ITEM) == NULL)
+				int num = rand() % ITEM_NUM;
+				POSITION pos = {
+						rand() % MAP_SIZE - MAP_SIZE / 2,
+						rand() % MAP_SIZE - MAP_SIZE / 2
+				};
+				if (!insertItem(num, &pos)) {
+						fprintf(stderr, "Failed to insert item\n");
 						return -1;
-				curItem->num = rand() % ITEM_NUM;
-				setPos(curItem->object, 
-				rand() % MAP_SIZE - MAP_SIZE / 2, 
-				rand() % MAP_SIZE - MAP_SIZE / 2
-				);
+				}
 		}
 
 		return 0;
@@ -103,6 +103,39 @@ static void initPlayer(PLAYER* player, int num) {
 }
 
 
+static bool insertObstacle(double angle, double ver, POSITION* pos) {
+		OBSTACLE* curObs;
+		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
+				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
+				exit(1);
+		}
+		if (insertObject(curObs, OBJECT_OBSTACLE) == NULL) {
+				fprintf(stderr, "Failed to insert object\n");
+				return false;
+		}
+		curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
+		curObs->ver = rand() % MAXIMUM_SPEED_OBSTACLE;
+		setPos(curObs->object, pos->x, pos->y);
+		return true;
+}
+
+
+static bool insertItem(int num, POSITION* pos) {
+		ITEM* item;
+		if ((item = malloc(sizeof(ITEM))) == NULL) {
+				fprintf(stderr, "Out of memory! Failed to insert item.\n");
+				exit(1);
+		}
+		if (insertObject(item, OBJECT_ITEM) == NULL) {
+				fprintf(stderr, "Failed to insert object\n");
+				return false;
+		}
+		item->num = num;
+		setPos(item->object, pos->x, pos->y);
+		return true;
+}
+
+
 /**
  * オブジェクトの挿入
  * input1: オブジェクト内容バッファ
@@ -110,8 +143,11 @@ static void initPlayer(PLAYER* player, int num) {
  * return: オブジェクトのポインタ(error = NULL)
  */
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
+		assert(buffer != NULL);
+		assert(type >= 0);
+		assert(type < OBJECT_NUM);
 		int count = 0;
-		OBJECT* curObject = NULL;
+		OBJECT* curObject;
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
 				if (curObject->type == OBJECT_EMPTY) {
@@ -245,9 +281,14 @@ static void accelerateVerocity(double accel) {
 		double direction = myPlayer->dir;
 		myPlayer->ver.vx += accel * cos(direction) / FPS;
 		myPlayer->ver.vy += accel * -sin(direction) / FPS;
+		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
+		if (v > pow(MAXIMUM_SPEED, 2)) {
+				double dv = sqrt(pow(MAXIMUM_SPEED, 2) / v);
+				myPlayer->ver.vx *= dv;
+				myPlayer->ver.vy *= dv;
+		}
 #ifndef NDEBUG
-		double v = sqrt(pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2));
-		printf("plyaer verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", v, myPlayer->ver.vx, myPlayer->ver.vy);
+		printf("plyaer verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
 #endif
 }
 
