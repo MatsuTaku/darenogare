@@ -10,7 +10,6 @@ PLAYER* player;
 PLAYER* myPlayer;
 static int curObjNum;
 
-
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
 static bool insertObstacle(double angle, double ver, POSITION* pos);
@@ -84,6 +83,10 @@ int initGameSystem(int myId, int playerNum) {
 }
 
 
+/** 
+ * オブジェクトの挿入
+ * input1: オブジェクトバッファ
+ */
 static void initObject(OBJECT* object) {
 		object->type = OBJECT_EMPTY;
 		object->id = 0;
@@ -91,6 +94,11 @@ static void initObject(OBJECT* object) {
 }
 
 
+/**
+ * プレイヤー初期化
+ * input1: プレイヤーポインタ
+ * input2: プレイヤーID
+ */
 static void initPlayer(PLAYER* player, int num) {
 		player->num = num;
 		player->item = ITEM_EMPTY;
@@ -103,6 +111,13 @@ static void initPlayer(PLAYER* player, int num) {
 }
 
 
+/**
+ * 障害物の挿入
+ * input1: 角度
+ * input2: 速度
+ * input3: ポジション
+ * return: 成功・失敗
+ */
 static bool insertObstacle(double angle, double ver, POSITION* pos) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
@@ -120,6 +135,12 @@ static bool insertObstacle(double angle, double ver, POSITION* pos) {
 }
 
 
+/**
+ * アイテムの挿入
+ * input1: アイテム番号
+ * input2: ポジション
+ * return: 成功・失敗
+ */
 static bool insertItem(int num, POSITION* pos) {
 		ITEM* item;
 		if ((item = malloc(sizeof(ITEM))) == NULL) {
@@ -179,6 +200,9 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 }
 
 
+/**
+ * システムの計算処理
+ */
 void updateEvent() {
 		/** Player value change method */
 		updatePlayer();
@@ -206,6 +230,9 @@ void updateEvent() {
 }
 
 
+/**
+ * プレイヤーデータの計算
+ */
 static void updatePlayer() {
 		/* プレイヤーの行動 */
 		// MARK
@@ -357,14 +384,17 @@ void rotateTo(int x, int y) {
 }
 
 
+// 左旋回
 void rotateLeft() {
 		myPlayer->rotate = ROTATE_LEFT;
 }
 
+// 右旋回
 void rotateRight() {
 		myPlayer->rotate = ROTATE_RIGHT;
 }
 
+// 慣性航行
 void fixRotation() {
 		myPlayer->rotate = ROTATE_NEUTRAL;
 }
