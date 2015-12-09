@@ -9,8 +9,8 @@
 #define HALF_DEGRESS	180	
 #define ANGULAR_VEROCITY	360	// 角速度
 #define ACCELE_GO	40		// 加速度
-#define MAXIMUM_SPEED	25
-#define MAXIMUM_SPEED_OBSTACLE	20
+#define MAXIMUM_SPEED	75
+#define MAXIMUM_SPEED_OBSTACLE	50
 #define ACCELE_BRAKE	-30	// 減速度
 // #define RESISTANCE		-0	// 抵抗
 
