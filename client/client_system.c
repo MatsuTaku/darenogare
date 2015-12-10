@@ -376,7 +376,7 @@ static void rotateDirection(double sign) {
 static void accelerateVerocity(double accel) {
 		double direction = myPlayer->dir;
 		myPlayer->ver.vx += accel * cos(direction) / FPS;
-		myPlayer->ver.vy += accel * -sin(direction) / FPS;
+		myPlayer->ver.vy -= accel * sin(direction) / FPS;
 		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
 		if (v > pow(MAXIMUM_SPEED, 2)) {
 				double av = MAXIMUM_SPEED / sqrt(v);
@@ -394,8 +394,8 @@ static void accelerateVerocity(double accel) {
  */
 static void setPlayerPosition() {
 		POSITION* pos = &(myPlayer->object->pos);
-		pos->x += myPlayer->ver.vx;
-		pos->y += myPlayer->ver.vy;
+		pos->x += myPlayer->ver.vx / FPS;
+		pos->y += myPlayer->ver.vy / FPS;
 #ifndef NDEBUG
 		// printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
 #endif

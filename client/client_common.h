@@ -8,10 +8,10 @@
 #define PI				3.14159265
 #define HALF_DEGRESS	180	
 #define ANGULAR_VEROCITY	360	// 角速度
-#define ACCELE_GO	140		// 加速度
-#define ACCELE_BRAKE	-100	// 減速度
-#define MAXIMUM_SPEED	40
-#define MAXIMUM_SPEED_OBSTACLE	60
+#define ACCELE_GO	500		// 加速度
+#define ACCELE_BRAKE	-400	// 減速度
+#define MAXIMUM_SPEED	2000
+#define MAXIMUM_SPEED_OBSTACLE	500
 // #define RESISTANCE		-0	// 抵抗
 
 
