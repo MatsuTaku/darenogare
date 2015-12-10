@@ -29,7 +29,7 @@ int executeCommand(int pos, entityStateSet* state)
                  */ 
 #endif
 
-		if (state->endFlag == 0) {
+		if (state->endFlag == 1) {
                     endFlag = 0;
 		}
         return endFlag;
