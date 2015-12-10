@@ -21,7 +21,7 @@ int executeCommand(int command)
 		switch(command){
 		case END_COMMAND:
 		    endFlag = 0;
-                Se
+                
 		    break;
 		default:	
 		    break;
