@@ -10,13 +10,16 @@ PLAYER* player;
 PLAYER* myPlayer;
 static int curObjNum;
 
-
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
-static bool insertObstacle(double angle, double ver, POSITION* pos);
+static void initObstacle(OBSTACLE* obstacle);
+static bool generateObstacle();
 static bool insertItem(int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void updatePlayer();
+static void updateObject();
+static void updateObstacle(OBSTACLE* obstacle);
+static void colligionDetection();
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
@@ -24,6 +27,7 @@ static void setPos(OBJECT* object, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
+static bool judgeSafety(POSITION* pos);
 
 
 /**
@@ -56,13 +60,7 @@ int initGameSystem(int myId, int playerNum) {
 
 		// test appearance
 		for (i = 0; i < MAX_OBSTACLE; i++) {
-				double angle = rand() % (int)(PI * 10000) / 10000 - PI;
-				double ver = rand() % MAXIMUM_SPEED + 1;
-				POSITION pos = {
-						rand() % MAP_SIZE - MAP_SIZE / 2,
-						rand() % MAP_SIZE - MAP_SIZE / 2
-				};
-				if (!insertObstacle(angle, ver, &pos)) {
+				if (!generateObstacle()) {
 						fprintf(stderr, "Failed to insert obstacle\n");
 						return -1;
 				}
@@ -84,6 +82,10 @@ int initGameSystem(int myId, int playerNum) {
 }
 
 
+/** 
+ * オブジェクトの挿入
+ * input1: オブジェクトバッファ
+ */
 static void initObject(OBJECT* object) {
 		object->type = OBJECT_EMPTY;
 		object->id = 0;
@@ -91,6 +93,11 @@ static void initObject(OBJECT* object) {
 }
 
 
+/**
+ * プレイヤー初期化
+ * input1: プレイヤーポインタ
+ * input2: プレイヤーID
+ */
 static void initPlayer(PLAYER* player, int num) {
 		player->num = num;
 		player->item = ITEM_EMPTY;
@@ -103,7 +110,38 @@ static void initPlayer(PLAYER* player, int num) {
 }
 
 
-static bool insertObstacle(double angle, double ver, POSITION* pos) {
+static void initObstacle(OBSTACLE* obstacle) {
+		double angle = rand() % (int)(2 * PI * 10000) / 10000 - PI;
+		obstacle->angle = angle;
+		//obstacle->ver = rand() % MAXIMUM_SPEED_OBSTACLE + 1;
+		obstacle->ver = MAXIMUM_SPEED_OBSTACLE;
+
+		/* マップ内に目標点をランダムに設定。
+		 * その座標に向かうように初期点をワールドの端に設定する。
+		 * ワールドは円形。
+		 */
+		// double r = WORLD_SIZE;
+		double r = MAP_SIZE;
+		double a = sin(angle) / cos(angle);
+		int toX, toY;
+		do {
+				toX = rand() % MAP_SIZE - MAP_SIZE / 2;
+				toY = rand() % MAP_SIZE - MAP_SIZE / 2;
+		} while (pow(toX, 2) + pow(toY, 2) > pow(MAP_SIZE, 2));
+		double b = toY - a * toX;
+		double x, y;
+		x =	(-(a * b) + (cos(angle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2)))
+			 / (pow(a, 2) + 1);
+		y = (sin(angle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2)); 
+		setPos(obstacle->object, x, y);
+}
+
+
+/**
+ * 障害物の挿入
+ * return: 成功・失敗
+ */
+static bool generateObstacle() {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
@@ -113,13 +151,17 @@ static bool insertObstacle(double angle, double ver, POSITION* pos) {
 				fprintf(stderr, "Failed to insert object\n");
 				return false;
 		}
-		curObs->angle = rand() % (int)(PI * 10000) / 10000 - PI;
-		curObs->ver = rand() % MAXIMUM_SPEED_OBSTACLE;
-		setPos(curObs->object, pos->x, pos->y);
+		initObstacle(curObs);
 		return true;
 }
 
 
+/**
+ * アイテムの挿入
+ * input1: アイテム番号
+ * input2: ポジション
+ * return: 成功・失敗
+ */
 static bool insertItem(int num, POSITION* pos) {
 		ITEM* item;
 		if ((item = malloc(sizeof(ITEM))) == NULL) {
@@ -179,33 +221,22 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 }
 
 
+/**
+ * システムの計算処理
+ */
 void updateEvent() {
 		/** Player value change method */
 		updatePlayer();
 
-		int i;
-		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObject = &object[i];
-				if (curObject->type != OBJECT_EMPTY) {
-						switch (curObject->type) {
-								case OBJECT_OBSTACLE:
-										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->alive = false;
-												initObject(curObject);
-										}
-								case OBJECT_ITEM:
-										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
-												initObject(curObject);
-										}
-								default:
-										break;
-						}
-		 		}
-		}
+		updateObject();
+
+		colligionDetection();
 }
 
 
+/**
+ * プレイヤーデータの計算
+ */
 static void updatePlayer() {
 		/* プレイヤーの行動 */
 		// MARK
@@ -251,6 +282,71 @@ static void updatePlayer() {
 
 
 /**
+ * オブジェクトデータ更新
+ */
+static void updateObject() {
+		int i;
+		for (i = 0; i < MAX_OBJECT; i++) {
+				OBJECT* curObject = &object[i];
+				if (curObject->type != OBJECT_EMPTY) {
+						switch (curObject->type) {
+								case OBJECT_EMPTY:
+										break;
+								case OBJECT_CHARACTER:
+										break;
+								case OBJECT_OBSTACLE:
+										updateObstacle((OBSTACLE *)curObject->typeBuffer);
+										break;
+								case OBJECT_ITEM:
+										break;
+								default:
+										break;
+						}
+				}
+		}
+}
+
+
+/**
+ * 障害物データ更新
+ */
+static void updateObstacle(OBSTACLE* obstacle) {
+		double ver = obstacle->ver;
+		double angle = obstacle->angle;
+		POSITION* pos = &obstacle->object->pos;
+		pos->x += ver * cos(angle) / FPS;
+		pos->y += ver * sin(angle) / FPS;
+}
+
+
+/**
+ * 当たり判定と処理
+ */
+static void colligionDetection() {
+		int i;
+		for (i = 0; i < MAX_OBJECT; i++) {
+				OBJECT* curObject = &object[i];
+				if (curObject->type != OBJECT_EMPTY) {
+						switch (curObject->type) {
+								case OBJECT_OBSTACLE:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->alive = false;
+												initObject(curObject);
+										}
+								case OBJECT_ITEM:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
+												initObject(curObject);
+										}
+								default:
+										break;
+						}
+				}
+		}
+}
+
+
+/**
  * 機体を旋回
  * input: 単位角速度
  */
@@ -283,12 +379,12 @@ static void accelerateVerocity(double accel) {
 		myPlayer->ver.vy += accel * -sin(direction) / FPS;
 		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
 		if (v > pow(MAXIMUM_SPEED, 2)) {
-				double dv = sqrt(pow(MAXIMUM_SPEED, 2) / v);
-				myPlayer->ver.vx *= dv;
-				myPlayer->ver.vy *= dv;
+				double av = MAXIMUM_SPEED / sqrt(v);
+				myPlayer->ver.vx *= av;
+				myPlayer->ver.vy *= av;
 		}
 #ifndef NDEBUG
-		printf("plyaer verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
+		printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
 #endif
 }
 
@@ -357,14 +453,17 @@ void rotateTo(int x, int y) {
 }
 
 
+// 左旋回
 void rotateLeft() {
 		myPlayer->rotate = ROTATE_LEFT;
 }
 
+// 右旋回
 void rotateRight() {
 		myPlayer->rotate = ROTATE_RIGHT;
 }
 
+// 慣性航行
 void fixRotation() {
 		myPlayer->rotate = ROTATE_NEUTRAL;
 }
@@ -448,4 +547,14 @@ static double getObjectSize(OBJECT* object) {
  */
 static double getRange(OBJECT* alpha, OBJECT* beta) {
 		return pow(beta->pos.x - alpha->pos.x, 2) + pow(beta->pos.y - alpha->pos.y, 2);
+}
+
+
+/**
+ * 安全圏内にいるかどうか
+ * input: ポジション
+ * return: 可否
+ */
+static bool judgeSafety(POSITION* pos) {
+		return pow(pos->x, 2) + pow(pos->y, 2) < pow(MAP_SIZE, 2);
 }
