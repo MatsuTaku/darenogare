@@ -54,18 +54,30 @@ int main(int argc,char *argv[])
 
 
 		/* メインループ */
-		Uint32 loopInterval = 1000 / FPS;
+		// 1000とFPSの最小公倍数を基準に分数で計算
+		int ms = 1000;
+		int a = ms, b = FPS, tmp;
+		int r = a % b;
+		while(r != 0) {
+				a = b;
+				b = r;
+				r = a % b;
+		}
+		double gcd = ms * FPS / b;
+		printf("gcd = %f\n", gcd);
+		Uint32 loopInterval = ms / b;
+		int timeRate = FPS / b;
 		Uint32 startTime, endTime, toTime;
 		while((endFlag = windowEvent()) != 0){
-				startTime = SDL_GetTicks();
-				toTime = startTime + loopInterval;
+				startTime = SDL_GetTicks() * timeRate;
+				toTime = startTime * timeRate + loopInterval;
 				timerEvent(++frame);
-				endTime = SDL_GetTicks();
+				endTime = SDL_GetTicks() * timeRate;
 				if (endTime < toTime) {
-						SDL_Delay(toTime - endTime);
+						SDL_Delay((toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				// printf("FPS: %d\n", 1000 / (endTime - startTime));
+				printf("FPS: %d\n", (int)(gcd / (endTime - startTime)));
 #endif
 		};
 	
