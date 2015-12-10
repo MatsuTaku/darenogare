@@ -316,7 +316,6 @@ static void updateObstacle(OBSTACLE* obstacle) {
 		POSITION* pos = &obstacle->object->pos;
 		pos->x += ver * cos(angle) / FPS;
 		pos->y += ver * sin(angle) / FPS;
-		printf("pos x: %d, y: %d\n", pos->x, pos->y);
 }
 
 
@@ -380,12 +379,12 @@ static void accelerateVerocity(double accel) {
 		myPlayer->ver.vy += accel * -sin(direction) / FPS;
 		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
 		if (v > pow(MAXIMUM_SPEED, 2)) {
-				double dv = sqrt(pow(MAXIMUM_SPEED, 2) / v);
-				myPlayer->ver.vx *= dv;
-				myPlayer->ver.vy *= dv;
+				double av = MAXIMUM_SPEED / sqrt(v);
+				myPlayer->ver.vx *= av;
+				myPlayer->ver.vy *= av;
 		}
 #ifndef NDEBUG
-		// printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
+		printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
 #endif
 }
 
