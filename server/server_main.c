@@ -32,7 +32,7 @@ int main(int argc,char *argv[])
 		endFlag = sendRecvManager();
 	};
 	 ending();
-         terminate_server();
+ 
          exit(0);
         return 0;
 }

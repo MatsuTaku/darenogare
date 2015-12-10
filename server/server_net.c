@@ -71,7 +71,8 @@ int setUpServer(int num)//サーバの立ち上げ
     return 0;
 }
 
-int sendRecvManager(void) //ネットワークメインモジュール
+int sendRecvManager(void) //サーバーから送られてきたデータを処理する
+
 {
 
     fd_set	readOK;
@@ -89,10 +90,13 @@ int sendRecvManager(void) //ネットワークメインモジュール
 		if(FD_ISSET(gClients[i].fd,&readOK)){ //読み込み可能なFDがあれば
 			     recvData(i, &data, sizeof(entityStateSet)); //受信
 			     endFlag = executeCommand(i, &data); //コマンド処理
-	    	                 if(endFlag == 0)
-                                    break; //終了コマンドが押されたら脱ループ
-		}
+	    	                 if(endFlag == 0){
+                                     printf("終了コマンドが押されました.");
+                                        break; //終了コマンドが押されたら脱ループ
+		                 }
+                }                
     }
+
     return endFlag;
 }
 
@@ -120,7 +124,8 @@ void sendData(int pos,void *data,int dataSize)
     }
 }
 
-void terminate_server(void) {//サーバ閉鎖をする関数
+void terminate_server(void)
+ {//サーバ閉鎖をする関数
   int i;
   for (i = 0; i < gClientNum; i++) {
     close(gClients[i].fd);
@@ -196,7 +201,7 @@ static void sendAllName(void)
 	}
 }
 
-static int recvData(int pos,void *data,int dataSize)
+static int recvData(int pos,void *data,int dataSize)// クライアントからデータを受け取る
 {
     int n;
     
