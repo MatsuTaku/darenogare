@@ -16,7 +16,7 @@ int main(int argc,char *argv[])
 		char	localHostName[]="localhost";
 		char	*serverName;
 
-		int		frame;
+		int		frame = -1;
 
 		SDL_Thread* networkThread;
 		SDL_TimerID drawTimer;
@@ -55,16 +55,18 @@ int main(int argc,char *argv[])
 
 		/* メインループ */
 		Uint32 loopInterval = 1000 / FPS;
-		Uint32 nowTime;
-		Uint32 toTime = SDL_GetTicks() + loopInterval;
-		while(endFlag){
-				endFlag = windowEvent();
-				if(endFlag == 0) break;
-				nowTime = SDL_GetTicks();
-				if (nowTime >= toTime) {
-						timerEvent(frame++);
-						toTime = nowTime + loopInterval;
+		Uint32 startTime, endTime, toTime;
+		while((endFlag = windowEvent()) != 0){
+				startTime = SDL_GetTicks();
+				toTime = startTime + loopInterval;
+				timerEvent(++frame);
+				endTime = SDL_GetTicks();
+				if (endTime < toTime) {
+						SDL_Delay(toTime - endTime);
 				}
+#ifndef NDEBUG
+				// printf("FPS: %d\n", 1000 / (endTime - startTime));
+#endif
 		};
 	
 		// SDL_WaitThread(networkThread, NULL);
@@ -88,6 +90,11 @@ static int networkEvent(void* data) {
 
 
 static Uint32 timerEvent(Uint32 frame) {
+		int s, e, w;
+		s = SDL_GetTicks();
 		updateEvent();
+		e = SDL_GetTicks();
 		drawWindow();
+		w = SDL_GetTicks();
+		printf("time system: %d,	window: %d\n", e - s, w - e);
 }
