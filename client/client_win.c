@@ -453,7 +453,6 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 			boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
 			SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
 		    }
-
 		}
 
 		//2.キャラをc_windowに描画
