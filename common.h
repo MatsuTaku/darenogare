@@ -116,9 +116,14 @@ typedef enum {
 } ROTATE_FLAG;
 
 typedef enum {
-		NONE,
-		USE_ITEM,
+		ACTION_NONE,
+		ACTION_USE_ITEM,
 } ACTION_FLAG;
+
+typedef enum {
+		WARN_SAFETY,
+		WARN_OUT_AREA
+} WARNING_FLAG;
 
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
@@ -126,12 +131,14 @@ typedef struct {
 		double dir;			// 進行方向
 		double toDir;		// 目標旋回角度
 		VEROCITY ver;		// 速度ベクトル
-		int alive;			// 生存フラグ
+		bool alive;			// 生存フラグ
 		BOOST_FLAG boost;	// 噴射フラグ
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
-		int id;
+		WARNING_FLAG warn;	// 警告フラグ
+		int deadTime;		// 死亡時間(生存領域外にいるとき)
+		int lastTime;		// 生存可能時間（〃）
 } PLAYER;
 
 
