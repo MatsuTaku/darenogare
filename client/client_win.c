@@ -14,7 +14,7 @@
 
 
 /*画像ファイルパス*/
-static char gMapImgFile[] = "IMG/Field.png";
+static char gMapImgFile[] = "IMG/WallL.png";
 static char gObstacleImgFile[] = "IMG/obstacle.png";
 static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gBoostImgFile[] = "IMG/boost.png";
@@ -121,7 +121,6 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 		sprintf(title, "%d", clientID);
 		SDL_WM_SetCaption(title,NULL);
 
-		SDL_FillRect(gMainWindow,NULL,0xffffff);
 
 		SDL_Flip(gMainWindow);
 
@@ -140,14 +139,15 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 
 int drawWindow() {	//ゲーム画面の描画
 		int endFlag = 1;
-
+		int start = SDL_GetTicks();
+		int clear, object, status, conbine, flip;
 		clearWindow(); //ウィンドウのクリア
+		//clear = SDL_GetTicks();
+		//printf("clear: %d\n", clear - start);
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 		combineStatus(&myPlayer->object->pos); //サーフェスの合体
-
 		SDL_Flip(gMainWindow);//描画更新
-
 		return endFlag; //endflagは1で返す(継続)
 }
 
@@ -243,28 +243,87 @@ int windowEvent() {
 
 /********* static *************/
 
+
+int initImage(void){ //画像の読み込み
+		int i;
+		gWorld = IMG_Load( gMapImgFile ); //マップ画像 
+		if ( gWorld == NULL ) {
+				printf("not find world image\n");
+				return(-1);
+		}
+		ObstacleImage[0] = IMG_Load( gObstacleImgFile ); //障害物
+		if( ObstacleImage[0] == NULL ){
+				printf("not find obstacle image\n");
+				return(-1);
+		}
+		gBoostImage = IMG_Load( gBoostImgFile ); //ブースト
+		if( gBoostImage == NULL ){
+				printf("not find boost image\n");
+				return(-1);
+		}
+		gItemBox = IMG_Load( gItemBoxImgFile ); //アイテムボックス
+		if( gItemBox == NULL){
+				printf("not find itembox image\n");
+				return(-1);
+		}
+		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
+				gItemImage[i] = IMG_Load( gItemImgFile[i] );
+				if( gItemImage[i] == NULL ){
+						printf("not find item%dimage\n", i+1);
+						return(-1);
+				}
+		}
+		for(i = 0; i < MAX_CLIENTS; i++){ //キャラクター画像
+				gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
+				if( gCharaImage[i] == NULL ){
+						printf("not find chara%dimage\n", i+1);
+						return(-1);
+				}
+		}
+		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
+				gIconImage[i] = IMG_Load( gIconImgFile[i] );
+				if( gIconImage[i] == NULL ){
+						printf("not find icon%d image\n", i+1);
+						return(-1);
+				}
+		}
+		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
+				gNameImage[i] = IMG_Load( gNameImgFile[i] );
+				if( gNameImage[i] == NULL ){
+						printf("not find name%dP image\n", i+1);
+						return(-1);
+				}
+		}
+		for(i = 0; i < MAX_CLIENTS; i++){ //矢印画像
+				gArrowImage[i] = IMG_Load( gArrowImgFile[i] );
+				if( gArrowImage[i] == NULL ){
+						printf("not find arrow%dP image\n", i+1);
+						return(-1);
+				}
+		}
+}
+
+
+
 void clearWindow(void){ //ウィンドウのクリア
 
 	//メインウィンドウ
 	POSITION* myPos = &myPlayer->object->pos;
-	int asp = 30;
+	int asp = 1;
 	SDL_FillRect(gMainWindow, NULL, 0x000000); // 白で塗り潰し
 	//背景を貼り付ける
 	Rect ground;
-	POSITION bgPos;
-	bgPos.x = myPos->x/asp;
-	bgPos.y = myPos->y/asp;
-	int diffWidth = (gWorld->w - WINDOW_WIDTH) / 2;
-	int diffHeight = (gWorld->h - WINDOW_HEIGHT) / 2;
-	ground.src.x = diffWidth + bgPos.x;
-	ground.src.y = diffHeight + bgPos.y;
+	ground.src.x = myPos->x/asp + (gWorld->w - gMainWindow->w)/2;
+	ground.src.y = myPos->y/asp + (gWorld->h - gMainWindow->h)/2;
 	ground.src.w = gMainWindow->w;
 	ground.src.h = gMainWindow->h;
 	ground.dst.x = 0;
 	ground.dst.y = 0;
+	int start, end;
+	start = SDL_GetTicks();
 	SDL_BlitSurface(gWorld, &ground.src, gMainWindow, &ground.dst);
-
-
+	end = SDL_GetTicks();
+	printf("fps:%d\n",end - start);
 	//ステータスウィンドウ
 	SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
 	SDL_Rect dst_rect = {0, 0};
@@ -275,6 +334,7 @@ void clearWindow(void){ //ウィンドウのクリア
 	  }
 
 }
+
 
 static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos) {
 		int diffWidth = WINDOW_WIDTH / 2; //y軸の中心
@@ -289,7 +349,6 @@ void drawObject(void) { //オブジェクトの描画
 	int i;
 	int id;
 	int item_id, obstacle_id, enemy_id;
-	SDL_Surface *image_reangle; //回転後のサーフェス
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	POSITION diffPos;
@@ -337,10 +396,6 @@ void drawObject(void) { //オブジェクトの描画
 		  SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect);
 	    }*/
 	}
-
-	if(image_reangle != NULL){
-		SDL_FreeSurface(image_reangle);
-	}
 }
 
 
@@ -374,8 +429,19 @@ void drawStatus(void){ //ステータスの描画
 		SDL_Flip(gStatusWindow);//描画更新
 }
 
-
-
+int judgeRange(POSITION *objPos, POSITION *myPos)
+{ //範囲内にオブジェクトがあるか判定
+		int range_w = WINDOW_WIDTH/2 + 200;
+		int range_h = WINDOW_HEIGHT/2 + 200;
+		if(objPos->x > (myPos->x - range_w)
+			&& objPos->x < (myPos->x + range_w)){ //横
+			if(objPos->y > (myPos->y - range_h)
+				&& objPos->y < (myPos->y + range_h)){ //縦
+				return 1;
+			}
+		}
+		return -1;
+}
 
 
 void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクターの描画
@@ -486,77 +552,3 @@ void combineStatus(POSITION* myPos){ //サーフェスを合体
 }
 
 
-
-int judgeRange(POSITION *objPos, POSITION *myPos)
-{ //範囲内にオブジェクトがあるか判定
-		int range_w = WINDOW_WIDTH/2 + 200;
-		int range_h = WINDOW_HEIGHT/2 + 200;
-		if(objPos->x > (myPos->x - range_w)
-			&& objPos->x < (myPos->x + range_w)){ //横
-			if(objPos->y > (myPos->y - range_h)
-				&& objPos->y < (myPos->y + range_h)){ //縦
-				return 1;
-			}
-		}
-		return -1;
-}
-
-
-int initImage(void){ //画像の読み込み
-		int i;
-		gWorld = IMG_Load( gMapImgFile ); //マップ画像 
-		if ( gWorld == NULL ) {
-				printf("not find world image\n");
-				return(-1);
-		}
-		ObstacleImage[0] = IMG_Load( gObstacleImgFile ); //障害物
-		if( ObstacleImage[0] == NULL ){
-				printf("not find obstacle image\n");
-				return(-1);
-		}
-		gBoostImage = IMG_Load( gBoostImgFile ); //ブースト
-		if( gBoostImage == NULL ){
-				printf("not find boost image\n");
-				return(-1);
-		}
-		gItemBox = IMG_Load( gItemBoxImgFile ); //アイテムボックス
-		if( gItemBox == NULL){
-				printf("not find itembox image\n");
-				return(-1);
-		}
-		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
-				gItemImage[i] = IMG_Load( gItemImgFile[i] );
-				if( gItemImage[i] == NULL ){
-						printf("not find item%dimage\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //キャラクター画像
-				gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
-				if( gCharaImage[i] == NULL ){
-						printf("not find chara%dimage\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
-				gIconImage[i] = IMG_Load( gIconImgFile[i] );
-				if( gIconImage[i] == NULL ){
-						printf("not find icon%d image\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
-				gNameImage[i] = IMG_Load( gNameImgFile[i] );
-				if( gNameImage[i] == NULL ){
-						printf("not find name%dP image\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //矢印画像
-				gArrowImage[i] = IMG_Load( gArrowImgFile[i] );
-				if( gArrowImage[i] == NULL ){
-						printf("not find arrow%dP image\n", i+1);
-						return(-1);
-				}
-		}
-}
