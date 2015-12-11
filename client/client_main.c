@@ -70,14 +70,15 @@ int main(int argc,char *argv[])
 		Uint32 startTime, endTime, toTime;
 		while((endFlag = windowEvent()) != 0){
 				startTime = SDL_GetTicks() * timeRate;
-				toTime = startTime * timeRate + loopInterval;
+				toTime = startTime + loopInterval;
 				timerEvent(++frame);
 				endTime = SDL_GetTicks() * timeRate;
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);
+						printf("delay: %d\n", (toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				printf("FPS: %d\n", (int)(gcd / (endTime - startTime)));
+				printf("FPS: %d, endtime: %d\n", (int)(gcd / (endTime - startTime)), endTime);
 #endif
 		};
 	
