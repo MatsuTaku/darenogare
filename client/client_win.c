@@ -8,13 +8,13 @@
 #include "client_common.h"
 #include "client_func.h"
 
-#define WINDOW_WIDTH	1280
-#define WINDOW_HEIGHT	720
+#define WINDOW_WIDTH	1000
+#define WINDOW_HEIGHT	600
 #define REACTION_VALUE	0x6fff
 
 
 /*画像ファイルパス*/
-static char gMapImgFile[] = "IMG/WallL.png";
+static char gMapImgFile[] = "IMG/WallL.gif";
 static char gObstacleImgFile[] = "IMG/obstacle.png";
 static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gBoostImgFile[] = "IMG/boost.png";
@@ -70,6 +70,7 @@ static SDL_Surface *gArrowImage[MAX_CLIENTS]; //矢印
 static SDL_Surface *gItemBox; //アイテム欄
 static SDL_Surface *gNameImage[MAX_CLIENTS]; //キャラクター名
 static SDL_Surface *gBoostImage; //ブースト
+static SDL_Surface *gBackGround;
 
 /*関数*/
 static void drawObject();
@@ -139,11 +140,7 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 
 int drawWindow() {	//ゲーム画面の描画
 		int endFlag = 1;
-		int start = SDL_GetTicks();
-		int clear, object, status, conbine, flip;
 		clearWindow(); //ウィンドウのクリア
-		//clear = SDL_GetTicks();
-		//printf("clear: %d\n", clear - start);
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 		combineStatus(&myPlayer->object->pos); //サーフェスの合体
@@ -155,7 +152,7 @@ int drawWindow() {	//ゲーム画面の描画
 void destroyWindow(void) {
 		SDL_FreeSurface(gMainWindow);
 		SDL_FreeSurface (gStatusWindow);
-		SDL_FreeSurface (gWorld);
+		SDL_FreeSurface (gBackGround);
 		SDL_FreeSurface (ObstacleImage[0]);
 		SDL_FreeSurface (gItemBox);
 		int i;
@@ -246,8 +243,8 @@ int windowEvent() {
 
 int initImage(void){ //画像の読み込み
 		int i;
-		gWorld = IMG_Load( gMapImgFile ); //マップ画像 
-		if ( gWorld == NULL ) {
+		gBackGround = IMG_Load( gMapImgFile ); //マップ画像 
+		if ( gBackGround == NULL ) {
 				printf("not find world image\n");
 				return(-1);
 		}
@@ -309,21 +306,24 @@ void clearWindow(void){ //ウィンドウのクリア
 
 	//メインウィンドウ
 	POSITION* myPos = &myPlayer->object->pos;
-	int asp = 1;
-	SDL_FillRect(gMainWindow, NULL, 0x000000); // 白で塗り潰し
+	int asp = 3;
 	//背景を貼り付ける
 	Rect ground;
-	ground.src.x = myPos->x/asp + (gWorld->w - gMainWindow->w)/2;
-	ground.src.y = myPos->y/asp + (gWorld->h - gMainWindow->h)/2;
+	ground.src.x = myPos->x/asp + (gBackGround->w - gMainWindow->w)/2;
+	ground.src.y = myPos->y/asp + (gBackGround->h - gMainWindow->h)/2;
 	ground.src.w = gMainWindow->w;
 	ground.src.h = gMainWindow->h;
 	ground.dst.x = 0;
 	ground.dst.y = 0;
+	if(ground.src.x-ground.src.w/2 < 0 || ground.src.x+ground.src.w/2 > gBackGround->w || 
+			ground.src.y-ground.src.h/2 < 0 || ground.src.y+ground.src.h/2 > gBackGround->h){
+		SDL_FillRect(gMainWindow, NULL, 0x000000); //範囲外だけ黒で塗り潰し
+	}
 	int start, end;
 	start = SDL_GetTicks();
-	SDL_BlitSurface(gWorld, &ground.src, gMainWindow, &ground.dst);
+	SDL_BlitSurface(gBackGround, &ground.src, gMainWindow, &ground.dst);
 	end = SDL_GetTicks();
-	printf("fps:%d\n",end - start);
+	printf("time:%d\n",end - start);
 	//ステータスウィンドウ
 	SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
 	SDL_Rect dst_rect = {0, 0};
@@ -398,36 +398,6 @@ void drawObject(void) { //オブジェクトの描画
 	}
 }
 
-
-void drawStatus(void){ //ステータスの描画
-		SDL_Rect src_rect;
-		SDL_Rect dst_rect;
-		src_rect.x = 0;
-		src_rect.y = 0;
-		int i;
-		int item_id;
-		int chara_id;
-
-		for(i=0; i<MAX_CLIENTS; i++){
-
-		    chara_id = player[i].num;	// キャラ番号
-		    item_id = player[i].item;	// アイテム番号
-		    //アイコン
-		    src_rect.w = gIconImage[chara_id]->w;
-		    src_rect.h = gIconImage[chara_id]->h;
-		    dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
-		    dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
-		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
-		    //所持アイテム
-		    if(item_id != ITEM_EMPTY){
-			src_rect.w = gItemImage[item_id]->w;
-			src_rect.h = gItemImage[item_id]->h;
-			dst_rect.x += gItemBox->w/2;
-			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
-		    }
-		}
-		SDL_Flip(gStatusWindow);//描画更新
-}
 
 int judgeRange(POSITION *objPos, POSITION *myPos)
 { //範囲内にオブジェクトがあるか判定
@@ -537,6 +507,35 @@ void drawObstacle(POSITION *obsPos){ //障害物の描画
 		SDL_BlitSurface(ObstacleImage[0], &src_rect, gMainWindow, &dst_rect); //描画
 }
 
+void drawStatus(void){ //ステータスの描画
+		SDL_Rect src_rect;
+		SDL_Rect dst_rect;
+		src_rect.x = 0;
+		src_rect.y = 0;
+		int i;
+		int item_id;
+		int chara_id;
+
+		for(i=0; i<MAX_CLIENTS; i++){
+
+		    chara_id = player[i].num;	// キャラ番号
+		    item_id = player[i].item;	// アイテム番号
+		    //アイコン
+		    src_rect.w = gIconImage[chara_id]->w;
+		    src_rect.h = gIconImage[chara_id]->h;
+		    dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
+		    dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
+		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
+		    //所持アイテム
+		    if(item_id != ITEM_EMPTY){
+			src_rect.w = gItemImage[item_id]->w;
+			src_rect.h = gItemImage[item_id]->h;
+			dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
+			dst_rect.y -= 10;
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+		    }
+		}
+}
 
 void combineStatus(POSITION* myPos){ //サーフェスを合体
 		
