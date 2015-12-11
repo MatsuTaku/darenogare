@@ -64,7 +64,6 @@ int main(int argc,char *argv[])
 				r = a % b;
 		}
 		double gcd = ms * FPS / b;
-		printf("gcd = %f\n", gcd);
 		Uint32 loopInterval = ms / b;
 		int timeRate = FPS / b;
 		Uint32 startTime, endTime, toTime;
@@ -78,10 +77,10 @@ int main(int argc,char *argv[])
 						printf("delay: %d\n", (toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				printf("FPS: %d, endtime: %d\n", (int)(gcd / (endTime - startTime)), endTime);
+				printf("FPS: %d\n", (int)(gcd / (endTime - startTime)));
 #endif
 		};
-	
+
 		// SDL_WaitThread(networkThread, NULL);
 		SDL_KillThread(networkThread);
 
