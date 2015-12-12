@@ -154,7 +154,7 @@ typedef struct {
 
 // 通信データ(client -> server)
 typedef struct {
-		int endFlag;	// 終了フラグ
+		int endFlag ;	// 終了フラグ
 		int clientId;			// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ

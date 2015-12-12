@@ -181,55 +181,57 @@ int windowEvent() {
 
 		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
 		while (SDL_PollEvent(&event)) {
-				switch (event.type) { 
-						case SDL_JOYAXISMOTION: //方向キーorアナログスティック
-						 		break;
-						case SDL_JOYBUTTONDOWN: //ボタンが押された時
+		    switch (event.type) { 
+		    case SDL_JOYAXISMOTION: //方向キーorアナログスティック
+			break;
+		    case SDL_JOYBUTTONDOWN: //ボタンが押された時
 #ifndef NDEBUG
-								printf("press buton: %d\n", event.jbutton.button);
+			printf("press buton: %d\n", event.jbutton.button);
 #endif
-								switch(event.jbutton.button) { //ボタン毎の処理
-										case BUTTON_CIRCLE: //ジェット噴射
-												//速度上昇
-												acceleration();
-												break;
-										case BUTTON_CROSS: //ジェット逆噴射
-												//速度下降（逆方向にブースト）
-												deceleration();
-												break;
-								}
-								break;
-						case SDL_JOYBUTTONUP: //ボタンが離された時
-								switch (event.jbutton.button) {
-										case BUTTON_CIRCLE:
-										case BUTTON_CROSS:
-												inertialNavigation();
-										case BUTTON_TRIANGLE:	//アイテム使用
-												useItem();
-												break;
-										default:
-												break;
-								}
-								break;
-						case SDL_QUIT:
-								endFlag = 0;
+			switch(event.jbutton.button) { //ボタン毎の処理
+			case BUTTON_CIRCLE: //ジェット噴射
+			    //速度上昇
+			    acceleration();
+			    break;
+			case BUTTON_CROSS: //ジェット逆噴射
+			    //速度下降（逆方向にブースト）
+			    deceleration();
+			    break;
+			}
+			break;
+		    case SDL_JOYBUTTONUP: //ボタンが離された時
+			switch (event.jbutton.button) {
+			case BUTTON_CIRCLE:
+			case BUTTON_CROSS:
+			    inertialNavigation();
+			case BUTTON_TRIANGLE:	//アイテム使用
+			    useItem();
+			    break;
+			default:
+			    break;
+			}
+			break;
+		    case SDL_QUIT:
+                        endFlag = 0;
+			SendEndCommand();
+		
 #ifndef NDEBUG
-								printf("Press close button\n");
+			printf("Press close button\n");
 #endif
-								break;
+			break;
 						default:
-								break;
-				}
+						    break;
+		    }
 		}
-
+		
 		// get analog stick method
 		Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
 		Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
 		double range = pow(xValue, 2) + pow(yValue, 2);
 		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
-				rotateTo(xValue, yValue);
+		    rotateTo(xValue, yValue);
 #ifndef NDEBUG
-				// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
+		    // printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
 #endif
 		} else
 				fixRotation();
