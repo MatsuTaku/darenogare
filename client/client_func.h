@@ -19,7 +19,7 @@ extern int drawWindow();
 
 /* client_command.c */
 extern int executeCommand(int command);
-extern void sendEndCommand(void);
+extern void SendEndCommand(void);
 
 /* client_system.c */
 extern int initGameSystem(int myId, int playerNum);

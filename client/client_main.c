@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
 
 		destroyWindow();
 		closeSoc();
-
+		SendEndCommand();
 		return 0;
 }
 

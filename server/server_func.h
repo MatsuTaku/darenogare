@@ -11,7 +11,7 @@ extern int sendRecvManager(void);
 extern void sendMapData(int pos);
 
 /* server_command.c */
-extern int executeCommand(int pos, entityStateSet* state);
+extern int executeCommand(int pos, entityStateSet* state,int command);
 
 /* server_system.c */
 extern void physicsManager(void);

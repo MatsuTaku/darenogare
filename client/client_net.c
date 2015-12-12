@@ -154,7 +154,7 @@ static void getAllName(int *clientID,int *num)
     recvIntData(num);
 }
 /*****************************************************************
-関数名	: SetMask
+関数名	: setMask
 機能	: select()のためのマスク値を設定する
 引数	: なし
 出力	: なし
