@@ -478,26 +478,44 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 		}
 		if(rtt_flag != ROTATE_NEUTRAL){
 		    if(rtt_flag == ROTATE_RIGHT){ //右回転の場合
-			image_reangle = rotozoomSurface(gBoostImage, 250, 0.5, 1); //角度の変更
+			image_reangle = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
 			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
 			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
 			dy = image_reangle->h - gBoostImage->h;
 			int i;
-			for(i = 0; i < 2; i++){
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*20;
+			for(i = 0; i < 2; i++){ //頭部の噴射炎
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
 			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+			image_reangle = rotozoomSurface(gBoostImage, 90, 0.4, 1);
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w;
+			dy = image_reangle->h - gBoostImage->h;
+			for(i = 0; i < 3; i++){ //後部の噴射炎
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
 			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
 			}
 		    }
 		    if(rtt_flag == ROTATE_LEFT){ //左回転の場合
-			image_reangle = rotozoomSurface(gBoostImage, 110, 0.5, 1); //角度の変更
+			image_reangle = rotozoomSurface(gBoostImage, 90, 0.4, 1); //角度の変更
 			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
 			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
 			dy = image_reangle->h - gBoostImage->h;
 			int i;
-			for(i = 0; i < 2; i++){
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*20;
+			for(i = 0; i < 2; i++){ //頭部
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
 			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+			image_reangle = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			for(i = 0; i < 3; i++){ //後部
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
 			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
 			}
 		    }
@@ -615,7 +633,7 @@ void drawStatus(void){ //ステータスの描画
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
 			dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
-			dst_rect.y -= 10;
+			dst_rect.y = gItemBox->h/2 - gItemImage[item_id]->h/2;
 			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
 		    }
 		}
