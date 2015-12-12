@@ -3,6 +3,8 @@
 
 #include"../common.h"
 
+/* client_main.c */
+
 /* client_net.c */
 extern int setUpClient(char* hostName,int *clientID,int *num);
 extern void closeSoc(void);

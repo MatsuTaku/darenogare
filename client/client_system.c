@@ -19,7 +19,7 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 static void updatePlayer();
 static void updateObject();
 static void updateObstacle(OBSTACLE* obstacle);
-static void colligionDetection();
+static void collisionDetection();
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
@@ -106,14 +106,17 @@ static void initPlayer(PLAYER* player, int num) {
 		player->ver.vx = 0;
 		player->ver.vy = 0;
 		player->alive = true;
+		player->boost = BOOST_NEUTRAL;
+		player->rotate = ROTATE_NEUTRAL;
+		player->action = ACTION_NONE;
+		player->warn = WARN_SAFETY;
 		setPos(player->object, 0, 0);
 }
 
 
 static void initObstacle(OBSTACLE* obstacle) {
-		double angle = rand() % (int)(2 * PI * 10000) / 10000 - PI;
+		double angle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS + 1) * PI / HALF_DEGRESS;
 		obstacle->angle = angle;
-		//obstacle->ver = rand() % MAXIMUM_SPEED_OBSTACLE + 1;
 		obstacle->ver = MAXIMUM_SPEED_OBSTACLE;
 
 		/* マップ内に目標点をランダムに設定。
@@ -131,7 +134,7 @@ static void initObstacle(OBSTACLE* obstacle) {
 		double b = toY - a * toX;
 		double x, y;
 		x =	(-(a * b) + (cos(angle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2)))
-			 / (pow(a, 2) + 1);
+				/ (pow(a, 2) + 1);
 		y = (sin(angle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2)); 
 		setPos(obstacle->object, x, y);
 }
@@ -230,7 +233,7 @@ void updateEvent() {
 
 		updateObject();
 
-		colligionDetection();
+		collisionDetection();
 }
 
 
@@ -238,46 +241,52 @@ void updateEvent() {
  * プレイヤーデータの計算
  */
 static void updatePlayer() {
-		/* プレイヤーの行動 */
-		// MARK
-		switch (myPlayer->action) {
-				case NONE:	break;
-				case USE_ITEM:
-							break;
-				default:
-							break;
-		}
+		if (myPlayer->alive) {
+				/* プレイヤーの行動 */
+				// MARK
+				switch (myPlayer->action) {
+						case ACTION_NONE:	break;
+						case ACTION_USE_ITEM:
+											break;
+						default:
+											break;
+				}
 
-		/* 旋回 */
-		switch (myPlayer->rotate) {
-				case ROTATE_NEUTRAL:	
-						break;
-				case ROTATE_LEFT:
-						rotateDirection(1);
-						break;
-				case ROTATE_RIGHT:
-						rotateDirection(-1);
-						break;
-				default:
-						break;
-		}
+				/* 旋回 */
+				switch (myPlayer->rotate) {
+						case ROTATE_NEUTRAL:	
+								break;
+						case ROTATE_LEFT:
+								rotateDirection(1);
+								break;
+						case ROTATE_RIGHT:
+								rotateDirection(-1);
+								break;
+						default:
+								break;
+				}
 
-		/* 加減速 */
-		switch (myPlayer->boost) {
-				case BOOST_NEUTRAL:	
-						break;
-				case BOOST_GO:
-						accelerateVerocity(ACCELE_GO);
-						break;
-				case BOOST_BACK:
-						accelerateVerocity(ACCELE_BRAKE);
-						break;
-				default:
-						break;
-		}
+				/* 加減速 */
+				switch (myPlayer->boost) {
+						case BOOST_NEUTRAL:	
+								break;
+						case BOOST_GO:
+								accelerateVerocity(ACCELE_GO);
+								break;
+						case BOOST_BACK:
+								accelerateVerocity(ACCELE_BRAKE);
+								break;
+						default:
+								break;
+				}
 
-		/* 速度を元に座標移動 */
-		setPlayerPosition();
+				/* 速度を元に座標移動 */
+				setPlayerPosition();
+		} else {	// 死亡時処理
+#ifndef NDEBUG
+				printf("You dead\n");
+#endif
+		}
 }
 
 
@@ -322,7 +331,7 @@ static void updateObstacle(OBSTACLE* obstacle) {
 /**
  * 当たり判定と処理
  */
-static void colligionDetection() {
+static void collisionDetection() {
 		int i;
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObject = &object[i];
@@ -342,6 +351,34 @@ static void colligionDetection() {
 										break;
 						}
 				}
+		}
+
+		int ms = 1000;
+		switch (myPlayer->warn) {
+				case WARN_SAFETY:
+						if (!judgeSafety(&myPlayer->object->pos)) {
+								myPlayer->warn = WARN_OUT_AREA;
+								myPlayer->deadTime = SDL_GetTicks() + WARN_TIME_RIMIT * ms;
+								myPlayer->lastTime = WARN_TIME_RIMIT * ms;
+						}
+						break;
+				case WARN_OUT_AREA:
+						if (judgeSafety(&myPlayer->object->pos)) {
+								myPlayer->warn = WARN_SAFETY;
+								myPlayer->deadTime = 0;
+								myPlayer->lastTime = 0;
+						} else {
+								if ((myPlayer->lastTime = myPlayer->deadTime - SDL_GetTicks()) < 0) {
+										myPlayer->alive = false;
+#ifndef NDEBUG
+										printf("You are still out of safety-zone!\n");
+										printf("come back in [%d] seconds!\n", myPlayer->lastTime);
+#endif
+								}
+						}
+						break;
+				default:
+						break;
 		}
 }
 
@@ -384,7 +421,7 @@ static void accelerateVerocity(double accel) {
 				myPlayer->ver.vy *= av;
 		}
 #ifndef NDEBUG
-		printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
+		// printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
 #endif
 }
 
@@ -425,7 +462,7 @@ void getItem() {
 
 void useItem() {	// アイテムの使用
 		if (myPlayer->item != ITEM_EMPTY) {
-				myPlayer->action = USE_ITEM;
+				myPlayer->action = ACTION_USE_ITEM;
 		}
 }
 
