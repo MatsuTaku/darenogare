@@ -74,7 +74,7 @@ static SDL_Surface *gBackGround;
 
 /*関数*/
 static void drawObject();
-static void drawChara(POSITION *charaPos, int chara_id, int flag);
+static void drawChara(POSITION *charaPos, int chara_id);
 void drawItem(POSITION *itemPos, int item_id);
 void drawObstacle(POSITION *obsPos);
 static void drawStatus();
@@ -355,7 +355,6 @@ void drawObject(void) { //オブジェクトの描画
 	POSITION objPos;
 	double angle,ar_angle;
 	POSITION* myPos = &myPlayer->object->pos; //マイポジション
-	int bst_flag; //ブーストフラグ
 	src_rect.x = 0;
 	src_rect.y = 0;
 
@@ -365,8 +364,7 @@ void drawObject(void) { //オブジェクトの描画
 		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
 			id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
-			bst_flag = myPlayer->boost;
-			drawChara(&object[i].pos, id, bst_flag); //キャラクターの描画
+			drawChara(&object[i].pos, id); //キャラクターの描画
 			break;
 		  case OBJECT_ITEM: //アイテム
 		  	id = ((ITEM *)object[i].typeBuffer)->num; //アイテム番号
@@ -414,7 +412,7 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 }
 
 
-void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクターの描画
+void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 
 		SDL_Surface *image_reangle; //回転後のサーフェス
 		static SDL_Surface *c_window;
@@ -422,6 +420,8 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 		POSITION c_center;
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
+		int bst_flag = myPlayer->boost; //噴射フラグ
+		int rtt_flag = player[chara_id].rotate; //回転フラグ
 		int dx, dy;
 		int rmask, gmask, amask, bmask;
 		rmask = 0xff000000;
@@ -430,23 +430,25 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 		amask = 0x000000ff;
 
 		//透過処理
-		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h + 40, 32, rmask, gmask, bmask, amask);
+		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h + 60, 32, rmask, gmask, bmask, amask);
 		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0x00, 0x00, 0x00)); //黒を透過
 		c_window = SDL_DisplayFormat(c_window);
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 
 		//1.噴射炎をc_windowに描画
-		if(flag != BOOST_NEUTRAL){
-		    Rect boost;
-		    boost.src.x=0; boost.src.y=0; boost.src.w=gBoostImage->w; boost.src.h=gBoostImage->h;
-		    if(flag == BOOST_GO){ //前噴射の場合
-			boost.dst.x = c_center.x - gCharaImage[chara_id]->w;
+		Rect boost;
+		boost.src.x = 0; boost.src.y = 0; 
+		if(bst_flag != BOOST_NEUTRAL){
+		    boost.src.w = gBoostImage->w; boost.src.h = gBoostImage->h;
+		    if(bst_flag == BOOST_GO){ //前噴射の場合
+			boost.dst.x = c_center.x - gCharaImage[chara_id]->w*0.9;
 			boost.dst.y = c_center.y - gBoostImage->h/2;
 			SDL_BlitSurface(gBoostImage, &boost.src, c_window, &boost.dst);
 		    }
-		    if(flag == BOOST_BACK){ //後噴射の場合
+		    if(bst_flag == BOOST_BACK){ //後噴射の場合
 			image_reangle = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
 			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
 			dy = image_reangle->h - gBoostImage->h;
 			boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
@@ -454,7 +456,32 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 			SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
 		    }
 		}
-
+		if(rtt_flag != ROTATE_NEUTRAL){
+		    if(rtt_flag == ROTATE_RIGHT){ //右回転の場合
+			image_reangle = rotozoomSurface(gBoostImage, 250, 0.5, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			int i;
+			for(i = 0; i < 2; i++){
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*20;
+			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+		    }
+		    if(rtt_flag == ROTATE_LEFT){ //左回転の場合
+			image_reangle = rotozoomSurface(gBoostImage, 110, 0.5, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			int i;
+			for(i = 0; i < 2; i++){
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*20;
+			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+		    }
+		}
 		//2.キャラをc_windowに描画
 		SDL_Rect src_rect = {0, 0, gCharaImage[chara_id]->w, gCharaImage[chara_id]->h};
 		SDL_Rect dst_rect = {c_center.x - gCharaImage[chara_id]->w/2, c_center.y - gCharaImage[chara_id]->h/2};
