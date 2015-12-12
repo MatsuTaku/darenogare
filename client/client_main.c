@@ -74,7 +74,6 @@ int main(int argc,char *argv[])
 				endTime = SDL_GetTicks() * timeRate;
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);
-						printf("delay: %d\n", (toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
 				printf("FPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
