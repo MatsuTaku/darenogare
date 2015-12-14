@@ -595,3 +595,58 @@ static double getRange(OBJECT* alpha, OBJECT* beta) {
 static bool judgeSafety(POSITION* pos) {
 		return pow(pos->x, 2) + pow(pos->y, 2) < pow(MAP_SIZE, 2);
 }
+
+
+
+/***********
+ * server method
+ */
+void reflectDelta(entityStateGet* data, int *latest) {
+		*latest = data->latestFrame;
+
+		ASSEMBLY* delta = &data->delta;
+		int i;
+
+		for (i = 0; i < MAX_CLIENTS; i++) {
+				if (i != myPlayer->num) {
+						PLAYER* curPlayer = &player[i];
+						PLAYER* deltaPlayer = &delta->player[i];
+						OBJECT* tmpObject = curPlayer->object;
+						curPlayer->dir += deltaPlayer->dir;
+						curPlayer->toDir += deltaPlayer->toDir;
+						curPlayer->ver.vx += deltaPlayer->ver.vx;
+						curPlayer->ver.vy += deltaPlayer->ver.vy;
+						if (deltaPlayer->alive)
+								curPlayer->alive = !curPlayer->alive;
+						curPlayer->boost += deltaPlayer->boost;
+						curPlayer->rotate += deltaPlayer->rotate;
+						curPlayer->action += deltaPlayer->action;
+						curPlayer->item += deltaPlayer->item;
+						curPlayer->warn += deltaPlayer->warn;
+						curPlayer->deadTime +=deltaPlayer->deadTime;
+						curPlayer->lastTime += deltaPlayer->lastTime;
+				}
+		}
+
+
+#ifndef NDEBUG
+		printf("reflectDelta\n");
+#endif
+}
+
+
+void sendEntity(int latest) {
+		entityStateSet data;
+		data.latestFrame = latest;
+		data.endFlag = false;
+		data.clientId = myPlayer->num;
+		data.pos.x = myPlayer->object->pos.x;
+		data.pos.y = myPlayer->object->pos.y;
+		data.player = *myPlayer;
+		data.killEnemy = -1;
+
+		sendData(&data, sizeof(entityStateSet));
+#ifndef NDEBUG
+		printf("sendEntity frame: %d\n", latest);
+#endif
+}

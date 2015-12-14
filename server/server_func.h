@@ -11,9 +11,11 @@ extern int sendRecvManager(void);
 extern void sendMapData(int pos);
 
 /* server_command.c */
-extern int executeCommand(int id, entityStateSet* state);
+extern bool executeCommand(int id, entityStateSet* state);
 
 /* server_system.c */
-extern void physicsManager(void);
+extern int initSystem(int clientNumber);
+extern void setPlayerState(int id, entityStateSet* state);
+extern void sendDeltaBuffer(int id, int latest, bool endFlag);
 
 #endif

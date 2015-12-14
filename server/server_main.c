@@ -3,10 +3,9 @@
 
 static Uint32 SignalHandler(Uint32 interval, void *param);
 
-int main(int argc,char *argv[])
-{
+int main(int argc,char *argv[]) {
 		int	num;
-		int	endFlag = 1;
+		bool endFlag = false;
 
 		if(argc != 2){
 				fprintf(stderr,"Usage: number of clients\n");
@@ -22,7 +21,7 @@ int main(int argc,char *argv[])
 				exit(-1);
 		}
 
-		if (initSystem() < 0) {
+		if (initSystem(num) < 0) {
 				printf("failed to initSystem!\n");
 				exit(-1);
 		}
@@ -45,8 +44,7 @@ int main(int argc,char *argv[])
 		Uint32 loopInterval = ms / b;
 		int timeRate = FPS / b;
 		Uint32 startTime, endTime, toTime;
-		while(endFlag) {
-				printf("size set: %d, get%d\n", sizeof(entityStateSet), sizeof(entityStateGet));
+		while(!endFlag) {
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
 				endFlag = sendRecvManager();

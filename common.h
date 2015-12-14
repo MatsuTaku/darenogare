@@ -166,7 +166,7 @@ typedef struct {
 // 通信データ(server -> client)
 typedef struct {
 		int latestFrame;
-		int endFlag;
+		bool endFlag;
 		ASSEMBLY delta;
 } entityStateGet;
 

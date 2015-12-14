@@ -91,7 +91,7 @@ int sendRecvManager(void) //サーバーから送られてきたデータを処�
 {
 		fd_set	readOK;
 		int		i;
-		bool	endFlag;
+		bool	endFlag = false;
 		entityStateSet data[gClientNum];
 		updateBuffer();
 
@@ -102,22 +102,15 @@ int sendRecvManager(void) //サーバーから送られてきたデータを処�
 
 		bool recvId[gClientNum];
 		for (i=0; i<gClientNum; i++){ //全てのクライアントに対して
-				if (FD_ISSET(gClients[i].fd, &readOK)){ //読み込み可能なFDがあれば
+				if ((recvId[i] = FD_ISSET(gClients[i].fd, &readOK)) == true) { //読み込み可能なFDがあれば
 						recvData(i, &data[i], sizeof(entityStateSet)); //受信
-						recvId[i] = true;
-
 						endFlag = executeCommand(i, &data[i]); //コマンド処理
-						if (endFlag){
-								break; //終了コマンドが押されたら脱ループ
-						}
-				} else {
-						recvId[i] = false;
 				}
 		}
-		
+
 		for (i = 0; i < gClientNum; i++) {
-				if (recvId[i]) {
-						sendDeltaBuffer(i, data[i].latestFrame);
+				if (recvId[i] || endFlag) {
+						sendDeltaBuffer(i, data[i].latestFrame, endFlag);
 				}
 		}
 
