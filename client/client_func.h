@@ -20,7 +20,7 @@ extern bool windowEvent();
 extern int drawWindow();
 
 /* client_command.c */
-extern bool executeCommand(entityStateGet* data, int* latest);
+extern bool executeCommand(entityStateGet* data);
 extern void sendEndCommand(void);
 
 /* client_system.c */
@@ -35,7 +35,7 @@ extern void fixRotation();
 extern void acceleration();
 extern void deceleration();
 extern void inertialNavigation();
-extern void relectDelta(entityStateGet* data, int* latest);
-extern void sendEntity(int latest);
+extern void relectDelta(entityStateGet* data);
+extern void sendEntity();
 
 #endif

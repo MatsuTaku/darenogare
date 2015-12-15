@@ -9,7 +9,6 @@
 static int	gSocket;/*ソケット*/
 static fd_set	gMask;	/*select()用のマスク*/
 static int	gWidth;	/*gMask中のチェックすべきビット数*/	
-static int latestFrame;
 
 static void getAllName(int *clientID,int *num);
 static void setMask(void);
@@ -60,8 +59,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
 
 		setMask();
 
-		latestFrame = 0;
-
 		return 0;
 }
 
@@ -80,6 +77,13 @@ bool sendRecvManager(void)
 		int		i;
 		bool	endFlag = false;
 		struct timeval	timeout;
+		/*
+		entityStateGet *data;
+		if ((data = malloc(sizeof(entityStateGet))) == NULL) {
+				fprintf(stderr, "Out of memory entityStateGet.\n");
+				exit(-1);
+		}
+		*/
 		entityStateGet data;
 
 		timeout.tv_sec = 0;
@@ -89,12 +93,11 @@ bool sendRecvManager(void)
 		/* サーバーからデータが届いているか調べる */
 		select(gWidth,&readOK,NULL,NULL,&timeout);
 		if(FD_ISSET(gSocket,&readOK)){
-				recvData(&data,sizeof(entityStateGet)); /* コマンドを読み込む */
-				endFlag = executeCommand(&data, &latestFrame);
+				recvData(&data, sizeof(entityStateGet)); /* コマンドを読み込む */
+				endFlag = executeCommand(&data);
 		}
-		sendEntity(latestFrame);
-
-		return endFlag;
+		sendEntity();
+		// free(data);
 }
 
 
@@ -163,6 +166,7 @@ static void getAllName(int *clientID,int *num)
 
 		recvIntData(clientID);
 		recvIntData(num);
+		printf("clientId: %d\nplayerNum: %d\n", *clientID, *num);
 }
 
 

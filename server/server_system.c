@@ -1,7 +1,7 @@
 #include "../common.h"
 #include "server_common.h"
 #include "server_func.h"
-#define nextObj(a)	((a + 1) % MAX_OBJECT)
+#define nextObj(a)	((a + 1) % MAX_OBJECT) + MAX_CLIENTS
 
 #define sub(x)	x % RETENTION_FRAME
 
@@ -39,6 +39,7 @@ int initSystem(int clientNumber) {
 						return -1;
 				}
 		}
+		curObjNum = MAX_CLIENTS;
 }
 
 static void initObject(OBJECT* object) {
@@ -97,8 +98,10 @@ void updateBuffer() {
 
 void setPlayerState(int id, entityStateSet* state) {
 		PLAYER* player = &curBuffer->player[id];
-		player->object->pos.x = state->pos.x;
-		player->object->pos.y = state->pos.y;
+		OBJECT *plyObj = &curBuffer->object[id];
+		plyObj->pos.x = state->pos.x;
+		plyObj->pos.y = state->pos.y;
+		printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
 		setPlayerValue(player, &state->player);
 }
 
@@ -111,40 +114,47 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 
 
 void sendDeltaBuffer(int id, int latest, bool endFlag) {
+		assert(id >= 0 && id < MAX_CLIENTS);
+		assert(latest >= 0);
+
 		entityStateGet data;
+		data.latestFrame = frame;
+
 		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 
-		data.endFlag = endFlag;
+		if ((data.endFlag = endFlag) == false) {
+				int i;
+				/* デルタの所得 */
+				for (i = 0; i < MAX_CLIENTS; i++) {
+						PLAYER* player = &data.delta.player[i];
+						PLAYER *curPlayer = &curBuffer->player[i];
+						PLAYER* latestPlayer = &latestBuffer->player[i];
+						player->dir = curPlayer->dir - latestPlayer->dir;
+						player->toDir = curPlayer->toDir - latestPlayer->toDir;
+						player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
+						player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
+						player->alive = curPlayer->alive != latestPlayer->alive;
+						player->boost = curPlayer->boost - latestPlayer->boost;
+						player->rotate = curPlayer->rotate - latestPlayer->rotate;
+						player->action = curPlayer->action - latestPlayer->action;
+						player->item = curPlayer->item - latestPlayer->item;
+						player->warn = curPlayer->warn - latestPlayer->warn;
+						player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
+						player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
 
-		int i;
-		/* デルタの所得 */
-		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* obj = &data.delta.object[i];
-				OBJECT *curObj = curBuffer->object;
-				OBJECT *latestObj = latestBuffer->object;
-				obj->type = curObj->type - latestObj->type;
-				obj->id = curObj->type - latestObj->type;
-				obj->pos.x = curObj->pos.x - latestObj->pos.x;
-				obj->pos.y = curObj->pos.y - latestObj->pos.y;
+						OBJECT *object = &data.delta.plyObj[i];
+						OBJECT *curPlObj = &curBuffer->object[i];
+						OBJECT *latestPlObj = &latestBuffer->object[i];
+						object->type = curPlObj->type - latestPlObj->type;
+						object->id = curPlObj->id - latestPlObj->id;
+						object->pos.x = curPlObj->pos.x - latestPlObj->pos.x;
+						object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
+						
+						printf("frame[%d]: latest[%d]	player[%d] pos x: %d, y: %d\n", frame, latest, i, object->pos.x, object->pos.y);
+				}
 		}
+		printf("send server frame: %d\n", data.latestFrame);
 
-		for (i = 0; i < MAX_CLIENTS; i++) {
-				PLAYER* player = &data.delta.player[i];
-				PLAYER *curPlayer = curBuffer->player;
-				PLAYER* latestPlayer = latestBuffer->player;
-				player->dir = curPlayer->dir - latestPlayer->dir;
-				player->toDir = curPlayer->toDir - latestPlayer->toDir;
-				player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
-				player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
-				player->alive = curPlayer->alive != latestPlayer->alive;
-				player->boost = curPlayer->boost - latestPlayer->boost;
-				player->rotate = curPlayer->rotate - latestPlayer->rotate;
-				player->action = curPlayer->action - latestPlayer->action;
-				player->item = curPlayer->item - latestPlayer->item;
-				player->warn = curPlayer->warn - latestPlayer->warn;
-				player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
-				player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
-		}
 
 		sendData(id, &data, sizeof(entityStateGet));
 }

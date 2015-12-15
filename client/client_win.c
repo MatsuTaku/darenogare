@@ -94,7 +94,7 @@ typedef struct {
 
 int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
-		char *s, title[10];
+		char *s, title[32];
 		myID = clientID;
 
 		assert(0<num && num<=MAX_CLIENTS);
@@ -119,8 +119,8 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 		}
 
 
-		sprintf(title, "%d", clientID);
-		SDL_WM_SetCaption(title,NULL);
+		sprintf(title, "Player No. %d", clientID + 1);
+		SDL_WM_SetCaption(title, NULL);
 
 
 		SDL_Flip(gMainWindow);
@@ -516,22 +516,23 @@ void drawStatus(void){ //ステータスの描画
 		int chara_id;
 
 		for(i=0; i<MAX_CLIENTS; i++){
-
-				chara_id = player[i].num;	// キャラ番号
-				item_id = player[i].item;	// アイテム番号
-				//アイコン
-				src_rect.w = gIconImage[chara_id]->w;
-				src_rect.h = gIconImage[chara_id]->h;
-				dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
-				dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
-				SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
-				//所持アイテム
-				if(item_id != ITEM_EMPTY){
-						src_rect.w = gItemImage[item_id]->w;
-						src_rect.h = gItemImage[item_id]->h;
-						dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
-						dst_rect.y -= 10;
-						SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+				if (player[i].object != NULL) {
+						chara_id = player[i].num;	// キャラ番号
+						item_id = player[i].item;	// アイテム番号
+						//アイコン
+						src_rect.w = gIconImage[chara_id]->w;
+						src_rect.h = gIconImage[chara_id]->h;
+						dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
+						dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
+						SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
+						//所持アイテム
+						if(item_id != ITEM_EMPTY){
+								src_rect.w = gItemImage[item_id]->w;
+								src_rect.h = gItemImage[item_id]->h;
+								dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
+								dst_rect.y -= 10;
+								SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+						}
 				}
 		}
 }

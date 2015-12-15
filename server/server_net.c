@@ -104,12 +104,14 @@ int sendRecvManager(void) //サーバーから送られてきたデータを処�
 		for (i=0; i<gClientNum; i++){ //全てのクライアントに対して
 				if ((recvId[i] = FD_ISSET(gClients[i].fd, &readOK)) == true) { //読み込み可能なFDがあれば
 						recvData(i, &data[i], sizeof(entityStateSet)); //受信
-						endFlag = executeCommand(i, &data[i]); //コマンド処理
+						if (executeCommand(i, &data[i])) //コマンド処理
+								endFlag = true;
 				}
 		}
 
 		for (i = 0; i < gClientNum; i++) {
 				if (recvId[i] || endFlag) {
+						printf("player[%d]	latest: %d\n", i, data[i].latestFrame);
 						sendDeltaBuffer(i, data[i].latestFrame, endFlag);
 				}
 		}

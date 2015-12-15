@@ -163,11 +163,17 @@ typedef struct {
 } entityStateSet;
 
 
+typedef struct {
+		OBJECT plyObj[MAX_CLIENTS];
+		PLAYER player[MAX_CLIENTS];
+} DELTA;
+
+
 // 通信データ(server -> client)
 typedef struct {
 		int latestFrame;
 		bool endFlag;
-		ASSEMBLY delta;
+		DELTA delta;
 } entityStateGet;
 
 

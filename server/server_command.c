@@ -2,7 +2,6 @@
 #include"server_func.h"
 #include"../common.h"
 
-static int numCommand;
 
 /**
  *  機能:コマンド処理

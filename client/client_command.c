@@ -13,7 +13,7 @@ entityStateSet rocket;
   出力	: プログラム終了コマンドがおくられてきた時には0を返す．
   それ以外は1を返す
  *****************************************************************/
-bool executeCommand(entityStateGet* data, int *latest) {
+bool executeCommand(entityStateGet* data) {
 #ifndef NDEBUG
 		/*
 		   printf("#####\n");
@@ -24,7 +24,7 @@ bool executeCommand(entityStateGet* data, int *latest) {
 				 return true;
 				 printf("Get end command.\n");
 		 }
-		 reflectDelta(&data, &latest);
+		 reflectDelta(&data);
 
 		return false;
 }
@@ -45,6 +45,7 @@ void sendEndCommand(void)
 #endif
 		entityStateSet data;
 		data.endFlag = true;
+		data.latestFrame = 0;
 
 		/*データの送信*/
 		sendData(&data, sizeof(entityStateSet));

@@ -10,6 +10,8 @@ PLAYER* player;
 PLAYER* myPlayer;
 static int curObjNum;
 
+static int latestFrame;
+
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
@@ -36,6 +38,8 @@ static bool judgeSafety(POSITION* pos);
  */
 int initGameSystem(int myId, int playerNum) {
 		srand((unsigned)time(NULL));
+
+		latestFrame = 0;
 
 		int i;
 		object = allAssembly.object;
@@ -110,6 +114,8 @@ static void initPlayer(PLAYER* player, int num) {
 		player->rotate = ROTATE_NEUTRAL;
 		player->action = ACTION_NONE;
 		player->warn = WARN_SAFETY;
+		player->deadTime = 0;
+		player->lastTime = 0;
 		setPos(player->object, 0, 0);
 }
 
@@ -335,7 +341,7 @@ static void collisionDetection() {
 		int i;
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObject = &object[i];
-				if (curObject->type != OBJECT_EMPTY) {
+				if (curObject->type > OBJECT_EMPTY) {
 						switch (curObject->type) {
 								case OBJECT_OBSTACLE:
 										if (hitObject(myPlayer->object, curObject)) {
@@ -601,17 +607,15 @@ static bool judgeSafety(POSITION* pos) {
 /***********
  * server method
  */
-void reflectDelta(entityStateGet* data, int *latest) {
-		*latest = data->latestFrame;
-
-		ASSEMBLY* delta = &data->delta;
+void reflectDelta(entityStateGet* data) {
+		latestFrame = ntohl(data->latestFrame);
+		printf("frame system: %d\n", data->latestFrame);
+		DELTA* delta = &data->delta;
 		int i;
-
 		for (i = 0; i < MAX_CLIENTS; i++) {
-				if (i != myPlayer->num) {
+				if (i != myPlayer->num && player[i].object != NULL) {
 						PLAYER* curPlayer = &player[i];
 						PLAYER* deltaPlayer = &delta->player[i];
-						OBJECT* tmpObject = curPlayer->object;
 						curPlayer->dir += deltaPlayer->dir;
 						curPlayer->toDir += deltaPlayer->toDir;
 						curPlayer->ver.vx += deltaPlayer->ver.vx;
@@ -625,19 +629,24 @@ void reflectDelta(entityStateGet* data, int *latest) {
 						curPlayer->warn += deltaPlayer->warn;
 						curPlayer->deadTime +=deltaPlayer->deadTime;
 						curPlayer->lastTime += deltaPlayer->lastTime;
+
+						OBJECT* curObject = curPlayer->object;
+						OBJECT* deltaObject = &delta->plyObj[i];
+						curObject->pos.x += deltaObject->pos.x;
+						curObject->pos.y += deltaObject->pos.y;
+#ifndef NDEBUG
+						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
+						printf("latestFrame[%d]\n", data->latestFrame);
+						printf("reflectDelta\n");
+#endif
 				}
 		}
-
-
-#ifndef NDEBUG
-		printf("reflectDelta\n");
-#endif
 }
 
 
-void sendEntity(int latest) {
+void sendEntity() {
 		entityStateSet data;
-		data.latestFrame = latest;
+		data.latestFrame = htonl(latestFrame);
 		data.endFlag = false;
 		data.clientId = myPlayer->num;
 		data.pos.x = myPlayer->object->pos.x;
@@ -647,6 +656,6 @@ void sendEntity(int latest) {
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG
-		printf("sendEntity frame: %d\n", latest);
+		printf("sendEntity frame: %d\n", latestFrame);
 #endif
 }

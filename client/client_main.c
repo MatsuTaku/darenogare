@@ -81,14 +81,15 @@ int main(int argc,char *argv[])
 #endif
 		};
 
-		if (endNet)
+		if (endNet) {
 				SDL_WaitThread(networkThread, NULL);
-		if (endFlag)
+		} else if (endFlag) {
+				sendEndCommand();
 				SDL_KillThread(networkThread);
+		}
 
 		destroyWindow();
 		closeSoc();
-		sendEndCommand();
 		return 0;
 }
 
@@ -129,5 +130,5 @@ static Uint32 timerEvent(Uint32 frame) {
 		e = SDL_GetTicks();
 		drawWindow();
 		w = SDL_GetTicks();
-		//printf("time system: %d,	window: %d\n", e - s, w - e);
+		// printf("time system: %d,	window: %d\n", e - s, w - e);
 }
