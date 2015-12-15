@@ -440,7 +440,7 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 		POSITION c_center;
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		int bst_flag = player->boost; //噴射フラグ
+		int bst_flag = player[chara_id].boost; //噴射フラグ
 		int rtt_flag = player[chara_id].rotate; //回転フラグ
 		int dx, dy;
 		int rmask, gmask, amask, bmask;
