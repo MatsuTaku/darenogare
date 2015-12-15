@@ -70,12 +70,12 @@ typedef struct {
 
 /* ITEM Values */
 typedef enum {
-		ITEM_EMPTY      = 0,
-		ITEM_NOIZING	= 1,
-		ITEM_LASER	= 2,
-		ITEM_MISSILE	= 3,
-		ITEM_MINIMUM	= 4,
-		ITEM_BARRIER	= 5,
+		ITEM_EMPTY      = -1,
+		ITEM_NOIZING	= 0,
+		ITEM_LASER	= 1,
+		ITEM_MISSILE	= 2,
+		ITEM_MINIMUM	= 3,
+		ITEM_BARRIER	= 4,
 		ITEM_NUM	= 5
 } ITEM_NUMBER ;
 
