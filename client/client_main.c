@@ -77,17 +77,13 @@ int main(int argc,char *argv[])
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				// printf("FPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
+				printf("FPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
 #endif
 		};
 
-		if (endNet) {
-				SDL_WaitThread(networkThread, NULL);
-		} else if (endFlag) {
+		if (endFlag)
 				sendEndCommand();
-				SDL_KillThread(networkThread);
-		}
-
+		SDL_WaitThread(networkThread, NULL);
 		destroyWindow();
 		closeSoc();
 		return 0;

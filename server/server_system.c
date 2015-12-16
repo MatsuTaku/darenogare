@@ -114,16 +114,14 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 
 
 void sendDeltaBuffer(int id, int latest, bool endFlag) {
-		assert(id >= 0 && id < MAX_CLIENTS);
-		assert(latest >= 0);
-
 		entityStateGet data;
-		data.latestFrame = frame;
-
-		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 
 		if ((data.endFlag = endFlag) == false) {
+				assert(id >= 0 && id < MAX_CLIENTS);
+				assert(latest >= 0);
+				ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 				int i;
+				data.latestFrame = frame;
 				/* デルタの所得 */
 				for (i = 0; i < MAX_CLIENTS; i++) {
 						PLAYER* player = &data.delta.player[i];
@@ -152,9 +150,8 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						
 						printf("frame[%d]: latest[%d]	player[%d] pos x: %d, y: %d\n", frame, latest, i, object->pos.x, object->pos.y);
 				}
+				printf("send server frame: %d\n", data.latestFrame);
 		}
-		printf("send server frame: %d\n", data.latestFrame);
-
 
 		sendData(id, &data, sizeof(entityStateGet));
 }

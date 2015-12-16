@@ -216,7 +216,7 @@ bool windowEvent() {
 #ifndef NDEBUG
 								printf("Press close button\n");
 #endif
-								break;
+								return endFlag;
 						default:
 								break;
 				}

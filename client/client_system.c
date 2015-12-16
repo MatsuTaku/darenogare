@@ -656,6 +656,6 @@ void sendEntity() {
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG
-		printf("sendEntity frame: %d\n", latestFrame);
+		// printf("sendEntity frame: %d\n", latestFrame);
 #endif
 }

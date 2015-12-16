@@ -2,8 +2,6 @@
 #include "client_common.h"
 #include "client_func.h"
 
-entityStateSet rocket;
-
 
 /*****************************************************************
   関数名	: ExecuteCommand
@@ -24,7 +22,7 @@ bool executeCommand(entityStateGet* data) {
 				 return true;
 				 printf("Get end command.\n");
 		 }
-		 reflectDelta(&data);
+		 reflectDelta(data);
 
 		return false;
 }

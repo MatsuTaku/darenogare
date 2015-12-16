@@ -70,21 +70,16 @@ int setUpClient(char *hostName,int *clientID,int *num)
   出力	: プログラム終了コマンドが送られてきた時0を返す．
   それ以外は1を返す
  *****************************************************************/
-bool sendRecvManager(void)
-{
+bool sendRecvManager(void) {
+		/* send player entity */
+		sendEntity();
+
+		/* get world delta */
 		fd_set	readOK;
 		int     command;
 		int		i;
 		bool	endFlag = false;
 		struct timeval	timeout;
-		/*
-		entityStateGet *data;
-		if ((data = malloc(sizeof(entityStateGet))) == NULL) {
-				fprintf(stderr, "Out of memory entityStateGet.\n");
-				exit(-1);
-		}
-		*/
-		entityStateGet data;
 
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 20;
@@ -93,11 +88,15 @@ bool sendRecvManager(void)
 		/* サーバーからデータが届いているか調べる */
 		select(gWidth,&readOK,NULL,NULL,&timeout);
 		if(FD_ISSET(gSocket,&readOK)){
+				/* サーバーからのデータを反映 */
+				entityStateGet data;
 				recvData(&data, sizeof(entityStateGet)); /* コマンドを読み込む */
 				endFlag = executeCommand(&data);
+
 		}
-		sendEntity();
-		// free(data);
+		printf("loop\n");
+
+		return endFlag;
 }
 
 
