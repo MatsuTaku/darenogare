@@ -4,7 +4,7 @@
 
 static int numCommand;
 
-/**
+/*
  *  機能:コマンド処理
  *  引数1:送信元
  *  引数2:entityState
@@ -61,7 +61,9 @@ static void SetIntData2DataBlock(void *data,int intData,int *dataSize)
     /* データサイズを増やす */
     (*dataSize) += sizeof(int);
 }
-
+/*****
+static
+*****/
 /*****************************************************************
 関数名	: SetCharData2DataBlock
 機能	: char 型のデータを送信用データの最後にセットする

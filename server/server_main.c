@@ -29,7 +29,7 @@ int main(int argc,char *argv[])
 	}
 	
 	while(endFlag){
-		endFlag = sendRecvManager();
+		endFlag = sendRecvManager();//endflagが０なら終了.
 	};
 	 ending();
          exit(0);
