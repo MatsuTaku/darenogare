@@ -12,7 +12,7 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
-#define RETENTION_FRAME	10
+#define RETENTION_FRAME	120
 
 #define MAX_CLIENTS		0x04				
 #define MAX_NAME_SIZE	10 				
@@ -154,27 +154,31 @@ typedef struct {
 
 // 通信データ(client -> server)
 typedef struct {
-		int endFlag ;	// 終了フラグ
-		int clientId;			// ユーザーID
+		int latestFrame;// 受信した最新フレーム 
+		bool endFlag ;	// 終了フラグ
+		int clientId;	// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
+		int killEnemy;
 } entityStateSet;
+
+
+typedef struct {
+		OBJECT plyObj[MAX_CLIENTS];
+		PLAYER player[MAX_CLIENTS];
+} DELTA;
 
 
 // 通信データ(server -> client)
 typedef struct {
-		int endFlag;
-		int clientId;
-		POSITION pos;
-		PLAYER player;
-		int killEnemy;
-		int deadFlag;
+		int latestFrame;
+		bool endFlag;
+		DELTA delta;
 } entityStateGet;
 
 
 typedef struct {
 		int test;
 } mapData;
-
 
 #endif

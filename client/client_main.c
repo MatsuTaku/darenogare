@@ -12,7 +12,8 @@ int main(int argc,char *argv[])
 {
 		int		num;
 		int 	clientID;
-		int		endFlag = 1;
+		bool	endFlag = false;
+		bool 	endNet = false;
 		char	localHostName[]="localhost";
 		char	*serverName;
 
@@ -47,7 +48,7 @@ int main(int argc,char *argv[])
 
 
 		/* ネットワーク処理スレッド作成 */
-		networkThread = SDL_CreateThread(networkEvent, &endFlag);
+		networkThread = SDL_CreateThread(networkEvent, &endNet);
 		if (networkThread == NULL) {
 				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
 		}
@@ -67,36 +68,53 @@ int main(int argc,char *argv[])
 		Uint32 loopInterval = ms / b;
 		int timeRate = FPS / b;
 		Uint32 startTime, endTime, toTime;
-		while((endFlag = windowEvent()) != 0){
+		while((endFlag = windowEvent()) == false && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
 				timerEvent(++frame);
 				endTime = SDL_GetTicks() * timeRate;
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);
-						printf("delay: %d\n", (toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
 				printf("FPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
 #endif
 		};
 
-		// SDL_WaitThread(networkThread, NULL);
-		SDL_KillThread(networkThread);
-
+		if (endFlag)
+				sendEndCommand();
+		SDL_WaitThread(networkThread, NULL);
 		destroyWindow();
 		closeSoc();
-		SendEndCommand();
 		return 0;
 }
 
 
 static int networkEvent(void* data) {
-		int* endFlag;
-		endFlag = (int*)data;
-		while(*endFlag) {
-				*endFlag = sendRecvManager();
+		bool *endFlag;
+		endFlag = (bool *)data;
+		// 1000と20の最小公倍数を基準に分数で計算
+		int ms = 1000;
+		int a = ms, b = 20, tmp;
+		int r = a % b;
+		while(r != 0) {
+				a = b;
+				b = r;
+				r = a % b;
 		}
+		double gcd = ms * FPS / b;
+		Uint32 loopInterval = ms / b;
+		int timeRate = FPS / b;
+		Uint32 startTime, endTime, toTime;
+		while(!*endFlag) {
+				startTime = SDL_GetTicks() * timeRate;
+				toTime = startTime + loopInterval;
+				*endFlag = sendRecvManager();
+				endTime = SDL_GetTicks() * timeRate;
+				if (endTime < toTime) {
+						SDL_Delay((toTime - endTime) / timeRate);
+				}
+		};
 		return 0;
 }
 
@@ -108,5 +126,5 @@ static Uint32 timerEvent(Uint32 frame) {
 		e = SDL_GetTicks();
 		drawWindow();
 		w = SDL_GetTicks();
-		//printf("time system: %d,	window: %d\n", e - s, w - e);
+		// printf("time system: %d,	window: %d\n", e - s, w - e);
 }
