@@ -18,6 +18,9 @@ static char gMapImgFile[] = "IMG/WallL.gif";
 static char gObstacleImgFile[] = "IMG/obstacle.png";
 static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gBoostImgFile[] = "IMG/boost.png";
+static char gWarningImgFile[] = "IMG/warning.png";
+static char gBoomImgFile[] = "IMG/boom.png";
+static char gMiniMapImgFile[] = "IMG/minimap.png";
 static char gItemImgFile[ITEM_NUM][20] = {
 		"IMG/noizing.png",
 		"IMG/Laser.png", 
@@ -60,8 +63,8 @@ SDL_Joystick* joystick;
 
 /*サーフェース*/
 static SDL_Surface *gMainWindow;//メインウィンドウ
+static SDL_Surface *gBackGround; //背景
 static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
-static SDL_Surface *gWorld;//背景画像のサーフェス
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
@@ -70,21 +73,24 @@ static SDL_Surface *gArrowImage[MAX_CLIENTS]; //矢印
 static SDL_Surface *gItemBox; //アイテム欄
 static SDL_Surface *gNameImage[MAX_CLIENTS]; //キャラクター名
 static SDL_Surface *gBoostImage; //ブースト
-static SDL_Surface *gBackGround;
+static SDL_Surface *gWarningImage; //警告
+static SDL_Surface *gBoomImage; //爆発
+static SDL_Surface *gMiniMapImage; //ミニマップ
 
 /*関数*/
-static void drawObject();
-static void drawChara(POSITION *charaPos, int chara_id, int flag);
-void drawItem(POSITION *itemPos, int item_id);
-void drawObstacle(POSITION *obsPos);
-static void drawStatus();
 static int initImage();
-static void combineStatus(POSITION* myPos);
+static void drawObject();
+static void drawChara(POSITION *charaPos, int chara_id);
+static void drawDeadChara(POSITION *charaPos, int chara_id);
+static void drawItem(POSITION *itemPos, int item_id);
+static void drawObstacle(POSITION *obsPos);
+static void drawStatus();
+static void drawWarning();
+static void drawMiniMap(POSITION* myPos);
+static void combineWindow(POSITION* myPos);
 static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static int judgeRange(POSITION *objPos, POSITION *myPos);
-static int measureDist(POSITION *objPos, POSITION *myPos);
-
 
 typedef struct {
 		SDL_Rect src;
@@ -141,9 +147,17 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 int drawWindow() {	//ゲーム画面の描画
 		int endFlag = 1;
 		clearWindow(); //ウィンドウのクリア
+		int start, end;
+		start = SDL_GetTicks();
 		drawObject(); //オブジェクトの描画
+		end = SDL_GetTicks();
+		printf("draw time:%d\n",end - start);
+		if(myPlayer->warn == WARN_OUT_AREA){
+			drawWarning(); //警告文の表示
+		}
 		drawStatus(); //ステータスの描画
-		combineStatus(&myPlayer->object->pos); //サーフェスの合体
+		drawMiniMap(&myPlayer->object->pos); //ミニマップの描画
+		combineWindow(&myPlayer->object->pos); //サーフェスの合体
 		SDL_Flip(gMainWindow);//描画更新
 		return endFlag; //endflagは1で返す(継続)
 }
@@ -263,6 +277,21 @@ int initImage(void){ //画像の読み込み
 				printf("not find itembox image\n");
 				return(-1);
 		}
+		gWarningImage = IMG_Load( gWarningImgFile ); //警告文
+		if( gWarningImage == NULL){
+				printf("not find warning image\n");
+				return(-1);
+		}
+		gBoomImage = IMG_Load( gBoomImgFile ); //警告文
+		if( gBoomImage == NULL){
+				printf("not find boom image\n");
+				return(-1);
+		}
+		gMiniMapImage = IMG_Load( gMiniMapImgFile ); //ミニマップ
+		if( gMiniMapImage == NULL){
+				printf("not find minimap image\n");
+				return(-1);
+		}
 		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
 				gItemImage[i] = IMG_Load( gItemImgFile[i] );
 				if( gItemImage[i] == NULL ){
@@ -303,7 +332,6 @@ int initImage(void){ //画像の読み込み
 
 
 void clearWindow(void){ //ウィンドウのクリア
-
 		//メインウィンドウ
 		POSITION* myPos = &myPlayer->object->pos;
 		int asp = 3;
@@ -319,11 +347,7 @@ void clearWindow(void){ //ウィンドウのクリア
 						ground.src.y-ground.src.h/2 < 0 || ground.src.y+ground.src.h/2 > gBackGround->h){
 				SDL_FillRect(gMainWindow, NULL, 0x000000); //範囲外だけ黒で塗り潰し
 		}
-		int start, end;
-		start = SDL_GetTicks();
 		SDL_BlitSurface(gBackGround, &ground.src, gMainWindow, &ground.dst);
-		end = SDL_GetTicks();
-		// printf("time:%d\n",end - start);
 		//ステータスウィンドウ
 		SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
 		SDL_Rect dst_rect = {0, 0};
@@ -332,7 +356,6 @@ void clearWindow(void){ //ウィンドウのクリア
 				dst_rect.x = i*(gItemBox->w);
 				SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 		}
-
 }
 
 
@@ -345,28 +368,27 @@ static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos) {
 
 
 void drawObject(void) { //オブジェクトの描画
-
 		int i;
 		int id;
-		int item_id, obstacle_id, enemy_id;
 		SDL_Rect src_rect;
 		SDL_Rect dst_rect;
 		POSITION diffPos;
 		POSITION objPos;
 		double angle,ar_angle;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		int bst_flag; //ブーストフラグ
 		src_rect.x = 0;
 		src_rect.y = 0;
-
 
 		for(i=0; i<MAX_OBJECT; i++){
 				if(judgeRange(&object[i].pos, myPos) > 0){ //表示範囲内にあれば
 						switch(object[i].type){
 								case OBJECT_CHARACTER: //キャラクター
 										id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
-										bst_flag = myPlayer->boost;
-										drawChara(&object[i].pos, id, bst_flag); //キャラクターの描画
+										if(player[id].alive == 0){
+												drawDeadChara(&object[i].pos, id); //死亡キャラの描画
+												break;
+										}
+										drawChara(&object[i].pos, id); //キャラクターの描画
 										break;
 								case OBJECT_ITEM: //アイテム
 										id = ((ITEM *)object[i].typeBuffer)->num; //アイテム番号
@@ -378,23 +400,7 @@ void drawObject(void) { //オブジェクトの描画
 								case OBJECT_EMPTY: //なし
 										break;
 						}
-				} /*else if(object[i].type == OBJECT_CHARACTER){ //敵の方向に矢印を表示
-					enemy_id = object[i].id;
-					double x,y;
-					double ar_x, ar_y;
-					x = object[i].pos.x - myPos->x;
-					y = object[i].pos.y - myPos->y;
-					ar_angle = atan2(y,x); //角度を求める
-					image_reangle = rotozoomSurface(gArrowImage[enemy_id], ar_angle, 1.0, 1); //角度の変更
-					int dx = image_reangle->w - gArrowImage[enemy_id]->w; //回転によるずれの調整差分
-					int dy = image_reangle->h - gArrowImage[enemy_id]->h;
-					ar_x = (WINDOW_HEIGHT/2)*cos(ar_angle); //矢印の位置を決める
-					ar_y = (WINDOW_HEIGHT/2)*sin(ar_angle);
-					diffPos.x = ar_x - (gArrowImage[enemy_id]->w /2) - dx/2;
-					diffPos.y = ar_y - (gArrowImage[enemy_id]->h /2) - dy/2;
-					adjustWindowPosition(&dst_rect, &diffPos);
-					SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect);
-					}*/
+				}
 		}
 }
 
@@ -414,7 +420,7 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 }
 
 
-void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクターの描画
+void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 
 		SDL_Surface *image_reangle; //回転後のサーフェス
 		static SDL_Surface *c_window;
@@ -422,6 +428,8 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 		POSITION c_center;
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
+		int bst_flag = player[chara_id].boost; //噴射フラグ
+		int rtt_flag = player[chara_id].rotate; //回転フラグ
 		int dx, dy;
 		int rmask, gmask, amask, bmask;
 		rmask = 0xff000000;
@@ -430,31 +438,76 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 		amask = 0x000000ff;
 
 		//透過処理
-		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h + 40, 32, rmask, gmask, bmask, amask);
+		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h + 60, 32, rmask, gmask, bmask, amask);
 		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0x00, 0x00, 0x00)); //黒を透過
 		c_window = SDL_DisplayFormat(c_window);
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 
 		//1.噴射炎をc_windowに描画
-		if(flag != BOOST_NEUTRAL){
-				Rect boost;
-				boost.src.x=0; boost.src.y=0; boost.src.w=gBoostImage->w; boost.src.h=gBoostImage->h;
-				if(flag == BOOST_GO){ //前噴射の場合
-						boost.dst.x = c_center.x - gCharaImage[chara_id]->w;
-						boost.dst.y = c_center.y - gBoostImage->h/2;
-						SDL_BlitSurface(gBoostImage, &boost.src, c_window, &boost.dst);
-				}
-				if(flag == BOOST_BACK){ //後噴射の場合
-						image_reangle = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
-						dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
-						dy = image_reangle->h - gBoostImage->h;
-						boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
-						boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
-						SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
-				}
+		Rect boost;
+		boost.src.x = 0; boost.src.y = 0; 
+		if(bst_flag != BOOST_NEUTRAL){
+		    boost.src.w = gBoostImage->w; boost.src.h = gBoostImage->h;
+		    if(bst_flag == BOOST_GO){ //前噴射の場合
+			boost.dst.x = c_center.x - gCharaImage[chara_id]->w*0.9;
+			boost.dst.y = c_center.y - gBoostImage->h/2;
+			SDL_BlitSurface(gBoostImage, &boost.src, c_window, &boost.dst);
+		    }
+		    if(bst_flag == BOOST_BACK){ //後噴射の場合
+			image_reangle = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
+			boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
+			SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+		    }
 		}
-
+		if(rtt_flag != ROTATE_NEUTRAL){
+		    if(rtt_flag == ROTATE_RIGHT){ //右回転の場合
+			image_reangle = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			int i;
+			for(i = 0; i < 2; i++){ //頭部の噴射炎
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
+			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+			image_reangle = rotozoomSurface(gBoostImage, 90, 0.4, 1);
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w;
+			dy = image_reangle->h - gBoostImage->h;
+			for(i = 0; i < 3; i++){ //後部の噴射炎
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+		    }
+		    if(rtt_flag == ROTATE_LEFT){ //左回転の場合
+			image_reangle = rotozoomSurface(gBoostImage, 90, 0.4, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			int i;
+			for(i = 0; i < 2; i++){ //頭部
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
+			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+			image_reangle = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
+			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
+			dy = image_reangle->h - gBoostImage->h;
+			for(i = 0; i < 3; i++){ //後部
+			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+			    SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
+		    }
+		}
 		//2.キャラをc_windowに描画
 		SDL_Rect src_rect = {0, 0, gCharaImage[chara_id]->w, gCharaImage[chara_id]->h};
 		SDL_Rect dst_rect = {c_center.x - gCharaImage[chara_id]->w/2, c_center.y - gCharaImage[chara_id]->h/2};
@@ -480,8 +533,32 @@ void drawChara(POSITION *charaPos, int chara_id, int flag){ //キャラクター
 
 }
 
-void drawItem(POSITION *itemPos, int item_id){ //アイテムの描画
+void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 
+		double angle;
+		int dx, dy;
+		POSITION diffPos;
+		POSITION* myPos = &myPlayer->object->pos; //マイポジション
+		SDL_Rect dst_rect;
+
+		SDL_Surface *image_reangle; //回転後のサーフェス
+		angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
+		image_reangle = rotozoomSurface(gBoomImage, angle, 1.0, 1); //角度の変更
+		SDL_Rect src_rect = {0, 0, image_reangle->w, image_reangle->h};
+
+		dx = image_reangle->w - gBoomImage->w; //回転によるずれの調整差分
+		dy = image_reangle->h - gBoomImage->h;
+		diffPos.x = charaPos->x - myPos->x - (gBoomImage->w /2) - dx/2;
+		diffPos.y = charaPos->y - myPos->y - (gBoomImage->h /2) - dy/2;
+		adjustWindowPosition(&dst_rect, &diffPos);
+		SDL_BlitSurface(image_reangle, &src_rect, gMainWindow, &dst_rect); //描画
+
+		SDL_FreeSurface(image_reangle);
+}
+
+
+void drawItem(POSITION *itemPos, int item_id){ //アイテムの描画
+		assert(item_id <= ITEM_NUM);
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
 		SDL_Rect dst_rect;
@@ -506,39 +583,91 @@ void drawObstacle(POSITION *obsPos){ //障害物の描画
 		SDL_BlitSurface(ObstacleImage[0], &src_rect, gMainWindow, &dst_rect); //描画
 }
 
+
+void drawWarning(void){ //警告文の表示
+		SDL_Rect src_rect = {0, 0, gWarningImage->w, gWarningImage->h};
+		SDL_Rect dst_rect = {100, 100};
+		SDL_BlitSurface(gWarningImage, &src_rect, gMainWindow, &dst_rect);
+}
+
+
 void drawStatus(void){ //ステータスの描画
-		SDL_Rect src_rect;
+		SDL_Rect src_rect = {0, 0, 0, 0};
 		SDL_Rect dst_rect;
-		src_rect.x = 0;
-		src_rect.y = 0;
 		int i;
 		int item_id;
 		int chara_id;
 
 		for(i=0; i<MAX_CLIENTS; i++){
-				if (player[i].object != NULL) {
-						chara_id = player[i].num;	// キャラ番号
-						item_id = player[i].item;	// アイテム番号
-						//アイコン
-						src_rect.w = gIconImage[chara_id]->w;
-						src_rect.h = gIconImage[chara_id]->h;
-						dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
-						dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
-						SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
-						//所持アイテム
-						if(item_id != ITEM_EMPTY){
-								src_rect.w = gItemImage[item_id]->w;
-								src_rect.h = gItemImage[item_id]->h;
-								dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
-								dst_rect.y -= 10;
-								SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
-						}
-				}
+			if (player[i].object != NULL) {
+
+		    chara_id = player[i].num;	// キャラ番号
+		    item_id = player[i].item;	// アイテム番号
+		    //アイコン
+		    if(player[chara_id].alive == 0){ //ゲームオーバーの場合
+			src_rect.w = gBoomImage->w;
+			src_rect.h = gBoomImage->h;
+			dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gBoomImage->w)/2;
+			dst_rect.y = (gItemBox->h - gBoomImage->h)/2;
+			SDL_BlitSurface(gBoomImage, &src_rect, gStatusWindow, &dst_rect);
+			return;
+		    }
+		    src_rect.w = gIconImage[chara_id]->w;
+		    src_rect.h = gIconImage[chara_id]->h;
+		    dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIconImage[chara_id]->w)/2;
+		    dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
+		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
+		    //所持アイテム
+		printf("item %d\n", item_id);
+		    if(item_id > ITEM_EMPTY){
+			src_rect.w = gItemImage[item_id]->w;
+			src_rect.h = gItemImage[item_id]->h;
+			dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2;
+			dst_rect.y = gItemBox->h/2 - gItemImage[item_id]->h/2;
+			SDL_BlitSurface(gItemImage[item_id], &src_rect, gStatusWindow, &dst_rect);
+		    		}
+			}
 		}
 }
 
-void combineStatus(POSITION* myPos){ //サーフェスを合体
 
+void drawMiniMap(POSITION* myPos){ //ミニマップ
+
+		POSITION c_center;
+		c_center.x = gMainWindow->w - gMiniMapImage->w/2;
+		c_center.y = gMiniMapImage->h/2;
+		SDL_Rect enemy[3];
+		int i, p;
+		double dx, dy, angle, r;
+		p = 0;
+		SDL_Rect map_src = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
+		SDL_Rect map_dst = {gMainWindow->w - gMiniMapImage->w, 0};
+		SDL_BlitSurface(gMiniMapImage, &map_src, gMainWindow, &map_dst);
+		for(i = 0; i < MAX_CLIENTS; i++){
+			if(i == myID)  break;
+			dx = player[i].object->pos.x - myPos->x;	
+			dy = player[i].object->pos.y - myPos->y;
+			r = tan(dx/dy);
+			angle = atan(r); //角度を求める
+
+			if(dx > gMiniMapImage->w){
+				enemy[p].x = c_center.x + gMiniMapImage->w/2*cos(angle);
+			}else{
+				enemy[p].x = c_center.x + dx/100 * cos(angle);
+			}
+			if(dy > gMiniMapImage->h){
+				enemy[p].y = c_center.y + gMiniMapImage->h/2*sin(angle);
+			}else{
+				enemy[p].y = c_center.y + dy/100 * sin(angle);
+			}
+			enemy[p].w = 5; enemy[p].h = 5;
+			SDL_FillRect(gMainWindow, &enemy[p], 0xffff0000); //点を描画
+			p++;
+		}
+}
+
+
+void combineWindow(POSITION* myPos){ //サーフェスを合体
 		//ステータスを組み合わせる
 		Rect status;
 		status.src.x = 0;
