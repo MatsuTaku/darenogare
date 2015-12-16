@@ -21,6 +21,7 @@ static char gBoostImgFile[] = "IMG/boost.png";
 static char gWarningImgFile[] = "IMG/warning.png";
 static char gBoomImgFile[] = "IMG/boom.png";
 static char gMiniMapImgFile[] = "IMG/minimap.png";
+static char gArrowImgFile[] = "IMG/arrow.jpg";
 static char gItemImgFile[ITEM_NUM][20] = {
 		"IMG/noizing.png",
 		"IMG/Laser.png", 
@@ -46,12 +47,7 @@ static char gNameImgFile[MAX_CLIENTS][20] = {
 		"IMG/3Pname.png",
 		"IMG/4Pname.png"
 };
-static char gArrowImgFile[MAX_CLIENTS][20] = {
-		"IMG/1Parrow.jpg",
-		"IMG/2Parrow.jpg",
-		"IMG/3Parrow.jpg",
-		"IMG/4Parrow.jpg"
-};
+
 
 static int hiritu = 100;
 static int weitFlag = 0;
@@ -69,7 +65,7 @@ static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
 static SDL_Surface *gIconImage[MAX_CLIENTS];//アイコン
-static SDL_Surface *gArrowImage[MAX_CLIENTS]; //矢印
+static SDL_Surface *gArrowImage; //矢印
 static SDL_Surface *gItemBox; //アイテム欄
 static SDL_Surface *gNameImage[MAX_CLIENTS]; //キャラクター名
 static SDL_Surface *gBoostImage; //ブースト
@@ -169,6 +165,10 @@ void destroyWindow(void) {
 		SDL_FreeSurface (gBackGround);
 		SDL_FreeSurface (ObstacleImage[0]);
 		SDL_FreeSurface (gItemBox);
+		SDL_FreeSurface(gMiniMapImage);
+		SDL_FreeSurface(gArrowImage);
+		SDL_FreeSurface(gBoomImage);
+		SDL_FreeSurface(gWarningImage);
 		int i;
 		for(i = 0; i < ITEM_NUM; i++){
 				SDL_FreeSurface (gItemImage[i]);
@@ -176,6 +176,7 @@ void destroyWindow(void) {
 		for(i = 0; i < MAX_CLIENTS; i++){
 				SDL_FreeSurface (gCharaImage[i]);
 				SDL_FreeSurface (gIconImage[i]);
+				SDL_FreeSurface(gNameImage[i]);
 		}
 
 		if (joystick != NULL)
@@ -294,6 +295,11 @@ int initImage(void){ //画像の読み込み
 				printf("not find minimap image\n");
 				return(-1);
 		}
+		gArrowImage = IMG_Load( gArrowImgFile ); //矢印
+		if(gArrowImage == NULL){
+				printf("not find arrow image\n");
+				return(-1);
+		}
 		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
 				gItemImage[i] = IMG_Load( gItemImgFile[i] );
 				if( gItemImage[i] == NULL ){
@@ -319,13 +325,6 @@ int initImage(void){ //画像の読み込み
 				gNameImage[i] = IMG_Load( gNameImgFile[i] );
 				if( gNameImage[i] == NULL ){
 						printf("not find name%dP image\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //矢印画像
-				gArrowImage[i] = IMG_Load( gArrowImgFile[i] );
-				if( gArrowImage[i] == NULL ){
-						printf("not find arrow%dP image\n", i+1);
 						return(-1);
 				}
 		}
@@ -377,7 +376,6 @@ void drawObject(void) { //オブジェクトの描画
 	SDL_Rect dst_rect;
 	POSITION diffPos;
 	POSITION objPos;
-	double angle,ar_angle;
 	POSITION* myPos = &myPlayer->object->pos; //マイポジション
 	src_rect.x = 0;
 	src_rect.y = 0;
@@ -426,8 +424,7 @@ int judgeRange(POSITION *objPos, POSITION *myPos)
 
 void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 
-		SDL_Surface *image_reangle; //回転後のサーフェス
-		static SDL_Surface *c_window;
+		static SDL_Surface *image_reangle, *c_window; //回転後のサーフェス
 		double angle,ar_angle;
 		POSITION c_center;
 		POSITION diffPos;
@@ -588,10 +585,31 @@ void drawObstacle(POSITION *obsPos){ //障害物の描画
 }
 
 
-void drawWarning(void){ //警告文の表示
-		SDL_Rect src_rect = {0, 0, gWarningImage->w, gWarningImage->h};
-		SDL_Rect dst_rect = {100, 100};
-		SDL_BlitSurface(gWarningImage, &src_rect, gMainWindow, &dst_rect);
+void drawWarning(void){ //警告の表示
+		int dx, dy;
+		POSITION* myPos = &myPlayer->object->pos;
+		SDL_Surface *image_reangle;
+		double angle;
+
+		//警告文の描写
+		SDL_Rect warn_src = {0, 0, gWarningImage->w, gWarningImage->h};
+		SDL_Rect warn_dst = {100, 100};
+		SDL_BlitSurface(gWarningImage, &warn_src, gMainWindow, &warn_dst);
+
+		//中心への矢印
+		dx = (WORLD_SIZE/2 - myPos->x);	
+		dy = (WORLD_SIZE/2 - myPos->y);
+		double r = tan(dy/dx);
+		angle = atan(r); //角度を求める
+		image_reangle = rotozoomSurface(gArrowImage, angle, 0.5, 1); //角度の変更
+		SDL_Rect ar_src = {0, 0, image_reangle->w, image_reangle->h};
+		SDL_Rect ar_dst;
+		dx = image_reangle->w - gArrowImage->w; //回転によるずれの調整差分
+		dy = image_reangle->h - gArrowImage->h;
+		ar_dst.x = gMainWindow->w/2 + gCharaImage[0]->w*cos(angle) - gArrowImage->w/2 - dx/2;
+		ar_dst.y = gMainWindow->h/2 + gCharaImage[0]->h*sin(angle) - gArrowImage->h/2 - dy/2;
+		SDL_BlitSurface(gArrowImage, &ar_src, gMainWindow, &ar_dst);
+		
 }
 
 
@@ -622,7 +640,6 @@ void drawStatus(void){ //ステータスの描画
 		    dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
 		    SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 		    //所持アイテム
-		printf("item %d\n", item_id);
 		    if(item_id > ITEM_EMPTY){
 			src_rect.w = gItemImage[item_id]->w;
 			src_rect.h = gItemImage[item_id]->h;
@@ -635,37 +652,48 @@ void drawStatus(void){ //ステータスの描画
 }
 
 
-void drawMiniMap(POSITION* myPos){ //ミニマップ
+void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 
 		POSITION c_center;
 		c_center.x = gMainWindow->w - gMiniMapImage->w/2;
 		c_center.y = gMiniMapImage->h/2;
-		SDL_Rect enemy[3];
-		int i, p;
+		SDL_Rect enemy[MAX_CLIENTS];
+		int i, p, player_num;
 		double dx, dy, angle, r;
-		p = 0;
 		SDL_Rect map_src = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMapImage->w, 0};
 		SDL_BlitSurface(gMiniMapImage, &map_src, gMainWindow, &map_dst);
-		for(i = 0; i < MAX_CLIENTS; i++){
-			if(i == myID)  break;
-			dx = player[i].object->pos.x - myPos->x;	
-			dy = player[i].object->pos.y - myPos->y;
-			r = tan(dx/dy);
-			angle = atan(r); //角度を求める
+		p = 0;
+		for(i = 0; i < MAX_CLIENTS; i++){ //接続人数の確認
+			if(player[i].object != NULL){
+				break;
+			}
+			player_num++;
+		}
+		for(i = 0; i < player_num; i++){
+			enemy[p].w = 6; enemy[p].h = 6;
+			if(i == myID){
+				enemy[p].x = c_center.x; enemy[p].y = c_center.y;
+				SDL_FillRect(gMainWindow, &enemy[p], 0xff00bfff); //自分の点を描画
+			}
+			else{
+				dx = (player[i].object->pos.x - myPos->x);	
+				dy = (player[i].object->pos.y - myPos->y);
+				r = tan(dy/dx);
+				angle = atan(r); //角度を求める
 
-			if(dx > gMiniMapImage->w){
-				enemy[p].x = c_center.x + gMiniMapImage->w/2*cos(angle);
-			}else{
-				enemy[p].x = c_center.x + dx/100 * cos(angle);
+				if(dx/150 > gMiniMapImage->w){
+					enemy[p].x = c_center.x + gMiniMapImage->w/2*cos(angle);
+				}else{
+					enemy[p].x = c_center.x + (dx/200 * cos(angle));
+				}
+				if(dy/150 > gMiniMapImage->h){
+					enemy[p].y = c_center.y + gMiniMapImage->h/2*sin(angle);
+				}else{
+					enemy[p].y = c_center.y + (dy/200 * sin(angle));
+				}
+				SDL_FillRect(gMainWindow, &enemy[p], 0xffff0000); //敵の点を描画
 			}
-			if(dy > gMiniMapImage->h){
-				enemy[p].y = c_center.y + gMiniMapImage->h/2*sin(angle);
-			}else{
-				enemy[p].y = c_center.y + dy/100 * sin(angle);
-			}
-			enemy[p].w = 5; enemy[p].h = 5;
-			SDL_FillRect(gMainWindow, &enemy[p], 0xffff0000); //点を描画
 			p++;
 		}
 }
