@@ -71,9 +71,6 @@ int setUpClient(char *hostName,int *clientID,int *num)
   それ以外は1を返す
  *****************************************************************/
 bool sendRecvManager(void) {
-		/* send player entity */
-		sendEntity();
-
 		/* get world delta */
 		fd_set	readOK;
 		int     command;
@@ -94,7 +91,9 @@ bool sendRecvManager(void) {
 				endFlag = executeCommand(&data);
 
 		}
-		printf("loop\n");
+
+		/* send player entity */
+		sendEntity();
 
 		return endFlag;
 }

@@ -11,6 +11,7 @@ PLAYER* myPlayer;
 static int curObjNum;
 
 static int latestFrame;
+static entityStateGet getEntity[FRAME_NUM];
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
@@ -37,11 +38,15 @@ static bool judgeSafety(POSITION* pos);
  *	return: Error = -1
  */
 int initGameSystem(int myId, int playerNum) {
+		int i;
 		srand((unsigned)time(NULL));
 
 		latestFrame = 0;
+		for (i = 0; i < FRAME_NUM; i++) {
+				getEntity[i].lastFrame = 0;
+				getEntity[i].latestFrame = 0;
+		}
 
-		int i;
 		object = allAssembly.object;
 		player = allAssembly.player;
 
@@ -609,31 +614,59 @@ static bool judgeSafety(POSITION* pos) {
  */
 void reflectDelta(entityStateGet* data) {
 		latestFrame = data->latestFrame;
-		printf("frame system: %d\n", data->latestFrame);
+		bool recieved = false;
+		if (data->lastFrame > getEntity[FRAME_LAST].lastFrame)
+				recieved = true;
+		getEntity[FRAME_LAST] = getEntity[FRAME_LATEST];
+		getEntity[FRAME_LATEST] = *data;
+
 		DELTA* delta = &data->delta;
 		int i;
 		for (i = 0; i < MAX_CLIENTS; i++) {
 				if (i != myPlayer->num && player[i].object != NULL) {
 						PLAYER* curPlayer = &player[i];
 						PLAYER* deltaPlayer = &delta->player[i];
-						curPlayer->dir += deltaPlayer->dir;
-						curPlayer->toDir += deltaPlayer->toDir;
-						curPlayer->ver.vx += deltaPlayer->ver.vx;
-						curPlayer->ver.vy += deltaPlayer->ver.vy;
-						if (deltaPlayer->alive)
-								curPlayer->alive = !curPlayer->alive;
-						curPlayer->boost += deltaPlayer->boost;
-						curPlayer->rotate += deltaPlayer->rotate;
-						curPlayer->action += deltaPlayer->action;
-						curPlayer->item += deltaPlayer->item;
-						curPlayer->warn += deltaPlayer->warn;
-						curPlayer->deadTime +=deltaPlayer->deadTime;
-						curPlayer->lastTime += deltaPlayer->lastTime;
-
 						OBJECT* curObject = curPlayer->object;
 						OBJECT* deltaObject = &delta->plyObj[i];
-						curObject->pos.x += deltaObject->pos.x;
-						curObject->pos.y += deltaObject->pos.y;
+						if (recieved) {
+								curPlayer->dir += deltaPlayer->dir;
+								curPlayer->toDir += deltaPlayer->toDir;
+								curPlayer->ver.vx += deltaPlayer->ver.vx;
+								curPlayer->ver.vy += deltaPlayer->ver.vy;
+								if (deltaPlayer->alive)
+										curPlayer->alive = !curPlayer->alive;
+								curPlayer->boost += deltaPlayer->boost;
+								curPlayer->rotate += deltaPlayer->rotate;
+								curPlayer->action += deltaPlayer->action;
+								curPlayer->item += deltaPlayer->item;
+								curPlayer->warn += deltaPlayer->warn;
+								curPlayer->deadTime +=deltaPlayer->deadTime;
+								curPlayer->lastTime += deltaPlayer->lastTime;
+
+								curObject->pos.x += deltaObject->pos.x;
+								curObject->pos.y += deltaObject->pos.y;
+						} else {
+								printf("fallthrough\n");
+								DELTA* lastDelta = &getEntity[FRAME_LAST].delta;
+								PLAYER* lastPlayer = &lastDelta->player[i];
+								OBJECT* lastObject = &lastDelta->plyObj[i];
+								curPlayer->dir += deltaPlayer->dir - lastPlayer->dir;
+								curPlayer->toDir += deltaPlayer->toDir - lastPlayer->toDir;
+								curPlayer->ver.vx += deltaPlayer->ver.vx - lastPlayer->ver.vx;
+								curPlayer->ver.vy += deltaPlayer->ver.vy - lastPlayer->ver.vy;
+								if (deltaPlayer->alive != lastPlayer->alive)
+										curPlayer->alive = !curPlayer->alive;
+								curPlayer->boost += deltaPlayer->boost - lastPlayer->boost;
+								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
+								curPlayer->action += deltaPlayer->action - lastPlayer->action;
+								curPlayer->item += deltaPlayer->item - lastPlayer->item;
+								curPlayer->warn += deltaPlayer->warn - lastPlayer->warn;
+								curPlayer->deadTime +=deltaPlayer->deadTime - lastPlayer->deadTime;
+								curPlayer->lastTime += deltaPlayer->lastTime - lastPlayer->lastTime;
+
+								curObject->pos.x += deltaObject->pos.x - lastObject->pos.x;
+								curObject->pos.y += deltaObject->pos.y - lastObject->pos.y;
+						}
 #ifndef NDEBUG
 						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
 						printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
