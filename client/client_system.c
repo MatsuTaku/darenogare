@@ -608,7 +608,7 @@ static bool judgeSafety(POSITION* pos) {
  * server method
  */
 void reflectDelta(entityStateGet* data) {
-		latestFrame = ntohl(data->latestFrame);
+		latestFrame = data->latestFrame;
 		printf("frame system: %d\n", data->latestFrame);
 		DELTA* delta = &data->delta;
 		int i;
@@ -636,8 +636,8 @@ void reflectDelta(entityStateGet* data) {
 						curObject->pos.y += deltaObject->pos.y;
 #ifndef NDEBUG
 						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
-						printf("latestFrame[%d]\n", data->latestFrame);
-						printf("reflectDelta\n");
+						printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
+						printf("recieve time: %d\n", SDL_GetTicks());
 #endif
 				}
 		}
@@ -646,7 +646,7 @@ void reflectDelta(entityStateGet* data) {
 
 void sendEntity() {
 		entityStateSet data;
-		data.latestFrame = htonl(latestFrame);
+		data.latestFrame = latestFrame;
 		data.endFlag = false;
 		data.clientId = myPlayer->num;
 		data.pos.x = myPlayer->object->pos.x;
@@ -656,6 +656,6 @@ void sendEntity() {
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG
-		// printf("sendEntity frame: %d\n", latestFrame);
+		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

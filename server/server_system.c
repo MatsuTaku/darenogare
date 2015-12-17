@@ -122,6 +122,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 				ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 				int i;
 				data.latestFrame = frame;
+				data.lastFrame = latest;
 				/* デルタの所得 */
 				for (i = 0; i < MAX_CLIENTS; i++) {
 						PLAYER* player = &data.delta.player[i];
