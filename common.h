@@ -172,6 +172,7 @@ typedef struct {
 // 通信データ(server -> client)
 typedef struct {
 		int latestFrame;
+		int lastFrame;
 		bool endFlag;
 		DELTA delta;
 } entityStateGet;

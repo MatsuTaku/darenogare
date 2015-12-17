@@ -32,6 +32,12 @@ enum joypadButton {
 		BUTTON_START	= 11
 };
 
+enum deltaFrame {
+		FRAME_LAST,
+		FRAME_LATEST,
+		FRAME_NUM
+};
+
 extern entityStateSet rocket;
 extern mapData MAP;
 

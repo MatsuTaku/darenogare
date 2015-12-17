@@ -95,16 +95,17 @@ static int networkEvent(void* data) {
 		endFlag = (bool *)data;
 		// 1000と20の最小公倍数を基準に分数で計算
 		int ms = 1000;
-		int a = ms, b = 20, tmp;
+		int CPS = 30;
+		int a = ms, b = CPS, tmp;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
 				b = r;
 				r = a % b;
 		}
-		double gcd = ms * FPS / b;
+		double gcd = ms * CPS / b;
 		Uint32 loopInterval = ms / b;
-		int timeRate = FPS / b;
+		int timeRate = CPS / b;
 		Uint32 startTime, endTime, toTime;
 		while(!*endFlag) {
 				startTime = SDL_GetTicks() * timeRate;
@@ -114,6 +115,7 @@ static int networkEvent(void* data) {
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
+				printf("CPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
 		};
 		return 0;
 }
