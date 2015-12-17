@@ -342,10 +342,10 @@ void clearWindow(void){ //ウィンドウのクリア
 		ground.src.h = gMainWindow->h;
 		ground.dst.x = 0;
 		ground.dst.y = 0;
-		if(ground.src.x-ground.src.w/2 < 0 || ground.src.x+ground.src.w/2 > gBackGround->w || 
-						ground.src.y-ground.src.h/2 < 0 || ground.src.y+ground.src.h/2 > gBackGround->h){
+		/*if(ground.src.x-ground.src.w/2 < 0 || ground.src.x+ground.src.w/2 > gBackGround->w || 
+						ground.src.y-ground.src.h/2 < 0 || ground.src.y+ground.src.h/2 > gBackGround->h){*/
 				SDL_FillRect(gMainWindow, NULL, 0x000000); //範囲外だけ黒で塗り潰し
-		}
+		//}
 		SDL_BlitSurface(gBackGround, &ground.src, gMainWindow, &ground.dst);
 		//ステータスウィンドウ
 		SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
@@ -623,7 +623,7 @@ void drawStatus(void){ //ステータスの描画
 		    chara_id = player[i].num;	// キャラ番号
 		    item_id = player[i].item;	// アイテム番号
 		    //アイコン
-		      if(player[chara_id].alive == 0){ //ゲームオーバーの場合
+		      if(!player[chara_id].alive){ //ゲームオーバーの場合
 			   src_rect.w = gBoomImage->w;
 			   src_rect.h = gBoomImage->h;
 			   dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gBoomImage->w)/2;
