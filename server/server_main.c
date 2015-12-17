@@ -3,6 +3,7 @@
 
 static Uint32 SignalHandler(Uint32 interval, void *param);
 
+
 int main(int argc,char *argv[]) {
 		int	num;
 		bool endFlag = false;
@@ -57,4 +58,5 @@ int main(int argc,char *argv[]) {
 		ending();
 		exit(0);
 		return 0;
+
 }

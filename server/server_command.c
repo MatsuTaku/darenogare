@@ -3,7 +3,7 @@
 #include"../common.h"
 
 
-/**
+/*
  *  機能:コマンド処理
  *  引数1:送信元
  *  引数2:entityState
@@ -23,4 +23,5 @@ bool executeCommand(int id, entityStateSet* state) {               /*引数チ�
 		   printf("ExecuteCommand()\n");
 		 */ 
 #endif
+
 }
