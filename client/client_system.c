@@ -633,8 +633,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->toDir += deltaPlayer->toDir;
 								curPlayer->ver.vx += deltaPlayer->ver.vx;
 								curPlayer->ver.vy += deltaPlayer->ver.vy;
-								if (deltaPlayer->alive)
-										curPlayer->alive = !curPlayer->alive;
+								curPlayer->alive = deltaPlayer->alive;
 								curPlayer->boost += deltaPlayer->boost;
 								curPlayer->rotate += deltaPlayer->rotate;
 								curPlayer->action += deltaPlayer->action;
@@ -654,8 +653,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->toDir += deltaPlayer->toDir - lastPlayer->toDir;
 								curPlayer->ver.vx += deltaPlayer->ver.vx - lastPlayer->ver.vx;
 								curPlayer->ver.vy += deltaPlayer->ver.vy - lastPlayer->ver.vy;
-								if (deltaPlayer->alive != lastPlayer->alive)
-										curPlayer->alive = !curPlayer->alive;
+								curPlayer->alive = deltaPlayer->alive;
 								curPlayer->boost += deltaPlayer->boost - lastPlayer->boost;
 								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
 								curPlayer->action += deltaPlayer->action - lastPlayer->action;
@@ -669,11 +667,14 @@ void reflectDelta(entityStateGet* data) {
 						}
 #ifndef NDEBUG
 						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
-						printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
-						printf("recieve time: %d\n", SDL_GetTicks());
+						printf("		alive: %d\n", curPlayer->alive);
 #endif
 				}
 		}
+#ifndef NDEBUG
+		printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
+		printf("recieve time: %d\n", SDL_GetTicks());
+#endif
 }
 
 
@@ -685,7 +686,6 @@ void sendEntity() {
 		data.pos.x = myPlayer->object->pos.x;
 		data.pos.y = myPlayer->object->pos.y;
 		data.player = *myPlayer;
-		data.killEnemy = -1;
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG

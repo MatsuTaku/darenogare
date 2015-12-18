@@ -93,9 +93,8 @@ int main(int argc,char *argv[])
 static int networkEvent(void* data) {
 		bool *endFlag;
 		endFlag = (bool *)data;
-		// 1000と20の最小公倍数を基準に分数で計算
+		// 1000とCPSの最小公倍数を基準に分数で計算
 		int ms = 1000;
-		int CPS = 30;
 		int a = ms, b = CPS, tmp;
 		int r = a % b;
 		while(r != 0) {
@@ -115,7 +114,7 @@ static int networkEvent(void* data) {
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
-				printf("CPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
+				printf("CPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : CPS);
 		};
 		return 0;
 }

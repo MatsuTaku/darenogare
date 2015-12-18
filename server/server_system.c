@@ -102,13 +102,15 @@ void setPlayerState(int id, entityStateSet* state) {
 		plyObj->pos.x = state->pos.x;
 		plyObj->pos.y = state->pos.y;
 		printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
+		printf("				alive: %d\n", state->player.alive);
+		printf("				alive: %d\n", player->alive);
 		setPlayerValue(player, &state->player);
 }
 
 
 static void setPlayerValue(PLAYER* to, PLAYER* from) {
 		OBJECT* object = to->object;
-		to = from;
+		*to = *from;
 		to->object = object;
 }
 
@@ -132,7 +134,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						player->toDir = curPlayer->toDir - latestPlayer->toDir;
 						player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
 						player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
-						player->alive = curPlayer->alive != latestPlayer->alive;
+						player->alive = curPlayer->alive;
 						player->boost = curPlayer->boost - latestPlayer->boost;
 						player->rotate = curPlayer->rotate - latestPlayer->rotate;
 						player->action = curPlayer->action - latestPlayer->action;
@@ -150,6 +152,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
 						
 						printf("frame[%d]: latest[%d]	player[%d] pos x: %d, y: %d\n", frame, latest, i, object->pos.x, object->pos.y);
+						printf("				alive: %d\n", player->alive);
 				}
 				printf("send server frame: %d\n", data.latestFrame);
 		}

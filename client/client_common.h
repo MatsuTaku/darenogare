@@ -38,8 +38,6 @@ enum deltaFrame {
 		FRAME_NUM
 };
 
-extern entityStateSet rocket;
-extern mapData MAP;
 
 /* client_system.c */
 extern ASSEMBLY allAssembly;
@@ -47,7 +45,5 @@ extern OBJECT* object;
 extern PLAYER* player;
 extern PLAYER* myPlayer;
 /* client_net.c */
-extern int clientID;
-
 
 #endif
