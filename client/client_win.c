@@ -97,6 +97,13 @@ typedef struct {
 		SDL_Rect dst;
 } Rect;
 
+char playerName[MAX_CLIENTS][32] = {
+		"RedFox",
+		"BlueHound",
+		"YellowTiger",
+		"GreenDragon"
+};
+
 
 int initWindows(int clientID, int num) { //ウィンドウ生成
 		int i;
@@ -131,8 +138,8 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 
 		font = TTF_OpenFont(gFontFile, 24);
 
-		sprintf(title, "Player No. %d", clientID + 1);
-		SDL_WM_SetCaption(title, NULL);
+		// sprintf(title, "Player No. %d", clientID + 1);
+		SDL_WM_SetCaption(playerName[clientID], NULL);
 
 
 		SDL_Flip(gMainWindow);
