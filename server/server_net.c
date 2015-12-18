@@ -87,8 +87,7 @@ int setUpServer(int num)//サーバの立ち上げ
   出力	: プログラム終了コマンドが送られてきた時0を返す．
   それ以外は1を返す
  *****************************************************************/
-int sendRecvManager(void) //サーバーから送られてきたデータを処理する
-{
+int sendRecvManager(void) {
 		fd_set	readOK;
 		int		i;
 		bool	endFlag = false;
@@ -96,7 +95,7 @@ int sendRecvManager(void) //サーバーから送られてきたデータを処�
 		updateBuffer();
 
 		readOK = gMask;
-		if (select(gWidth, &readOK, NULL, NULL, NULL) < 0){ //読み込み可能なFDを探す
+		if (select(gWidth, &readOK, NULL, NULL, NULL) < 0) { //読み込み可能なFDを探す
 				return endFlag; //なければ終了
 		}
 

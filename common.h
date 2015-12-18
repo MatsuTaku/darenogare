@@ -143,14 +143,27 @@ typedef struct {
 } PLAYER;
 
 
-
 // すべてのオブジェクトの集合体
 typedef struct {
 		OBJECT object[MAX_OBJECT];
 		PLAYER player[MAX_CLIENTS];
-// 		OBSTACLE obstacle[MAX_OBSTACLE];
-//		ITEM item[MAX_ITEM];
 } ASSEMBLY;
+
+
+// イベント通知
+typedef enum {
+		EVENT_NONE,
+		EVENT_OBSTACLE,
+		EVENT_ITEM,
+		EVENT_KILL,
+} EVENT;
+
+typedef struct {
+		int num;	// プレイヤー番号
+		EVENT type;	// イベントの種類
+		int objId;		// オブジェクトの種類
+		int id;			// オブジェクトID
+} eventNotification;
 
 
 // 通信データ(client -> server)
@@ -160,27 +173,22 @@ typedef struct {
 		int clientId;	// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
-		int killEnemy;
+		eventNotification event;
 } entityStateSet;
 
 
+// 通信データ(server -> client)
 typedef struct {
 		OBJECT plyObj[MAX_CLIENTS];
 		PLAYER player[MAX_CLIENTS];
 } DELTA;
 
-
-// 通信データ(server -> client)
 typedef struct {
 		int latestFrame;
 		int lastFrame;
 		bool endFlag;
 		DELTA delta;
+		eventNotification event;
 } entityStateGet;
-
-
-typedef struct {
-		int test;
-} mapData;
 
 #endif
