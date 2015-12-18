@@ -661,7 +661,7 @@ void drawStatus(void){ //ステータスの描画
 			      		dst_rect.y = (gItemBox->h - gIconImage[chara_id]->h)/2;
 			      		SDL_BlitSurface(gIconImage[chara_id], &src_rect, gStatusWindow, &dst_rect);
 			      		//所持アイテム
-			     		 if(item_id != ITEM_EMPTY){
+			     		 if(item_id > ITEM_EMPTY){
 				 		src_rect.w = gItemImage[item_id]->w;
 				 		src_rect.h = gItemImage[item_id]->h;
 				 		dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2 - 5;
