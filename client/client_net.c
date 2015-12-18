@@ -12,7 +12,7 @@ static int	gWidth;	/*gMask中のチェックすべきビット数*/
 
 static void getAllName(int *clientID,int *num);
 static void setMask(void);
-static int RecvData(void *data,int dataSize);
+static int RecvData(void *data, int dataSize);
 
 
 /*****************************************************************

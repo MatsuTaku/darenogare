@@ -13,6 +13,7 @@
 
 #define FPS	60
 #define CPS 30
+#define MIRI_SECOND		1000
 #define RETENTION_FRAME	120
 
 #define MAX_CLIENTS		0x04				
@@ -24,6 +25,7 @@
 #define MAX_ITEM		0x3f
 #define CT_NUM 4
 
+#define MAX_EVENT	0xf
 #define MAP_SIZE	10000
 #define WORLD_SIZE 		20000
 
@@ -159,7 +161,7 @@ typedef enum {
 } EVENT;
 
 typedef struct {
-		int num;	// プレイヤー番号
+		int playerId;	// プレイヤー番号
 		EVENT type;	// イベントの種類
 		int objId;		// オブジェクトの種類
 		int id;			// オブジェクトID
@@ -173,7 +175,7 @@ typedef struct {
 		int clientId;	// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
-		eventNotification event;
+		eventNotification event[MAX_EVENT];
 } entityStateSet;
 
 
@@ -188,7 +190,7 @@ typedef struct {
 		int lastFrame;
 		bool endFlag;
 		DELTA delta;
-		eventNotification event;
+		eventNotification event[MAX_EVENT];
 } entityStateGet;
 
 #endif

@@ -134,7 +134,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						player->toDir = curPlayer->toDir - latestPlayer->toDir;
 						player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
 						player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
-						player->alive = curPlayer->alive;
+						player->alive = curPlayer->alive;	// bool値は直接送信
 						player->boost = curPlayer->boost - latestPlayer->boost;
 						player->rotate = curPlayer->rotate - latestPlayer->rotate;
 						player->action = curPlayer->action - latestPlayer->action;

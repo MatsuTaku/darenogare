@@ -33,8 +33,8 @@ int main(int argc,char *argv[]) {
 		}
 
 		/* ネットワークループ */
-		int ms = 1000;
-		int a = ms, b = FPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = FPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;

@@ -56,8 +56,8 @@ int main(int argc,char *argv[])
 
 		/* メインループ */
 		// 1000とFPSの最小公倍数を基準に分数で計算
-		int ms = 1000;
-		int a = ms, b = FPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = FPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
@@ -95,8 +95,8 @@ int main(int argc,char *argv[])
 static int networkEvent(void* data) {
 		bool *endFlag = (bool *)data;
 		// 1000とCPSの最小公倍数を基準に分数で計算
-		int ms = 1000;
-		int a = ms, b = CPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = CPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
