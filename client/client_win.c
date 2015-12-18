@@ -21,7 +21,7 @@ static char gBoostImgFile[] = "IMG/boost.png";
 static char gWarningImgFile[] = "IMG/warning.png";
 static char gBoomImgFile[] = "IMG/boom.png";
 static char gMiniMapImgFile[] = "IMG/minimap.png";
-static char gArrowImgFile[] = "IMG/arrow.jpg";
+static char gArrowImgFile[] = "IMG/target.png";
 static char gItemImgFile[ITEM_NUM][20] = {
 		"IMG/noizing.png",
 		"IMG/Laser.png", 
@@ -434,6 +434,7 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 		int bst_flag = player[chara_id].boost; //噴射フラグ
 		int rtt_flag = player[chara_id].rotate; //回転フラグ
 		int dx, dy;
+		int i;
 		int rmask, gmask, amask, bmask;
 		rmask = 0xff000000;
 		gmask = 0x00ff0000;
@@ -451,11 +452,17 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 		Rect boost;
 		boost.src.x = 0; boost.src.y = 0; 
 		if(bst_flag != BOOST_NEUTRAL){
-		    boost.src.w = gBoostImage->w; boost.src.h = gBoostImage->h;
+		    
 		    if(bst_flag == BOOST_GO){ //前噴射の場合
-			boost.dst.x = c_center.x - gCharaImage[chara_id]->w*0.9;
-			boost.dst.y = c_center.y - gBoostImage->h/2;
-			SDL_BlitSurface(gBoostImage, &boost.src, c_window, &boost.dst);
+			for(i = 0; i < 2; i++){
+				image_reangle = rotozoomSurface(gBoostImage, i*-2, 0.5, 1); //縮小
+				boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
+				dx = image_reangle->w - gBoostImage->w; //調整差分
+				dy = image_reangle->h - gBoostImage->h;
+				boost.dst.x = c_center.x - gCharaImage[chara_id]->w*1.0 -4 - dx;
+				boost.dst.y = (c_center.y - image_reangle->h/2 - 1) - i*26 - dy;
+				SDL_BlitSurface(image_reangle, &boost.src, c_window, &boost.dst);
+			}
 		    }
 		    if(bst_flag == BOOST_BACK){ //後噴射の場合
 			image_reangle = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
@@ -473,7 +480,6 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
 			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
 			dy = image_reangle->h - gBoostImage->h;
-			int i;
 			for(i = 0; i < 2; i++){ //頭部の噴射炎
 			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
 			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
@@ -494,7 +500,6 @@ void drawChara(POSITION *charaPos, int chara_id){ //キャラクターの描画
 			boost.src.w = image_reangle->w; boost.src.h = image_reangle->h;
 			dx = image_reangle->w - gBoostImage->w; //回転によるずれの調整差分
 			dy = image_reangle->h - gBoostImage->h;
-			int i;
 			for(i = 0; i < 2; i++){ //頭部
 			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
 			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
@@ -615,7 +620,7 @@ void drawWarning(void){ //警告の表示
 			angle = atan2(dy,dx) * HALF_DEGRESS / PI; //角度を求める
 		}	
 		printf("angle: %f\n", angle);
-		image_reangle = rotozoomSurface(gArrowImage, angle, 0.2, 1); //角度の変更
+		image_reangle = rotozoomSurface(gArrowImage, angle, 1.0, 1); //角度の変更
 		SDL_Rect ar_src = {0, 0, image_reangle->w, image_reangle->h};
 		SDL_Rect ar_dst;
 		double r_angle = angle *PI / HALF_DEGRESS;
