@@ -150,6 +150,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
 						
 						printf("frame[%d]: latest[%d]	player[%d] pos x: %d, y: %d\n", frame, latest, i, object->pos.x, object->pos.y);
+						printf("							alive: %d\n", curPlayer->alive);
 				}
 				printf("send server frame: %d\n", data.latestFrame);
 		}

@@ -12,6 +12,7 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
+#define CPS 30
 #define RETENTION_FRAME	120
 
 #define MAX_CLIENTS		0x04				

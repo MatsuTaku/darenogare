@@ -669,11 +669,14 @@ void reflectDelta(entityStateGet* data) {
 						}
 #ifndef NDEBUG
 						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
-						printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
-						printf("recieve time: %d\n", SDL_GetTicks());
+						printf("		alive: %d\n", curPlayer->alive);
 #endif
 				}
 		}
+#ifndef NDEBUG
+		printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
+		printf("recieve time: %d\n", SDL_GetTicks());
+#endif
 }
 
 
