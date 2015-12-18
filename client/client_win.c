@@ -618,8 +618,7 @@ void drawWarning(void){ //警告の表示
 			angle = dx < 0 ? 180 : 0;
 		} else {
 			angle = atan2(dy,dx) * HALF_DEGRESS / PI; //角度を求める
-		}	
-		printf("angle: %f\n", angle);
+		}
 		image_reangle = rotozoomSurface(gArrowImage, angle, 1.0, 1); //角度の変更
 		SDL_Rect ar_src = {0, 0, image_reangle->w, image_reangle->h};
 		SDL_Rect ar_dst;
@@ -630,6 +629,7 @@ void drawWarning(void){ //警告の表示
 		ar_dst.y = gMiniMapImage->h/2 - ry*sin(r_angle) - image_reangle->h/2 - dy/2;
 		SDL_BlitSurface(gArrowImage, &ar_src, gMainWindow, &ar_dst);
 
+		SDL_FreeSurface(strings);
 		SDL_FreeSurface(image_reangle);
 		
 }
@@ -681,7 +681,7 @@ void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 		c_center.y = gMiniMapImage->h/2;
 		SDL_Rect enemy[MAX_CLIENTS];
 		int i, p;
-		double dx, dy, angle, r;
+		double dx, dy, angle;
 		SDL_Rect map_src = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMapImage->w, 0};
 		SDL_BlitSurface(gMiniMapImage, &map_src, gMainWindow, &map_dst);
@@ -697,18 +697,17 @@ void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 				}*/
 				dx = (player[i].object->pos.x - myPos->x);	
 				dy = (player[i].object->pos.y - myPos->y);
-				r = tan(dy/dx);
-				angle = atan(r); //角度を求める
+				angle = atan2(dy, dx); //角度を求める
 	
 				if(dx/150 > gMiniMapImage->w){
 					enemy[p].x = c_center.x + (gMiniMapImage->w/2*cos(angle));
 				}else{
-					enemy[p].x = c_center.x + (dx/200 * cos(angle));
+					enemy[p].x = c_center.x + (dx/150 * cos(angle));
 				}
 				if(dy/150 > gMiniMapImage->h){
-					enemy[p].y = c_center.y + (gMiniMapImage->h/2*sin(angle));
+					enemy[p].y = c_center.y - (gMiniMapImage->h/2*sin(angle));
 				}else{
-					enemy[p].y = c_center.y + (dy/150 * sin(angle));
+					enemy[p].y = c_center.y - (dy/150 * sin(angle));
 				}
 				SDL_FillRect(gMainWindow, &enemy[p], 0xffff0000); //敵の点を描画
 			}
