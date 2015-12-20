@@ -9,17 +9,19 @@ OBJECT* object;
 PLAYER* player;
 PLAYER* myPlayer;
 static int curObjNum;
+static int selfObject;
+static eventNotification eventStack[MAX_EVENT];
 
 static int latestFrame;
 static entityStateGet getEntity[FRAME_NUM];
-static eventNotification eventStack[MAX_EVENT];
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
-static bool generateObstacle();
-static bool insertItem(int num, POSITION* pos);
-static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
+// static bool generateObstacle();
+static bool generateObstacle(int id, POSITION* pos, double angle, double ver);
+static bool insertItem(int id, int num, POSITION* pos);
+static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void initEvent();
 static void updatePlayer();
 static void updateObject();
@@ -33,6 +35,7 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 static bool judgeSafety(POSITION* pos);
+static void launchEvent(eventNotification *event);
 
 
 /**
@@ -57,12 +60,13 @@ int initGameSystem(int myId, int playerNum) {
 				initObject(curObj);
 		}
 		curObjNum = 0;
+		selfObject = 0x1000;
 
 		myPlayer = &player[myId];
 
 		for (i = 0; i < playerNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				if (insertObject(curPlayer, OBJECT_CHARACTER) == NULL) {
+				if (insertObject(curPlayer, i, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -70,6 +74,7 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		// test appearance
+		/*
 		for (i = 0; i < MAX_OBSTACLE; i++) {
 				if (!generateObstacle()) {
 						fprintf(stderr, "Failed to insert obstacle\n");
@@ -83,11 +88,12 @@ int initGameSystem(int myId, int playerNum) {
 						rand() % MAP_SIZE - MAP_SIZE / 2,
 						rand() % MAP_SIZE - MAP_SIZE / 2
 				};
-				if (!insertItem(num, &pos)) {
+				if (!insertItem(0, num, &pos)) {
 						fprintf(stderr, "Failed to insert item\n");
 						return -1;
 				}
 		}
+		*/
 
 		return 0;
 }
@@ -157,18 +163,35 @@ static void initObstacle(OBSTACLE* obstacle) {
  * 障害物の挿入
  * return: 成功・失敗
  */
+ /*
 static bool generateObstacle() {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
 				exit(1);
 		}
-		if (insertObject(curObs, OBJECT_OBSTACLE) == NULL) {
+		if (insertObject(curObs, 0, OBJECT_OBSTACLE) == NULL) {
 				fprintf(stderr, "Failed to insert object\n");
 				return false;
 		}
 		initObstacle(curObs);
 		return true;
+}
+*/
+static bool generateObstacle(int id, POSITION* pos, double angle, double ver) {
+		OBSTACLE* curObs;
+		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
+				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
+				exit(1);
+		}
+		if (insertObject(curObs, id, OBJECT_OBSTACLE) == NULL) {
+				fprintf(stderr, "Failed to insert object\n");
+				return false;
+		}
+		curObs->object->pos.x = pos->x;
+		curObs->object->pos.y = pos->y;
+		curObs->angle = angle;
+		curObs->ver = ver;
 }
 
 
@@ -178,13 +201,13 @@ static bool generateObstacle() {
  * input2: ポジション
  * return: 成功・失敗
  */
-static bool insertItem(int num, POSITION* pos) {
+static bool insertItem(int id, int num, POSITION* pos) {
 		ITEM* item;
 		if ((item = malloc(sizeof(ITEM))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert item.\n");
 				exit(1);
 		}
-		if (insertObject(item, OBJECT_ITEM) == NULL) {
+		if (insertObject(item, id, OBJECT_ITEM) == NULL) {
 				fprintf(stderr, "Failed to insert object\n");
 				return false;
 		}
@@ -200,7 +223,7 @@ static bool insertItem(int num, POSITION* pos) {
  * input2: オブジェクトタイプ
  * return: オブジェクトのポインタ(error = NULL)
  */
-static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
+static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 		assert(buffer != NULL);
 		assert(type >= 0);
 		assert(type < OBJECT_NUM);
@@ -209,8 +232,10 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
 				if (curObject->type == OBJECT_EMPTY) {
+						curObject->id = id;
 						curObject->type = type;
 						curObject->typeBuffer = buffer;
+						// 相互参照
 						switch (type) {
 								case OBJECT_EMPTY:
 										break;
@@ -690,10 +715,33 @@ void reflectDelta(entityStateGet* data) {
 #endif
 				}
 		}
+
+		for (i = 0; i < MAX_EVENT; i++) {
+				eventNotification *curEvent = &data->event[i];
+				if (curEvent->type != EVENT_NONE)
+						launchEvent(curEvent);
+		}
+
 #ifndef NDEBUG
 		printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
 		printf("recieve time: %d\n", SDL_GetTicks());
 #endif
+}
+
+
+static void launchEvent(eventNotification *event) {
+		switch (event->type) {
+				case EVENT_OBSTACLE:
+						generateObstacle(event->id, &event->pos, event->angle, event->ver);
+						break;
+				case EVENT_ITEM:
+						insertItem(event->id, event->objId, &event->pos);
+						break;
+				case EVENT_KILL:
+						break;
+				default:
+						break;
+		}
 }
 
 

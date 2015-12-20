@@ -7,19 +7,25 @@
 
 static ASSEMBLY pastAssembly[RETENTION_FRAME];
 static ASSEMBLY *lastBuffer, *curBuffer;
+static eventAssembly pastEvent[RETENTION_FRAME];
+static eventAssembly *lastEvent, *curEvent;
 static int frame;
 static int clientNum;
 static int curObjNum;
+static int clientNum;
 
 static void initObject(OBJECT* object);
+static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver);
 static setPos(POSITION* pos, int x, int y);
 static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
 
+static bool insertEvent(int id, eventNotification* event);
 static void setPlayerValue(PLAYER* to, PLAYER* from);
 
 
 int initSystem(int clientNumber) {
 		frame = 0;
+		clientNum = clientNumber;
 		srand((unsigned)time(NULL));
 		clientNum = clientNumber;
 		int i;
@@ -27,6 +33,9 @@ int initSystem(int clientNumber) {
 		ASSEMBLY* firstData = &pastAssembly[sub(frame)];
 		lastBuffer = firstData;
 		curBuffer = firstData;
+		eventAssembly* firstEvent = &pastEvent[sub(frame)];
+		lastEvent = firstEvent;
+		curEvent = firstEvent;
 
 		for (i = 0; i < MAX_OBJECT; i++) {
 				initObject(&firstData->object[i]);
@@ -83,6 +92,23 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		return NULL;
 }
 
+static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver) {
+		OBSTACLE* curObs;
+		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
+				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
+				exit(-1);
+		}
+		if (insertObject(curObs, OBJECT_OBSTACLE) == NULL) {
+				fprintf(stderr, "Failed to insert object\n");
+				return false;
+		}
+		curObs->object->pos.x = pos->x;
+		curObs->object->pos.y = pos->y;
+		curObs->object->id = id;
+		curObs->angle = angle;
+		curObs->ver = ver;
+}
+
 static setPos(POSITION* pos, int x, int y) {
 		pos->x = x;
 		pos->y = y;
@@ -91,8 +117,47 @@ static setPos(POSITION* pos, int x, int y) {
 
 void updateBuffer() {
 		lastBuffer = &pastAssembly[sub(frame)];
-		curBuffer = &pastAssembly[sub(++frame)];
+		curBuffer = &pastAssembly[sub(frame + 1)];
 		*curBuffer = *lastBuffer;
+		lastEvent = &pastEvent[sub(frame)];
+		curEvent = &pastEvent[sub(frame + 1)];
+		*curEvent = *lastEvent;
+		frame++;
+}
+
+
+static bool insertEvent(int id, eventNotification* event) {
+		int i;
+		for (i = 0; i < clientNum; i++) {
+				if (i != id) {
+						int j;
+						for (j = 0; j < MAX_EVENT; j++)
+								if (curEvent->eventStack[i][j].id == EVENT_NONE)
+										curEvent->eventStack[i][j] = *event;
+						if (j == MAX_EVENT) {
+								printf("player[%d] Event stack is FULL!\n", id);
+								return false;
+						}
+				}
+		}
+		return true;
+}
+
+
+static clearEvent(int playerId, int latest) {
+		int nowFrame = frame;
+		int i;
+		for (i = sub(latest); 
+		i != sub(nowFrame); 
+		i = i > 0 ? i - 1 : RETENTION_FRAME - 1) {
+				int j;
+				for (j = 0; j < MAX_EVENT; j++) {
+						eventNotification new;
+						new.type = EVENT_NONE;
+						pastEvent[i].eventStack[playerId][j] = new;
+				}
+
+		}
 }
 
 
@@ -105,6 +170,13 @@ void setPlayerState(int id, entityStateSet* state) {
 		printf("				alive: %d\n", state->player.alive);
 		printf("				alive: %d\n", player->alive);
 		setPlayerValue(player, &state->player);
+		int i;
+		for (i = 0; i < MAX_EVENT; i++) {
+				if (state->event[i].type != EVENT_NONE) {
+						if (!insertEvent(id, &state->event[i]))
+								exit(-1);
+				}
+		}
 }
 
 
@@ -126,7 +198,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 				data.latestFrame = frame;
 				data.lastFrame = latest;
 				/* デルタの所得 */
-				for (i = 0; i < MAX_CLIENTS; i++) {
+				for (i = 0; i < clientNum; i++) {
 						PLAYER* player = &data.delta.player[i];
 						PLAYER *curPlayer = &curBuffer->player[i];
 						PLAYER* latestPlayer = &latestBuffer->player[i];
@@ -154,6 +226,18 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						printf("frame[%d]: latest[%d]	player[%d] pos x: %d, y: %d\n", frame, latest, i, object->pos.x, object->pos.y);
 						printf("				alive: %d\n", player->alive);
 				}
+
+				/* イベント所得 */
+				for (i = 0; i < MAX_EVENT; i++) {
+						if (curEvent->eventStack[id][i].id != EVENT_NONE && 
+							curEvent->eventStack[id][i].id != lastEvent->eventStack[id][i].id) {
+								data.event[i] = curEvent->eventStack[id][i];
+						} else {
+								data.event[i].type = EVENT_NONE;
+						}
+				}
+				clearEvent(id, latest);
+
 				printf("send server frame: %d\n", data.latestFrame);
 		}
 

@@ -5,6 +5,10 @@
 #include"../common.h"
 
 
+typedef struct {
+		eventNotification eventStack[MAX_CLIENTS][MAX_EVENT];
+} eventAssembly;
+
 /* server_net.c */
 extern int gClientNum;
 //extern Charatype gChara[CT_NUM];

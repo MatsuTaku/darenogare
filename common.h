@@ -165,13 +165,17 @@ typedef struct {
 		EVENT type;	// イベントの種類
 		int objId;		// オブジェクトの種類
 		int id;			// オブジェクトID
+		POSITION pos;
+		double angle;
+		double ver;
+		int killTo;
 } eventNotification;
 
 
 // 通信データ(client -> server)
 typedef struct {
 		int latestFrame;// 受信した最新フレーム 
-		bool endFlag ;	// 終了フラグ
+		bool endFlag;	// 終了フラグ
 		int clientId;	// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
