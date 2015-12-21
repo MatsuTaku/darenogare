@@ -128,5 +128,5 @@ static Uint32 timerEvent(Uint32 frame) {
 		e = SDL_GetTicks();
 		drawWindow();
 		w = SDL_GetTicks();
-		// printf("time system: %d,	window: %d\n", e - s, w - e);
+	//	printf("time system: %d,	window: %d\n", e - s, w - e);
 }

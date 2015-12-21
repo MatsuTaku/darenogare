@@ -5,13 +5,10 @@
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
-#define PI				3.14159265
-#define HALF_DEGRESS	180	
 #define ANGULAR_VEROCITY	360	// 角速度
 #define ACCELE_GO	400		// 加速度
 #define ACCELE_BRAKE	-300	// 減速度
 #define MAXIMUM_SPEED	800
-#define MAXIMUM_SPEED_OBSTACLE	200
 // #define RESISTANCE		-0	// 抵抗
 #define WARN_TIME_RIMIT	10	// 帰還制限時間（秒）
 

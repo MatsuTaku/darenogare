@@ -60,3 +60,23 @@ int main(int argc,char *argv[]) {
 		return 0;
 
 }
+
+
+int gcd(int a, int b) {
+		if (!a || !b) 
+				return 0;
+
+		int r;
+		while((r = a % b) != 0) {
+				a = b;
+				b = r;
+		}
+		return b;
+}
+
+int lcm(int a, int b) {
+		if (!a || !b)
+				return 0;
+
+		return (a * b / gcd(a, b));
+}

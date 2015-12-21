@@ -60,7 +60,7 @@ int initGameSystem(int myId, int playerNum) {
 				initObject(curObj);
 		}
 		curObjNum = 0;
-		selfObject = 0x1000;
+		selfObject = 0x1000 * (myId + 1);
 
 		myPlayer = &player[myId];
 
@@ -212,7 +212,7 @@ static bool insertItem(int id, int num, POSITION* pos) {
 				return false;
 		}
 		item->num = num;
-		setPos(item->object, pos->x, pos->y);
+		item->object->pos = *pos;
 		return true;
 }
 
@@ -285,10 +285,11 @@ static void initEvent() {
 		int i;
 		for (i = 0; i < MAX_EVENT; i++) {
 				eventNotification *event = &eventStack[i];
-				event->playerId = 0;
+				event->playerId = myPlayer->num;
 				event->type = EVENT_NONE;
-				event->objId = OBJECT_EMPTY;
+				event->objId = -1;
 				event->id = -1;
+				event->killTo = -1;
 		}
 }
 
@@ -730,6 +731,9 @@ void reflectDelta(entityStateGet* data) {
 
 
 static void launchEvent(eventNotification *event) {
+#ifndef NDEBUG
+		printf("launchEvent type: %d\n", event->type);
+#endif
 		switch (event->type) {
 				case EVENT_OBSTACLE:
 						generateObstacle(event->id, &event->pos, event->angle, event->ver);
@@ -753,6 +757,10 @@ void sendEntity() {
 		data.pos.x = myPlayer->object->pos.x;
 		data.pos.y = myPlayer->object->pos.y;
 		data.player = *myPlayer;
+		int i;
+		for (i = 0; i < MAX_EVENT; i++) {
+				data.event[i] = eventStack[i];
+		}
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG

@@ -14,7 +14,7 @@
 #define FPS	60
 #define CPS 30
 #define MIRI_SECOND		1000
-#define RETENTION_FRAME	120
+#define RETENTION_FRAME	0x7f
 
 #define MAX_CLIENTS		0x04				
 #define MAX_NAME_SIZE	10 				
@@ -25,9 +25,13 @@
 #define MAX_ITEM		0x3f
 #define CT_NUM 4
 
-#define MAX_EVENT	0xf
+#define MAX_EVENT	0x3f
 #define MAP_SIZE	10000
 #define WORLD_SIZE 		20000
+
+#define PI				3.14159265
+#define HALF_DEGRESS	180
+#define MAXIMUM_SPEED_OBSTACLE 200
 
 typedef enum {
 		END_COMMAND = 1
@@ -99,6 +103,7 @@ typedef enum {
 
 /* PLAYER Values */
 typedef enum {
+		OWNER = -1,
 		PLAYER_1 = 0,
 		PLAYER_2 = 1,
 		PLAYER_3 = 2,
@@ -154,10 +159,10 @@ typedef struct {
 
 // イベント通知
 typedef enum {
-		EVENT_NONE,
-		EVENT_OBSTACLE,
-		EVENT_ITEM,
-		EVENT_KILL,
+		EVENT_NONE = -1,
+		EVENT_OBSTACLE = 0,
+		EVENT_ITEM = 1,
+		EVENT_KILL = 2,
 } EVENT;
 
 typedef struct {
