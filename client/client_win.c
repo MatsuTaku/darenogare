@@ -20,6 +20,7 @@ static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gBoostImgFile[] = "IMG/boost.png";
 static char gWarningImgFile[] = "IMG/warning.png";
 static char gBoomImgFile[] = "IMG/boom.png";
+static char gDeadIconImgFile[] = "IMG/Deadicon.png";
 static char gMiniMapImgFile[] = "IMG/minimap.png";
 static char gArrowImgFile[] = "IMG/target.png";
 static char gItemImgFile[ITEM_NUM][20] = {
@@ -68,6 +69,7 @@ static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gBackGround; //背景
 static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
 static SDL_Surface *gMiniMap; //ミニマップ
+static SDL_Surface *gDeadIconImage; //死亡時のアイコン
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
@@ -318,6 +320,11 @@ int initImage(void){ //画像の読み込み
 		gMiniMapImage = IMG_Load( gMiniMapImgFile ); //ミニマップ
 		if( gMiniMapImage == NULL){
 				printf("not find minimap image\n");
+				return(-1);
+		}
+		gDeadIconImage = IMG_Load( gDeadIconImgFile ); //死亡時のアイコン
+		if( gDeadIconImage == NULL){
+				printf("not find deadicon image\n");
 				return(-1);
 		}
 		gArrowImage = IMG_Load( gArrowImgFile ); //矢印
@@ -633,7 +640,7 @@ void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 
 		src_rect.x = (gBoomImage->w / 8) * (animeNum % 8);
 		src_rect.y = (gBoomImage->h / 2) * (animeNum / 8);
-			SDL_BlitSurface(gBoomImage, &src_rect, gMainWindow, &dst_rect); //描画
+		SDL_BlitSurface(gBoomImage, &src_rect, gMainWindow, &dst_rect); //描画
 }
 
 
@@ -726,12 +733,12 @@ void drawStatus(void){ //ステータスの描画
 			    item_id = player[i].item;	// アイテム番号
 
 			      if(!player[chara_id].alive){ //ゲームオーバーの場合
-				   src_rect.x = gBoomImage->w/8 *4;
-				   src_rect.w = gBoomImage->w/8;
-				   src_rect.h = gBoomImage->h/2;
-				   dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gBoomImage->w/8)/2;
-				   dst_rect.y = (gItemBox->h - gBoomImage->h/2)/2;
-				   SDL_BlitSurface(gBoomImage, &src_rect, gStatusWindow, &dst_rect);
+				   src_rect.x = 0;
+				   src_rect.w = gDeadIconImage->w;
+				   src_rect.h = gDeadIconImage->h;
+				   dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gDeadIconImage->w)/2;
+				   dst_rect.y = (gItemBox->h - gDeadIconImage->h)/2;
+				   SDL_BlitSurface(gDeadIconImage, &src_rect, gStatusWindow, &dst_rect);
 			      }else{
 					//アイコン
 			      		src_rect.w = gIconImage[chara_id]->w;    src_rect.h = gIconImage[chara_id]->h;
