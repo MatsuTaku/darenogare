@@ -67,6 +67,7 @@ SDL_Joystick* joystick;
 static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gBackGround; //背景
 static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
+static SDL_Surface *gMiniMap; //ミニマップ
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
@@ -132,7 +133,11 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 				printf("failed to initialize statuswindow");
 				return -1;
 		}
-
+		//MiniMap
+		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff)) == NULL) {
+				printf("failed to initialize minimap");
+				return -1;
+		}
 		if(TTF_Init() < 0){ //フォントの初期化
 				printf("failed to initialize font");
 				return -1;
@@ -183,6 +188,7 @@ int drawWindow() {	//ゲーム画面の描画
 void destroyWindow(void) {
 		SDL_FreeSurface(gMainWindow);
 		SDL_FreeSurface (gStatusWindow);
+		SDL_FreeSurface(gMiniMap);
 		SDL_FreeSurface (gBackGround);
 		SDL_FreeSurface (ObstacleImage[0]);
 		SDL_FreeSurface (gItemBox);
@@ -605,7 +611,7 @@ void drawBoost(int chara_id, SDL_Surface *c_window){ //噴射炎を描画
 */
 void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 		int interval = 100;
-		int animeNum = myPlayer->deadAnimation / (interval * FPS / 1000);
+		int animeNum = player[chara_id].deadAnimation / (interval * FPS / 1000);
 		if(animeNum >= 16){
 			return;
 		}
@@ -752,23 +758,19 @@ void drawStatus(void){ //ステータスの描画
 void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 
 		//1.mapウィンドウの準備
-		SDL_Surface *map;
-		map = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-		SDL_SetColorKey(map, SDL_SRCCOLORKEY, SDL_MapRGB(map->format, 0x00, 0x00, 0x00)); //黒を透過
-		map = SDL_DisplayFormat(map);
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
-		SDL_BlitSurface(gMiniMapImage, &src_rect, map, &dst_rect);
+		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
 		//2.オブジェクトの位置をmapに描写
 		SDL_Rect point[MAX_OBJECT];
 		int i;
 		int rd = 300; //ミニマップの半径
-		int asp = 30; //比率
+		int asp = 15; //比率
 		double dx, dy, angle = 0;
 		POSITION center;
-		center.x = map->w/2;
-		center.y = map->h/2;
+		center.x = gMiniMap->w/2;
+		center.y = gMiniMap->h/2;
 
 		for(i = 0; i < MAX_OBJECT; i++){ //オブジェクトの場所の描画
 			point[i].w = 5; point[i].h = 5;
@@ -810,26 +812,25 @@ void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 			switch(object[i].type){
 				case OBJECT_CHARACTER:
 					if(((PLAYER*)object[i].typeBuffer)->num == myID){
-						filledCircleColor(map, center.x, center.y, 4, 0xff00ffff); //自分の点を描画
+						filledCircleColor(gMiniMap, center.x, center.y, 4, 0xff00ffff); //自分の点を描画
 					}else{
-						SDL_FillRect(map, &point[i], 0xffffff00); //敵の点を描画
+						SDL_FillRect(gMiniMap, &point[i], 0xffffff00); //敵の点を描画
 					}
 					break;
 				case OBJECT_OBSTACLE:
-					SDL_FillRect(map, &point[i], 0xffff0000); //障害物の点を描画
+					SDL_FillRect(gMiniMap, &point[i], 0xffff0000); //障害物の点を描画
 					break;
 				case OBJECT_ITEM:
-					SDL_FillRect(map, &point[i], 0xff0000ff); //アイテムの点を描画
+					SDL_FillRect(gMiniMap, &point[i], 0xff0000ff); //アイテムの点を描画
 					break;
 				case OBJECT_EMPTY:
 					break;
 			}
 		}
 		//3.mapをメインウィンドウに貼付け
-		SDL_Rect map_src = {0, 0, map->w, map->h};
-		SDL_Rect map_dst = {gMainWindow->w - map->w, 0};
-		SDL_BlitSurface(map, &map_src, gMainWindow, &map_dst);
-		SDL_FreeSurface(map);
+		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
+		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
+		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
 
 }
 
