@@ -30,7 +30,7 @@ static void collisionDetection();
 static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
-static void setPos(OBJECT* object, int x, int y);
+static void setPos(POSITION* pos, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
@@ -85,7 +85,7 @@ int initGameSystem(int myId, int playerNum) {
 static void initObject(OBJECT* object) {
 		object->type = OBJECT_EMPTY;
 		object->id = 0;
-		setPos(object, 0, 0);
+		setPos(&object->pos, 0, 0);
 }
 
 
@@ -109,7 +109,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->deadTime = 0;
 		player->lastTime = 0;
 		player->deadAnimation = -1;
-		setPos(player->object, 0, 0);
+		setPos(&player->object->pos, 0, 0);
 }
 
 
@@ -135,7 +135,7 @@ static void initObstacle(OBSTACLE* obstacle) {
 		x =	(-(a * b) + (cos(angle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2)))
 				/ (pow(a, 2) + 1);
 		y = (sin(angle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2)); 
-		setPos(obstacle->object, x, y);
+		setPos(&obstacle->object->pos, x, y);
 }
 
 
@@ -255,6 +255,10 @@ static void initEvent() {
 				event->objId = -1;
 				event->id = -1;
 				event->killTo = -1;
+				setPos(&event->pos, 0, 0);
+				event->angle = 0;
+				event->ver = 0;
+				event->killTo = 0;
 		}
 }
 
@@ -353,7 +357,8 @@ static void updateObstacle(OBSTACLE* obstacle) {
 		double angle = obstacle->angle;
 		POSITION* pos = &obstacle->object->pos;
 		pos->x += ver * cos(angle) / FPS;
-		pos->y += ver * sin(angle) / FPS;
+		pos->y -= ver * sin(angle) / FPS;
+		// printf("objAngle: %.0f\n", angle * HALF_DEGRESS / PI);
 }
 
 
@@ -565,9 +570,9 @@ void inertialNavigation() {
  * オブジェクト座標設定
  *	マップの中央を原点
  */
-static void setPos(OBJECT* object, int x, int y) {
-		object->pos.x = x;
-		object->pos.y = y;
+static void setPos(POSITION* pos, int x, int y) {
+		pos->x = x;
+		pos->y = y;
 }
 
 
@@ -663,7 +668,7 @@ void reflectDelta(entityStateGet* data) {
 								curObject->pos.y += deltaObject->pos.y;
 						} else {
 #ifndef NDEBUG
-								printf("fallthrough\n");
+								printf("!!!!!fallthrough!!!!!\n");
 #endif
 								DELTA* lastDelta = &getEntity[FRAME_LAST].delta;
 								PLAYER* lastPlayer = &lastDelta->player[i];
