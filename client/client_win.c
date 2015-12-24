@@ -769,83 +769,100 @@ void drawStatus(void){ //ステータスの描画
 }
 
 
-void drawMiniMap(POSITION* myPos){ //ミニマップの描画
-
+void drawMiniMap(POSITION* myPos) { //ミニマップの描画
 		//1.gMiniMapの初期化
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
 		//2.オブジェクトの位置をgMiniMapに描写
-		SDL_Rect point[MAX_OBJECT];
 		int i;
-		int rd = 300; //ミニマップの半径
-		int asp = 15; //比率
-		double dx, dy, angle = 0;
+		int rImg = 60;
+		int asp = 100; //比率
+		int rd = rImg * asp; //ミニマップの半径
+		SDL_Rect point[MAX_OBJECT];
 		POSITION center;
-		center.x = gMiniMap->w/2;
-		center.y = gMiniMap->h/2;
+		center.x = gMiniMap->w / 2;
+		center.y = gMiniMap->h / 2;
 
-		for(i = 0; i < MAX_OBJECT; i++){ //オブジェクトの場所の描画
-			point[i].w = 5; point[i].h = 5;
-			dx = object[i].pos.x - myPos->x;	
-			dy = object[i].pos.y - myPos->y;
-			if (dx == 0) {
-				angle = dy > 0 ? 90 * PI / HALF_DEGRESS : -90 * PI / HALF_DEGRESS;
-			} else if (dy == 0) {
-				angle = dx < 0 ? 180 * PI / HALF_DEGRESS : 0;
-			}
-			angle = atan2(dy,dx); //角度を求める
-			if(dx < 0){ //xの調整
-				if(dx/asp > gMiniMapImage->w -20){
-					point[i].x = center.x - (rd*cos(angle));
-				}else{
-					point[i].x = center.x - (dx/asp * cos(angle));
-				}
-			}else{
-				if(dx/asp > gMiniMapImage->w -20){
-					point[i].x = center.x + (rd*cos(angle));
-				}else{
-					point[i].x = center.x + (dx/asp * cos(angle));
-				}
-			}
+		for (i = 0; i < MAX_OBJECT; i++) { //オブジェクトの場所の描画
+				if (object[i].type == OBJECT_EMPTY)
+						continue;
+				point[i].w = 5; point[i].h = 5;
+				double dx = object[i].pos.x - myPos->x;	
+				double dy = object[i].pos.y - myPos->y;
+				double range = pow(dx, 2) + pow(dy, 2);
+				if (range < pow(rd, 2)) {
+						double angle;
+						if (dx == 0) {
+								angle = dy > 0 ? 90 * PI / HALF_DEGRESS : -90 * PI / HALF_DEGRESS;
+						} else if (dy == 0) {
+								angle = dx < 0 ? 180 * PI / HALF_DEGRESS : 0;
+						}
+						angle = atan2(dy,dx); //角度を求める
 
-			if(angle < 0){ //yの調整
-				if(dy/asp > gMiniMapImage->h){
-					point[i].y = center.y - (rd*sin(angle));
-				}else{
-					point[i].y = center.y - (dy/asp * sin(angle));
+						point[i].x = center.x + dx / asp;
+						point[i].y = center.y + dy / asp;
+						printf("point[%d] [%d: %d]\n", i, point[i].x - 67, point[i].y - 67);
+
+						/*
+						   if (dx < 0) { //xの調整
+						   if (dx/asp > gMiniMapImage->w -20) {
+						   point[i].x = center.x - (rd*cos(angle));
+						   } else {
+						   point[i].x = center.x - (dx/asp * cos(angle));
+						   }
+						   } else {
+						   if (dx/asp > gMiniMapImage->w -20) {
+						   point[i].x = center.x + (rd*cos(angle));
+						   } else {
+						   point[i].x = center.x + (dx/asp * cos(angle));
+						   }
+						   }
+
+						   if (angle < 0) { //yの調整
+						   if (dy/asp > gMiniMapImage->h) {
+						   point[i].y = center.y - (rd*sin(angle));
+						   } else {
+						   point[i].y = center.y - (dy/asp * sin(angle));
+						   }
+						   } else {
+						   if (dy/asp > gMiniMapImage->h) {
+						   point[i].y = center.y + (rd*sin(angle));
+						   } else {
+						   point[i].y = center.y + (dy/asp * sin(angle));
+						   }
+						   }
+						 */
+
+						int size = 2;
+						switch(object[i].type) {
+								case OBJECT_CHARACTER:
+										if (((PLAYER*)object[i].typeBuffer)->num == myID) {
+												filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分の点を描画
+										} else {
+												//	SDL_FillRect(gMiniMap, &point[i], 0xffffff00); //敵の点を描画
+												filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xffffff00);
+										}
+										break;
+								case OBJECT_OBSTACLE:
+									 //SDL_FillRect(gMiniMap, &point[i], 0xffff0000); //障害物の点を描画
+										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xff0000ff);
+										printf("obstacle\n");
+										break;
+								case OBJECT_ITEM:
+										 // SDL_FillRect(gMiniMap, &point[i], 0xff0000ff); //アイテムの点を描画
+										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0x0000ffff);
+										printf("item\n");
+										break;
+								default:
+										break;
+						}
 				}
-			}else{
-				if(dy/asp > gMiniMapImage->h){
-					point[i].y = center.y + (rd*sin(angle));
-				}else{
-					point[i].y = center.y + (dy/asp * sin(angle));
-				}
-			}
-			switch(object[i].type){
-				case OBJECT_CHARACTER:
-					if(((PLAYER*)object[i].typeBuffer)->num == myID){
-						filledCircleColor(gMiniMap, center.x, center.y, 4, 0xff00ffff); //自分の点を描画
-					}else{
-						SDL_FillRect(gMiniMap, &point[i], 0xffffff00); //敵の点を描画
-					}
-					break;
-				case OBJECT_OBSTACLE:
-					SDL_FillRect(gMiniMap, &point[i], 0xffff0000); //障害物の点を描画
-					break;
-				case OBJECT_ITEM:
-					SDL_FillRect(gMiniMap, &point[i], 0xff0000ff); //アイテムの点を描画
-					break;
-				case OBJECT_EMPTY:
-					break;
-			}
 		}
+
 		//3.gMiniMapをメインウィンドウに貼付け
 		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
-
 }
-
-
