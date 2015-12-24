@@ -134,7 +134,7 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 				return -1;
 		}
 		//MiniMap
-		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff)) == NULL) {
+		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0, 0, 0, 0)) == NULL) {
 				printf("failed to initialize minimap");
 				return -1;
 		}
@@ -408,11 +408,13 @@ void drawObject(void) { //オブジェクトの描画
 		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
 			id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
-			if(!player[id].alive){
-				drawDeadChara(&object[i].pos, id); //死亡キャラの描画
-				break;
+			if(id != myID){
+				if(!player[id].alive){
+					drawDeadChara(&object[i].pos, id); //死亡キャラの描画
+					break;
+				}
+				drawChara(&object[i].pos, id); //キャラクターの描画
 			}
-			drawChara(&object[i].pos, id); //キャラクターの描画
 			break;
 		  case OBJECT_ITEM: //アイテム
 		  	id = ((ITEM *)object[i].typeBuffer)->num; //アイテム番号
@@ -425,6 +427,11 @@ void drawObject(void) { //オブジェクトの描画
 			break;
 		  }
 	    }
+	}
+	if(!myPlayer->alive){
+		drawDeadChara(myPos, myID);
+	}else{
+		drawChara(myPos, myID); //プレイヤーの描画
 	}
 }
 
@@ -757,12 +764,12 @@ void drawStatus(void){ //ステータスの描画
 
 void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 
-		//1.mapウィンドウの準備
+		//1.gMiniMapの初期化
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
-		//2.オブジェクトの位置をmapに描写
+		//2.オブジェクトの位置をgMiniMapに描写
 		SDL_Rect point[MAX_OBJECT];
 		int i;
 		int rd = 300; //ミニマップの半径
@@ -827,7 +834,7 @@ void drawMiniMap(POSITION* myPos){ //ミニマップの描画
 					break;
 			}
 		}
-		//3.mapをメインウィンドウに貼付け
+		//3.gMiniMapをメインウィンドウに貼付け
 		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
