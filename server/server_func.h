@@ -3,6 +3,9 @@
 
 #include"server_common.h"
 
+/* server_main.c */
+extern bool gcd(int a, int b);
+extern bool lcm(int a, int b);
 /* server_net.c */
 extern int setUpServer(int num);
 extern void ending(void);

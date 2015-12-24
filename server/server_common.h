@@ -5,6 +5,15 @@
 #include"../common.h"
 
 
+enum generateFrequency {	// 毎秒の頻度
+		FREQ_OBSTACLE = 10,
+		FREQ_ITEM = 1,
+};
+
+typedef struct {
+		eventNotification eventStack[MAX_CLIENTS][MAX_EVENT];
+} eventAssembly;
+
 /* server_net.c */
 extern int gClientNum;
 //extern Charatype gChara[CT_NUM];

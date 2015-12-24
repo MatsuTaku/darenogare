@@ -33,8 +33,8 @@ int main(int argc,char *argv[]) {
 		}
 
 		/* ネットワークループ */
-		int ms = 1000;
-		int a = ms, b = FPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = FPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
@@ -59,4 +59,24 @@ int main(int argc,char *argv[]) {
 		exit(0);
 		return 0;
 
+}
+
+
+int gcd(int a, int b) {
+		if (!a || !b) 
+				return 0;
+
+		int r;
+		while((r = a % b) != 0) {
+				a = b;
+				b = r;
+		}
+		return b;
+}
+
+int lcm(int a, int b) {
+		if (!a || !b)
+				return 0;
+
+		return (a * b / gcd(a, b));
 }

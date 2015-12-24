@@ -9,6 +9,8 @@ OBJECT* object;
 PLAYER* player;
 PLAYER* myPlayer;
 static int curObjNum;
+static int selfObject;
+static eventNotification eventStack[MAX_EVENT];
 
 static int latestFrame;
 static entityStateGet getEntity[FRAME_NUM];
@@ -16,9 +18,11 @@ static entityStateGet getEntity[FRAME_NUM];
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
-static bool generateObstacle();
-static bool insertItem(int num, POSITION* pos);
-static OBJECT* insertObject(void* buffer, OBJECT_TYPE type);
+// static bool generateObstacle();
+static bool generateObstacle(int id, POSITION* pos, double angle, double ver);
+static bool insertItem(int id, int num, POSITION* pos);
+static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
+static void initEvent();
 static void updatePlayer();
 static void updateObject();
 static void updateObstacle(OBSTACLE* obstacle);
@@ -31,6 +35,7 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 static bool judgeSafety(POSITION* pos);
+static void launchEvent(eventNotification *event);
 
 
 /**
@@ -55,12 +60,13 @@ int initGameSystem(int myId, int playerNum) {
 				initObject(curObj);
 		}
 		curObjNum = 0;
+		selfObject = 0x1000 * (myId + 1);
 
 		myPlayer = &player[myId];
 
 		for (i = 0; i < playerNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				if (insertObject(curPlayer, OBJECT_CHARACTER) == NULL) {
+				if (insertObject(curPlayer, i, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -68,6 +74,7 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		// test appearance
+		/*
 		for (i = 0; i < MAX_OBSTACLE; i++) {
 				if (!generateObstacle()) {
 						fprintf(stderr, "Failed to insert obstacle\n");
@@ -81,11 +88,12 @@ int initGameSystem(int myId, int playerNum) {
 						rand() % MAP_SIZE - MAP_SIZE / 2,
 						rand() % MAP_SIZE - MAP_SIZE / 2
 				};
-				if (!insertItem(num, &pos)) {
+				if (!insertItem(0, num, &pos)) {
 						fprintf(stderr, "Failed to insert item\n");
 						return -1;
 				}
 		}
+		*/
 
 		return 0;
 }
@@ -156,18 +164,35 @@ static void initObstacle(OBSTACLE* obstacle) {
  * 障害物の挿入
  * return: 成功・失敗
  */
+ /*
 static bool generateObstacle() {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
 				exit(1);
 		}
-		if (insertObject(curObs, OBJECT_OBSTACLE) == NULL) {
+		if (insertObject(curObs, 0, OBJECT_OBSTACLE) == NULL) {
 				fprintf(stderr, "Failed to insert object\n");
 				return false;
 		}
 		initObstacle(curObs);
 		return true;
+}
+*/
+static bool generateObstacle(int id, POSITION* pos, double angle, double ver) {
+		OBSTACLE* curObs;
+		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
+				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
+				exit(1);
+		}
+		if (insertObject(curObs, id, OBJECT_OBSTACLE) == NULL) {
+				fprintf(stderr, "Failed to insert object\n");
+				return false;
+		}
+		curObs->object->pos.x = pos->x;
+		curObs->object->pos.y = pos->y;
+		curObs->angle = angle;
+		curObs->ver = ver;
 }
 
 
@@ -177,18 +202,18 @@ static bool generateObstacle() {
  * input2: ポジション
  * return: 成功・失敗
  */
-static bool insertItem(int num, POSITION* pos) {
+static bool insertItem(int id, int num, POSITION* pos) {
 		ITEM* item;
 		if ((item = malloc(sizeof(ITEM))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert item.\n");
 				exit(1);
 		}
-		if (insertObject(item, OBJECT_ITEM) == NULL) {
+		if (insertObject(item, id, OBJECT_ITEM) == NULL) {
 				fprintf(stderr, "Failed to insert object\n");
 				return false;
 		}
 		item->num = num;
-		setPos(item->object, pos->x, pos->y);
+		item->object->pos = *pos;
 		return true;
 }
 
@@ -199,7 +224,7 @@ static bool insertItem(int num, POSITION* pos) {
  * input2: オブジェクトタイプ
  * return: オブジェクトのポインタ(error = NULL)
  */
-static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
+static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 		assert(buffer != NULL);
 		assert(type >= 0);
 		assert(type < OBJECT_NUM);
@@ -208,8 +233,10 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
 		while (count < MAX_OBJECT) {
 				curObject = &object[curObjNum];
 				if (curObject->type == OBJECT_EMPTY) {
+						curObject->id = id;
 						curObject->type = type;
 						curObject->typeBuffer = buffer;
+						// 相互参照
 						switch (type) {
 								case OBJECT_EMPTY:
 										break;
@@ -240,12 +267,31 @@ static OBJECT* insertObject(void* buffer, OBJECT_TYPE type) {
  * システムの計算処理
  */
 void updateEvent() {
+		// initalize event stack
+		initEvent();
+
 		/** Player value change method */
 		updatePlayer();
-
+		/** Object value change method */
 		updateObject();
-
+		/** launch judging collision detection method */
 		collisionDetection();
+}
+
+
+/**
+ * イベントスタックの初期化
+ */
+static void initEvent() {
+		int i;
+		for (i = 0; i < MAX_EVENT; i++) {
+				eventNotification *event = &eventStack[i];
+				event->playerId = myPlayer->num;
+				event->type = EVENT_NONE;
+				event->objId = -1;
+				event->id = -1;
+				event->killTo = -1;
+		}
 }
 
 
@@ -348,25 +394,24 @@ static void collisionDetection() {
 		int i;
 		for (i = 0; i < MAX_OBJECT; i++) {
 				OBJECT* curObject = &object[i];
-				if (curObject->type > OBJECT_EMPTY) {
-						switch (curObject->type) {
-								case OBJECT_OBSTACLE:
-										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->alive = false;
-												initObject(curObject);
-										}
-								case OBJECT_ITEM:
-										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
-												initObject(curObject);
-										}
-								default:
-										break;
-						}
+				if (curObject->type == OBJECT_EMPTY)	continue;
+				switch (curObject->type) {
+						case OBJECT_OBSTACLE:
+								if (hitObject(myPlayer->object, curObject)) {
+										myPlayer->alive = false;
+										initObject(curObject);
+								}
+						case OBJECT_ITEM:
+								if (hitObject(myPlayer->object, curObject)) {
+										myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
+										initObject(curObject);
+								}
+						default:
+								break;
 				}
 		}
 
-		int ms = 1000;
+		int ms = MIRI_SECOND;
 		switch (myPlayer->warn) {
 				case WARN_SAFETY:
 						if (!judgeSafety(&myPlayer->object->pos)) {
@@ -383,11 +428,11 @@ static void collisionDetection() {
 						} else {
 								if ((myPlayer->lastTime = myPlayer->deadTime - SDL_GetTicks()) < 0) {
 										myPlayer->alive = false;
-#ifndef NDEBUG
-										printf("You are still out of safety-zone!\n");
-										printf("come back in [%d] seconds!\n", myPlayer->lastTime);
-#endif
 								}
+#ifndef NDEBUG
+								printf("You are still out of safety-zone!\n");
+								printf("come back in [%d] seconds!\n", myPlayer->lastTime / MIRI_SECOND);
+#endif
 						}
 						break;
 				default:
@@ -616,9 +661,7 @@ static bool judgeSafety(POSITION* pos) {
  */
 void reflectDelta(entityStateGet* data) {
 		latestFrame = data->latestFrame;
-		bool recieved = false;
-		if (data->lastFrame > getEntity[FRAME_LAST].lastFrame)
-				recieved = true;
+		bool recieved = data->lastFrame > getEntity[FRAME_LAST].lastFrame;
 		getEntity[FRAME_LAST] = getEntity[FRAME_LATEST];
 		getEntity[FRAME_LATEST] = *data;
 
@@ -647,7 +690,9 @@ void reflectDelta(entityStateGet* data) {
 								curObject->pos.x += deltaObject->pos.x;
 								curObject->pos.y += deltaObject->pos.y;
 						} else {
+#ifndef NDEBUG
 								printf("fallthrough\n");
+#endif
 								DELTA* lastDelta = &getEntity[FRAME_LAST].delta;
 								PLAYER* lastPlayer = &lastDelta->player[i];
 								OBJECT* lastObject = &lastDelta->plyObj[i];
@@ -673,10 +718,36 @@ void reflectDelta(entityStateGet* data) {
 #endif
 				}
 		}
+
+		for (i = 0; i < MAX_EVENT; i++) {
+				eventNotification *curEvent = &data->event[i];
+				if (curEvent->type != EVENT_NONE)
+						launchEvent(curEvent);
+		}
+
 #ifndef NDEBUG
 		printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
 		printf("recieve time: %d\n", SDL_GetTicks());
 #endif
+}
+
+
+static void launchEvent(eventNotification *event) {
+#ifndef NDEBUG
+		printf("launchEvent type: %d\n", event->type);
+#endif
+		switch (event->type) {
+				case EVENT_OBSTACLE:
+						generateObstacle(event->id, &event->pos, event->angle, event->ver);
+						break;
+				case EVENT_ITEM:
+						insertItem(event->id, event->objId, &event->pos);
+						break;
+				case EVENT_KILL:
+						break;
+				default:
+						break;
+		}
 }
 
 
@@ -688,6 +759,10 @@ void sendEntity() {
 		data.pos.x = myPlayer->object->pos.x;
 		data.pos.y = myPlayer->object->pos.y;
 		data.player = *myPlayer;
+		int i;
+		for (i = 0; i < MAX_EVENT; i++) {
+				data.event[i] = eventStack[i];
+		}
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG

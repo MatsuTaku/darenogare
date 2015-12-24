@@ -56,8 +56,8 @@ int main(int argc,char *argv[])
 
 		/* メインループ */
 		// 1000とFPSの最小公倍数を基準に分数で計算
-		int ms = 1000;
-		int a = ms, b = FPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = FPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
@@ -81,9 +81,11 @@ int main(int argc,char *argv[])
 #endif
 		};
 
-		if (endFlag)
+		if (endFlag) {
 				sendEndCommand();
-		SDL_WaitThread(networkThread, NULL);
+				SDL_KillThread(networkThread);
+		} else if (endNet)
+				SDL_WaitThread(networkThread, NULL);
 		destroyWindow();
 		closeSoc();
 		return 0;
@@ -91,11 +93,10 @@ int main(int argc,char *argv[])
 
 
 static int networkEvent(void* data) {
-		bool *endFlag;
-		endFlag = (bool *)data;
+		bool *endFlag = (bool *)data;
 		// 1000とCPSの最小公倍数を基準に分数で計算
-		int ms = 1000;
-		int a = ms, b = CPS, tmp;
+		int ms = MIRI_SECOND;
+		int a = ms, b = CPS;
 		int r = a % b;
 		while(r != 0) {
 				a = b;
@@ -127,5 +128,5 @@ static Uint32 timerEvent(Uint32 frame) {
 		e = SDL_GetTicks();
 		drawWindow();
 		w = SDL_GetTicks();
-		// printf("time system: %d,	window: %d\n", e - s, w - e);
+	//	printf("time system: %d,	window: %d\n", e - s, w - e);
 }
