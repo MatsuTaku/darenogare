@@ -8,6 +8,7 @@ ASSEMBLY allAssembly;
 OBJECT* object;
 PLAYER* player;
 PLAYER* myPlayer;
+static int clientNum;
 static int curObjNum;
 static int selfObject;
 static eventNotification eventStack[MAX_EVENT];
@@ -18,7 +19,6 @@ static entityStateGet getEntity[FRAME_NUM];
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
-// static bool generateObstacle();
 static bool generateObstacle(int id, POSITION* pos, double angle, double ver);
 static bool insertItem(int id, int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
@@ -46,6 +46,7 @@ int initGameSystem(int myId, int playerNum) {
 		int i;
 		srand((unsigned)time(NULL));
 
+		clientNum = playerNum;
 		latestFrame = 0;
 		for (i = 0; i < FRAME_NUM; i++) {
 				getEntity[i].lastFrame = 0;
@@ -72,28 +73,6 @@ int initGameSystem(int myId, int playerNum) {
 				}
 				initPlayer(curPlayer, i);
 		}
-
-		// test appearance
-		/*
-		for (i = 0; i < MAX_OBSTACLE; i++) {
-				if (!generateObstacle()) {
-						fprintf(stderr, "Failed to insert obstacle\n");
-						return -1;
-				}
-		}
-
-		for (i = 0; i < MAX_ITEM; i++) {
-				int num = rand() % ITEM_NUM;
-				POSITION pos = {
-						rand() % MAP_SIZE - MAP_SIZE / 2,
-						rand() % MAP_SIZE - MAP_SIZE / 2
-				};
-				if (!insertItem(0, num, &pos)) {
-						fprintf(stderr, "Failed to insert item\n");
-						return -1;
-				}
-		}
-		*/
 
 		return 0;
 }
@@ -164,21 +143,6 @@ static void initObstacle(OBSTACLE* obstacle) {
  * 障害物の挿入
  * return: 成功・失敗
  */
- /*
-static bool generateObstacle() {
-		OBSTACLE* curObs;
-		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
-				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
-				exit(1);
-		}
-		if (insertObject(curObs, 0, OBJECT_OBSTACLE) == NULL) {
-				fprintf(stderr, "Failed to insert object\n");
-				return false;
-		}
-		initObstacle(curObs);
-		return true;
-}
-*/
 static bool generateObstacle(int id, POSITION* pos, double angle, double ver) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
@@ -342,9 +306,8 @@ static void updatePlayer() {
 				setPlayerPosition();
 		} else {	// 死亡時処理
 #ifndef NDEBUG
-				printf("You dead\n");
+				printf("YOU DIED\n");
 #endif
-				myPlayer->deadAnimation++;
 		}
 }
 
@@ -372,6 +335,13 @@ static void updateObject() {
 						}
 				}
 		}
+
+		for (i = 0; i < clientNum; i++) {
+				PLAYER* curPlayer = &player[i];
+				if (!curPlayer->alive) {
+						curPlayer->deadAnimation++;
+				}
+		}
 }
 
 
@@ -391,52 +361,54 @@ static void updateObstacle(OBSTACLE* obstacle) {
  * 当たり判定と処理
  */
 static void collisionDetection() {
-		int i;
-		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObject = &object[i];
-				if (curObject->type == OBJECT_EMPTY)	continue;
-				switch (curObject->type) {
-						case OBJECT_OBSTACLE:
-								if (hitObject(myPlayer->object, curObject)) {
-										myPlayer->alive = false;
-										initObject(curObject);
+		if (myPlayer->alive) {
+				int i;
+				for (i = 0; i < MAX_OBJECT; i++) {
+						OBJECT* curObject = &object[i];
+						if (curObject->type == OBJECT_EMPTY)	continue;
+						switch (curObject->type) {
+								case OBJECT_OBSTACLE:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->alive = false;
+												initObject(curObject);
+										}
+								case OBJECT_ITEM:
+										if (hitObject(myPlayer->object, curObject)) {
+												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
+												initObject(curObject);
+										}
+								default:
+										break;
+						}
+				}
+
+				int ms = MIRI_SECOND;
+				switch (myPlayer->warn) {
+						case WARN_SAFETY:
+								if (!judgeSafety(&myPlayer->object->pos)) {
+										myPlayer->warn = WARN_OUT_AREA;
+										myPlayer->deadTime = SDL_GetTicks() + WARN_TIME_RIMIT * ms;
+										myPlayer->lastTime = WARN_TIME_RIMIT * ms;
 								}
-						case OBJECT_ITEM:
-								if (hitObject(myPlayer->object, curObject)) {
-										myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
-										initObject(curObject);
+								break;
+						case WARN_OUT_AREA:
+								if (judgeSafety(&myPlayer->object->pos)) {
+										myPlayer->warn = WARN_SAFETY;
+										myPlayer->deadTime = 0;
+										myPlayer->lastTime = 0;
+								} else {
+										if ((myPlayer->lastTime = myPlayer->deadTime - SDL_GetTicks()) < 0) {
+												myPlayer->alive = false;
+										}
+#ifndef NDEBUG
+										printf("You are still out of safety-zone!\n");
+										printf("come back in [%d] seconds!\n", myPlayer->lastTime / MIRI_SECOND);
+#endif
 								}
+								break;
 						default:
 								break;
 				}
-		}
-
-		int ms = MIRI_SECOND;
-		switch (myPlayer->warn) {
-				case WARN_SAFETY:
-						if (!judgeSafety(&myPlayer->object->pos)) {
-								myPlayer->warn = WARN_OUT_AREA;
-								myPlayer->deadTime = SDL_GetTicks() + WARN_TIME_RIMIT * ms;
-								myPlayer->lastTime = WARN_TIME_RIMIT * ms;
-						}
-						break;
-				case WARN_OUT_AREA:
-						if (judgeSafety(&myPlayer->object->pos)) {
-								myPlayer->warn = WARN_SAFETY;
-								myPlayer->deadTime = 0;
-								myPlayer->lastTime = 0;
-						} else {
-								if ((myPlayer->lastTime = myPlayer->deadTime - SDL_GetTicks()) < 0) {
-										myPlayer->alive = false;
-								}
-#ifndef NDEBUG
-								printf("You are still out of safety-zone!\n");
-								printf("come back in [%d] seconds!\n", myPlayer->lastTime / MIRI_SECOND);
-#endif
-						}
-						break;
-				default:
-						break;
 		}
 }
 
