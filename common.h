@@ -140,6 +140,7 @@ typedef struct {
 		WARNING_FLAG warn;	// 警告フラグ
 		int deadTime;		// 死亡時間(生存領域外にいるとき)
 		int lastTime;		// 生存可能時間（〃）
+		int deadAnimation;
 } PLAYER;
 
 

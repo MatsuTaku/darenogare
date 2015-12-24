@@ -121,6 +121,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->warn = WARN_SAFETY;
 		player->deadTime = 0;
 		player->lastTime = 0;
+		player->deadAnimation = -1;
 		setPos(player->object, 0, 0);
 }
 
@@ -297,6 +298,7 @@ static void updatePlayer() {
 #ifndef NDEBUG
 				printf("You dead\n");
 #endif
+				myPlayer->deadAnimation++;
 		}
 }
 
