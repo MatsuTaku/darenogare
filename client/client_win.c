@@ -22,7 +22,7 @@ static char gWarningImgFile[] = "IMG/warning.png"; //警告マーク
 static char gBoomImgFile[] = "IMG/boom.png"; //爆発
 static char gDeadIconImgFile[] = "IMG/Deadicon.png"; //死亡時のキャラ
 static char gMiniMapImgFile[] = "IMG/minimap.png"; //ミニマップ
-static char gArrowImgFile[] = "IMG/target.png"; //目的地
+static char gTargetImgFile[] = "IMG/target.png"; //目的地
 static char gMissileImgFile[] = "IMG/missileEff.png"; //ミサイル
 static char gNoizingImgFile[] = "IMG/noizingEff.png"; //妨害電波
 static char gBarrierImgFile[] = "IMG/barrierEff.png"; //バリア
@@ -85,7 +85,7 @@ static SDL_Surface *gWarningImage; //警告
 static SDL_Surface *gDeadIconImage; //死亡時のアイコン
 static SDL_Surface *gBoomImage; //爆発
 static SDL_Surface *gMiniMapImage; //ミニマップの画像
-static SDL_Surface *gArrowImage; //中心位置への方向
+static SDL_Surface *gTargetImage; //中心位置への方向
 
 /*関数*/
 static int initImage();
@@ -206,7 +206,7 @@ void destroyWindow(void) { //サーフェスの解放
 		SDL_FreeSurface (ObstacleImage[0]);
 		SDL_FreeSurface (gItemBox);
 		SDL_FreeSurface(gMiniMapImage);
-		SDL_FreeSurface(gArrowImage);
+		SDL_FreeSurface(gTargetImage);
 		SDL_FreeSurface(gBoomImage);
 		SDL_FreeSurface(gWarningImage);
 		int i;
@@ -340,8 +340,8 @@ int initImage(void){ //画像の読み込み
 				printf("not find minimap image\n");
 				return(-1);
 		}
-		gArrowImage = IMG_Load( gArrowImgFile ); //目的地
-		if(gArrowImage == NULL){
+		gTargetImage = IMG_Load( gTargetImgFile ); //目的地
+		if(gTargetImage == NULL){
 				printf("not find arrow image\n");
 				return(-1);
 		}
@@ -356,7 +356,7 @@ int initImage(void){ //画像の読み込み
 				return(-1);
 		}
 		gBarrierImage = IMG_Load( gBarrierImgFile ); //バリア
-		if(gArrowImage == NULL){
+		if(gBarrierImage == NULL){
 				printf("not find barrier image\n");
 				return(-1);
 		}
@@ -654,15 +654,16 @@ void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡アニメーショ
 		int interval = 100;
 		int animeNum = player[chara_id].deadAnimation / (interval * FPS / 1000);
 		if(animeNum >= 16){
-			//GAMEOVERの描写
-			SDL_Surface *strings;
-			SDL_Color red = {204, 0, 0};
-			font = TTF_OpenFont(gFontFile, 48);
-			strings = TTF_RenderUTF8_Blended(font, "GAME OVER　m9(^Д^)", red);
-			SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
-			SDL_Rect go_src = {0, 0, strings->w, strings->h};
-			SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
-			SDL_FreeSurface(strings);
+			if(!myPlayer->alive){ //"GAME OVER"の描写
+				SDL_Surface *strings;
+				SDL_Color red = {204, 0, 0};
+				font = TTF_OpenFont(gFontFile, 48);
+				strings = TTF_RenderUTF8_Blended(font, "GAME OVER", red);
+				SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
+				SDL_Rect go_src = {0, 0, strings->w, strings->h};
+				SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
+				SDL_FreeSurface(strings);
+			}
 			return;
 		}
 		double angle;
@@ -749,12 +750,12 @@ void drawWarning(void){ //警告の表示
 		} else {
 			angle = atan2(dy,dx) * HALF_DEGRESS / PI; //角度を求める
 		}
-		image_reangle = rotozoomSurface(gArrowImage, angle, 1.0, 1); //角度の変更
+		image_reangle = rotozoomSurface(gTargetImage, angle, 1.0, 1); //角度の変更
 		SDL_Rect ar_src = {0, 0, image_reangle->w, image_reangle->h};
 		SDL_Rect ar_dst;
 		double r_angle = angle *PI / HALF_DEGRESS;
-		dx = image_reangle->w - gArrowImage->w; //回転によるずれの調整差分
-		dy = image_reangle->h - gArrowImage->h;
+		dx = image_reangle->w - gTargetImage->w; //回転によるずれの調整差分
+		dy = image_reangle->h - gTargetImage->h;
 		ar_dst.x = gMainWindow->w - gMiniMapImage->w/2 + rx*cos(r_angle) - image_reangle->w/2 - dx/2;
 		ar_dst.y = gMiniMapImage->h/2 - ry*sin(r_angle) - image_reangle->h/2 - dy/2;
 		SDL_BlitSurface(image_reangle, &ar_src, gMainWindow, &ar_dst);
