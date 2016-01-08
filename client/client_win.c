@@ -884,32 +884,21 @@ void drawMiniMap(POSITION* myPos) { //ミニマップの描画
 		//2.オブジェクトの位置をgMiniMapに描写
 		int i;
 		int rImg = 60;
-		int asp = 80; //比率
+		int asp = 40; //比率
 		int rd = rImg * asp; //ミニマップの半径
-		SDL_Rect point[MAX_OBJECT];
 		POSITION center;
 		center.x = gMiniMap->w / 2;
 		center.y = gMiniMap->h / 2;
 
 		for (i = 0; i < MAX_OBJECT; i++) { //オブジェクトの場所の描画
-				if (object[i].type == OBJECT_EMPTY)
-						continue;
-				point[i].w = 5; point[i].h = 5;
+				if (object[i].type == OBJECT_EMPTY)	continue;
 				double dx = object[i].pos.x - myPos->x;	
 				double dy = object[i].pos.y - myPos->y;
 				double range = pow(dx, 2) + pow(dy, 2);
 				if (range < pow(rd, 2)) {
-						double angle;
-						if (dx == 0) {
-								angle = dy > 0 ? 90 * PI / HALF_DEGRESS : -90 * PI / HALF_DEGRESS;
-						} else if (dy == 0) {
-								angle = dx < 0 ? 180 * PI / HALF_DEGRESS : 0;
-						}
-						angle = atan2(dy,dx); //角度を求める
-
-						point[i].x = center.x + dx / asp;
-						point[i].y = center.y + dy / asp;
-						printf("point[%d] [%d: %d]\n", i, point[i].x - 67, point[i].y - 67);
+						POSITION point;
+						point.x = center.x + dx / asp;
+						point.y = center.y + dy / asp;
 
 						int size = 2;
 						switch(object[i].type) {
@@ -917,16 +906,14 @@ void drawMiniMap(POSITION* myPos) { //ミニマップの描画
 										if (((PLAYER*)object[i].typeBuffer)->num == myID) {
 												filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
 										} else {
-												filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xffd700); //敵
+												filledCircleColor(gMiniMap, point.x, point.y, size, 0xffd700); //敵
 										}
 										break;
 								case OBJECT_OBSTACLE: //障害物
-										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xff0000ff);
-										printf("obstacle\n");
+										filledCircleColor(gMiniMap, point.x, point.y, size, 0xff0000ff);
 										break;
 								case OBJECT_ITEM: //アイテム
-										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0x0000ffff);
-										printf("item\n");
+										filledCircleColor(gMiniMap, point.x, point.y, size, 0x0000ffff);
 										break;
 								default:
 										break;

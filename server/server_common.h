@@ -1,4 +1,3 @@
-
 #ifndef _SERVER_COMMON_H_
 #define _SERVER_COMMON_H_
 

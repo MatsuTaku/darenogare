@@ -17,6 +17,7 @@ static int latestFrame;
 static entityStateGet getEntity[FRAME_NUM];
 
 static void initObject(OBJECT* object);
+static bool deleteObject(int objectId);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
 static bool generateObstacle(int id, POSITION* pos, double angle, double ver);
@@ -32,10 +33,12 @@ static void accelerateVerocity(double accel);
 static void setPlayerPosition();
 static void setPos(POSITION* pos, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
+static void hitDeleteObject(OBJECT* object);
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 static bool judgeSafety(POSITION* pos);
 static void launchEvent(eventNotification *event);
+static bool insertEvent(eventNotification* event);
 
 
 /**
@@ -85,7 +88,26 @@ int initGameSystem(int myId, int playerNum) {
 static void initObject(OBJECT* object) {
 		object->type = OBJECT_EMPTY;
 		object->id = 0;
+		object->typeBuffer = NULL;
 		setPos(&object->pos, 0, 0);
+}
+
+
+static bool deleteObject(int objectId) {
+		int i;
+		OBJECT* curObject;
+		for (i = 0; i < MAX_OBJECT; i++) {
+				curObject = &object[i];
+				if (curObject->type == OBJECT_EMPTY)	continue;
+				if (curObject->id == objectId) {
+						free((OBSTACLE *)curObject->typeBuffer);
+						initObject(curObject);
+						printf("delete object[%d]\n", objectId);
+						return true;
+				}
+		}
+		printf("failed to delete object[%d]\n", objectId);
+		return false;
 }
 
 
@@ -216,6 +238,7 @@ static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 								default:
 										break;
 						}
+						printf("insert object[%d]\n", curObjNum);
 						curObjNum = nextObj(curObjNum);
 						return curObject;
 				}
@@ -232,7 +255,7 @@ static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
  */
 void updateEvent() {
 		// initalize event stack
-		initEvent();
+		// initEvent();
 
 		/** Player value change method */
 		updatePlayer();
@@ -359,7 +382,14 @@ static void updateObstacle(OBSTACLE* obstacle) {
 		pos->x += ver * cos(angle) / FPS;
 		pos->y -= ver * sin(angle) / FPS;
 		// printf("objAngle: %.0f\n", angle * HALF_DEGRESS / PI);
+
+		// 範囲外の障害物の消去
+		if (pow(pos->x, 2) + pow(pos->y, 2) > pow(WORLD_SIZE, 2)) {
+				initObject(obstacle->object);
+				free(obstacle);
+		}
 }
+
 
 
 /**
@@ -375,13 +405,15 @@ static void collisionDetection() {
 								case OBJECT_OBSTACLE:
 										if (hitObject(myPlayer->object, curObject)) {
 												myPlayer->alive = false;
-												initObject(curObject);
+												hitDeleteObject(curObject);
 										}
+										break;
 								case OBJECT_ITEM:
 										if (hitObject(myPlayer->object, curObject)) {
 												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
-												initObject(curObject);
+												hitDeleteObject(curObject);
 										}
+										break;
 								default:
 										break;
 						}
@@ -407,7 +439,7 @@ static void collisionDetection() {
 										}
 #ifndef NDEBUG
 										printf("You are still out of safety-zone!\n");
-										printf("come back in [%d] seconds!\n", myPlayer->lastTime / MIRI_SECOND);
+										printf("come back in [%d] seconds!\n", myPlayer->lastTime / ms);
 #endif
 								}
 								break;
@@ -415,6 +447,17 @@ static void collisionDetection() {
 								break;
 				}
 		}
+}
+
+
+static void hitDeleteObject(OBJECT* object) {
+		eventNotification event;
+		event.type = EVENT_DELETE;
+		event.playerId = myPlayer->num;
+		event.id = object->id;
+		insertEvent(&event);
+
+		initObject(object);
 }
 
 
@@ -473,26 +516,6 @@ static void setPlayerPosition() {
 #endif
 }
 
-
-/*
- *	触れたアイテムを入手する
- */
-void getItem() {
-		int num, i;
-		OBJECT* playerObj = myPlayer->object;
-
-		for (i = 0; i < MAX_OBJECT; i++) {
-				OBJECT* curObj = &object[i];
-				if (curObj->type == OBJECT_ITEM) {
-						if (hitObject(playerObj, curObj)) {
-								// MARK
-								myPlayer->item = ((ITEM*)curObj->typeBuffer)->num;
-								initObject(curObj);
-								break;
-						}
-				}
-		}
-}
 
 
 void useItem() {	// アイテムの使用
@@ -690,8 +713,8 @@ void reflectDelta(entityStateGet* data) {
 								curObject->pos.y += deltaObject->pos.y - lastObject->pos.y;
 						}
 #ifndef NDEBUG
-						printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
-						printf("		alive: %d\n", curPlayer->alive);
+						// printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
+						// printf("		alive: %d\n", curPlayer->alive);
 #endif
 				}
 		}
@@ -703,8 +726,7 @@ void reflectDelta(entityStateGet* data) {
 		}
 
 #ifndef NDEBUG
-		printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
-		printf("recieve time: %d\n", SDL_GetTicks());
+		// printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
 #endif
 }
 
@@ -717,6 +739,9 @@ static void launchEvent(eventNotification *event) {
 				case EVENT_OBSTACLE:
 						generateObstacle(event->id, &event->pos, event->angle, event->ver);
 						break;
+				case EVENT_DELETE:
+						deleteObject(event->id);
+						break;
 				case EVENT_ITEM:
 						insertItem(event->id, event->objId, &event->pos);
 						break;
@@ -725,6 +750,20 @@ static void launchEvent(eventNotification *event) {
 				default:
 						break;
 		}
+}
+
+
+static bool insertEvent(eventNotification* event) {
+		int i;
+		for (i = 0; i < MAX_EVENT; i++) {
+				if (eventStack[i].type == EVENT_NONE) {
+						eventStack[i] = *event;
+						printf("Success insert event sub[%d]\n", i);
+						return true;
+				}
+		}
+		printf("Event stack is FULL!\n");
+		return false;
 }
 
 
@@ -740,9 +779,10 @@ void sendEntity() {
 		for (i = 0; i < MAX_EVENT; i++) {
 				data.event[i] = eventStack[i];
 		}
+		initEvent();
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG
-		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
+		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

@@ -205,7 +205,7 @@ static bool randomGenerateObstacle() {
 		double randAngle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS) * PI / HALF_DEGRESS;
 		double randVer = MAXIMUM_SPEED_OBSTACLE;
 		double r = MAP_SIZE;
-		double a = sin(randAngle) / cos(randAngle);
+		double a = tan(randAngle);
 		int toX, toY;
 		do {
 				toX = rand() % MAP_SIZE - MAP_SIZE / 2;
@@ -215,6 +215,7 @@ static bool randomGenerateObstacle() {
 		double x = (-(a * b) + (cos(randAngle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2))) / (pow(a, 2) + 1);
 		double y = (sin(randAngle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2));
 		POSITION randPos = {x, y};
+		printf("obstacle pos[%.0f: %.0f]\n", x, y);
 
 		//if (generateObstacle(ownerObject, 0, &randPos, randAngle, randVer)) {
 				eventNotification event;
@@ -295,7 +296,7 @@ static clearEvent(int playerId, int latest) {
 				}
 		}
 #ifndef NDEBUG
-		printf("###clearEvent\n");
+		// printf("###clearEvent\n");
 #endif
 }
 
