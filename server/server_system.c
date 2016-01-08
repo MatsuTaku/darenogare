@@ -15,6 +15,7 @@ static int curObjNum;
 static int ownerObject;
 
 static void initObject(OBJECT* object);
+static void initPlayer(PLAYER* player, int id);
 static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver);
 static setPos(POSITION* pos, int x, int y);
 static void initEvent(eventNotification* event);
@@ -57,6 +58,7 @@ int initSystem(int clientNumber) {
 						fprintf(stderr, "InsertingObject is failed!\n");
 						return -1;
 				}
+				initPlayer(&firstData->player[i], i);
 		}
 		curObjNum = MAX_CLIENTS;
 #ifndef NDEBUG
@@ -68,6 +70,24 @@ static void initObject(OBJECT* object) {
 		object->type = OBJECT_EMPTY;
 		object->id = 0;
 		setPos(&object->pos, 0, 0);
+}
+
+static void initPlayer(PLAYER* player, int id) {
+		player->object = NULL;
+		player->num = id;
+		player->dir = 0;
+		player->toDir = player->dir;
+		player->ver.vx = 0;
+		player->ver.vy = 0;
+		player->alive = 0;
+		player->boost = 0;
+		player->rotate = 0;
+		player->action = 0;
+		player->item = 0;
+		player->warn = 0;
+		player->deadTime = 0;
+		player->lastTime = 0;
+		player->deadAnimation = 0;
 }
 
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
@@ -293,6 +313,8 @@ void setPlayerState(int id, entityStateSet* state) {
 		*/
 #endif
 		setPlayerValue(player, &state->player);
+		
+		clearEvent(id, state->latestFrame);
 		int i;
 		for (i = 0; i < MAX_EVENT; i++) {
 				if (state->event[i].type != EVENT_NONE) {
@@ -362,7 +384,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 								data.event[i].type = EVENT_NONE;
 						}
 				}
-				clearEvent(id, latest);
+				// clearEvent(id, latest);
 
 				printf("send server frame: %d\n", data.latestFrame);
 		}

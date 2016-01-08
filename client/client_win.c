@@ -20,8 +20,13 @@ static char gItemBoxImgFile[] = "IMG/Itembox.png";
 static char gBoostImgFile[] = "IMG/boost.png";
 static char gWarningImgFile[] = "IMG/warning.png";
 static char gBoomImgFile[] = "IMG/boom.png";
+static char gDeadIconImgFile[] = "IMG/Deadicon.png";
 static char gMiniMapImgFile[] = "IMG/minimap.png";
 static char gArrowImgFile[] = "IMG/target.png";
+static char gLaserImgFile[2][20] = {
+		"IMG/LaserEff.png",
+		"IMG/LaserEff2.png"
+};
 static char gItemImgFile[ITEM_NUM][20] = {
 		"IMG/noizing.png",
 		"IMG/Laser.png", 
@@ -40,12 +45,6 @@ static char gIconImgFile[MAX_CLIENTS][20] = {
 		"IMG/2Picon.png", 
 		"IMG/3Picon.png", 
 		"IMG/4Picon.png"
-};
-static char gNameImgFile[MAX_CLIENTS][20] = {
-		"IMG/1Pname.png",
-		"IMG/2Pname.png",
-		"IMG/3Pname.png",
-		"IMG/4Pname.png"
 };
 /* フォントファイル */
 static char gFontFile[] = "/usr/share/fonts/opentype/ipafont-mincho/ipamp.ttf";
@@ -68,13 +67,14 @@ static SDL_Surface *gMainWindow;//メインウィンドウ
 static SDL_Surface *gBackGround; //背景
 static SDL_Surface *gStatusWindow; //各プレイヤーのステータスウィンドウ
 static SDL_Surface *gMiniMap; //ミニマップ
+static SDL_Surface *gDeadIconImage; //死亡時のアイコン
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *ObstacleImage[1]; //障害物
 static SDL_Surface *gIconImage[MAX_CLIENTS];//アイコン
-static SDL_Surface *gArrowImage; //矢印
+static SDL_Surface *gArrowImage; //中心位置への方向
+static SDL_Surface *gLaserImage[2]; //レーザーのエフェクト
 static SDL_Surface *gItemBox; //アイテム欄
-static SDL_Surface *gNameImage[MAX_CLIENTS]; //キャラクター名
 static SDL_Surface *gBoostImage; //ブースト
 static SDL_Surface *gWarningImage; //警告
 static SDL_Surface *gBoomImage; //爆発
@@ -88,6 +88,7 @@ static void drawBoost(int chara_id, SDL_Surface *c_window);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
 static void drawObstacle(POSITION *obsPos);
+//static void drawLaser(POSITION *charaPos, int chara_id);
 static void drawStatus();
 static void drawWarning();
 static void drawMiniMap(POSITION* myPos);
@@ -134,7 +135,7 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 				return -1;
 		}
 		//MiniMap
-		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff)) == NULL) {
+		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0, 0, 0, 0)) == NULL) {
 				printf("failed to initialize minimap");
 				return -1;
 		}
@@ -175,8 +176,11 @@ int drawWindow() {	//ゲーム画面の描画
 
 		clearWindow(); //ウィンドウのクリア
 		drawObject(); //オブジェクトの描画
+		//drawLaser(); //レーザーの描画
 		drawStatus(); //ステータスの描画
-		drawMiniMap(&myPlayer->object->pos); //ミニマップの描画
+		if(myPlayer->alive){
+			drawMiniMap(&myPlayer->object->pos); //ミニマップの描画
+		}
 		if(myPlayer->warn == WARN_OUT_AREA && myPlayer->alive){
 			drawWarning(); //警告文の表示
 		}
@@ -185,7 +189,7 @@ int drawWindow() {	//ゲーム画面の描画
 }
 
 
-void destroyWindow(void) {
+void destroyWindow(void) { //サーフェスの解放
 		SDL_FreeSurface(gMainWindow);
 		SDL_FreeSurface (gStatusWindow);
 		SDL_FreeSurface(gMiniMap);
@@ -203,7 +207,9 @@ void destroyWindow(void) {
 		for(i = 0; i < MAX_CLIENTS; i++){
 				SDL_FreeSurface (gCharaImage[i]);
 				SDL_FreeSurface (gIconImage[i]);
-				SDL_FreeSurface(gNameImage[i]);
+		}
+		for(i = 0; i < 2; i++){
+				SDL_FreeSurface (gLaserImage[i]);
 		}
 
 		if (joystick != NULL)
@@ -320,6 +326,11 @@ int initImage(void){ //画像の読み込み
 				printf("not find minimap image\n");
 				return(-1);
 		}
+		gDeadIconImage = IMG_Load( gDeadIconImgFile ); //死亡時のアイコン
+		if( gDeadIconImage == NULL){
+				printf("not find deadicon image\n");
+				return(-1);
+		}
 		gArrowImage = IMG_Load( gArrowImgFile ); //矢印
 		if(gArrowImage == NULL){
 				printf("not find arrow image\n");
@@ -339,6 +350,13 @@ int initImage(void){ //画像の読み込み
 						return(-1);
 				}
 		}
+		for(i = 0; i < 2; i++){ //レーザー画像
+				gLaserImage[i] = IMG_Load( gLaserImgFile[i] );
+				if( gLaserImage[i] == NULL){
+						printf("not find laser%dimage\n", i+1);
+						return(-1);
+				}
+		}
 		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
 				gIconImage[i] = IMG_Load( gIconImgFile[i] );
 				if( gIconImage[i] == NULL ){
@@ -346,13 +364,7 @@ int initImage(void){ //画像の読み込み
 						return(-1);
 				}
 		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
-				gNameImage[i] = IMG_Load( gNameImgFile[i] );
-				if( gNameImage[i] == NULL ){
-						printf("not find name%dP image\n", i+1);
-						return(-1);
-				}
-		}
+
 }
 
 
@@ -408,11 +420,13 @@ void drawObject(void) { //オブジェクトの描画
 		switch(object[i].type){
 		  case OBJECT_CHARACTER: //キャラクター
 			id = ((PLAYER*)object[i].typeBuffer)->num; //キャラ番号
-			if(!player[id].alive){
-				drawDeadChara(&object[i].pos, id); //死亡キャラの描画
-				break;
+			if(id != myID){
+				if(!player[id].alive){
+					drawDeadChara(&object[i].pos, id); //死亡キャラの描画
+					break;
+				}
+				drawChara(&object[i].pos, id); //キャラクターの描画
 			}
-			drawChara(&object[i].pos, id); //キャラクターの描画
 			break;
 		  case OBJECT_ITEM: //アイテム
 		  	id = ((ITEM *)object[i].typeBuffer)->num; //アイテム番号
@@ -425,6 +439,11 @@ void drawObject(void) { //オブジェクトの描画
 			break;
 		  }
 	    }
+	}
+	if(!myPlayer->alive){
+		drawDeadChara(myPos, myID);
+	}else{
+		drawChara(myPos, myID); //プレイヤーの描画
 	}
 }
 
@@ -609,10 +628,19 @@ void drawBoost(int chara_id, SDL_Surface *c_window){ //噴射炎を描画
 
 }
 */
-void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
+void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡アニメーションの描画
 		int interval = 100;
 		int animeNum = player[chara_id].deadAnimation / (interval * FPS / 1000);
 		if(animeNum >= 16){
+			//GAMEOVERの描写
+			SDL_Surface *strings;
+			SDL_Color red = {204, 0, 0};
+			font = TTF_OpenFont(gFontFile, 48);
+			strings = TTF_RenderUTF8_Blended(font, "GAME OVER　m9(^Д^)", red);
+			SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
+			SDL_Rect go_src = {0, 0, strings->w, strings->h};
+			SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
+			SDL_FreeSurface(strings);
 			return;
 		}
 		double angle;
@@ -626,7 +654,7 @@ void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 
 		src_rect.x = (gBoomImage->w / 8) * (animeNum % 8);
 		src_rect.y = (gBoomImage->h / 2) * (animeNum / 8);
-			SDL_BlitSurface(gBoomImage, &src_rect, gMainWindow, &dst_rect); //描画
+		SDL_BlitSurface(gBoomImage, &src_rect, gMainWindow, &dst_rect); //描画
 }
 
 
@@ -655,7 +683,18 @@ void drawObstacle(POSITION *obsPos){ //障害物の描画
 		SDL_BlitSurface(ObstacleImage[0], &src_rect, gMainWindow, &dst_rect); //描画
 }
 
+/*
+void drawLaser(POSITION *charaPos, int chara_id){ //レーザーの描画
+
+		Rect shadow, entity;
+		SDL_Surface *reangle;
+		int dir = player[chara_id].dir *HALF_DEGRESS /PI; //キャラの向き(度数)
+
+		//影の描写
+		reangle = rotozoomSurface(gLaserImage[1], dir, 1.0, 1.0);
 		
+}
+*/
 
 void drawWarning(void){ //警告の表示
 		POSITION* myPos = &myPlayer->object->pos;
@@ -719,12 +758,12 @@ void drawStatus(void){ //ステータスの描画
 			    item_id = player[i].item;	// アイテム番号
 
 			      if(!player[chara_id].alive){ //ゲームオーバーの場合
-				   src_rect.x = gBoomImage->w/8 *4;
-				   src_rect.w = gBoomImage->w/8;
-				   src_rect.h = gBoomImage->h/2;
-				   dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gBoomImage->w/8)/2;
-				   dst_rect.y = (gItemBox->h - gBoomImage->h/2)/2;
-				   SDL_BlitSurface(gBoomImage, &src_rect, gStatusWindow, &dst_rect);
+				   src_rect.x = 0;
+				   src_rect.w = gDeadIconImage->w;
+				   src_rect.h = gDeadIconImage->h;
+				   dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gDeadIconImage->w)/2;
+				   dst_rect.y = (gItemBox->h - gDeadIconImage->h)/2;
+				   SDL_BlitSurface(gDeadIconImage, &src_rect, gStatusWindow, &dst_rect);
 			      }else{
 					//アイコン
 			      		src_rect.w = gIconImage[chara_id]->w;    src_rect.h = gIconImage[chara_id]->h;
@@ -755,83 +794,67 @@ void drawStatus(void){ //ステータスの描画
 }
 
 
-void drawMiniMap(POSITION* myPos){ //ミニマップの描画
-
-		//1.mapウィンドウの準備
+void drawMiniMap(POSITION* myPos) { //ミニマップの描画
+		//1.gMiniMapの初期化
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
-		//2.オブジェクトの位置をmapに描写
-		SDL_Rect point[MAX_OBJECT];
+		//2.オブジェクトの位置をgMiniMapに描写
 		int i;
-		int rd = 300; //ミニマップの半径
-		int asp = 15; //比率
-		double dx, dy, angle = 0;
+		int rImg = 60;
+		int asp = 80; //比率
+		int rd = rImg * asp; //ミニマップの半径
+		SDL_Rect point[MAX_OBJECT];
 		POSITION center;
-		center.x = gMiniMap->w/2;
-		center.y = gMiniMap->h/2;
+		center.x = gMiniMap->w / 2;
+		center.y = gMiniMap->h / 2;
 
-		for(i = 0; i < MAX_OBJECT; i++){ //オブジェクトの場所の描画
-			point[i].w = 5; point[i].h = 5;
-			dx = object[i].pos.x - myPos->x;	
-			dy = object[i].pos.y - myPos->y;
-			if (dx == 0) {
-				angle = dy > 0 ? 90 * PI / HALF_DEGRESS : -90 * PI / HALF_DEGRESS;
-			} else if (dy == 0) {
-				angle = dx < 0 ? 180 * PI / HALF_DEGRESS : 0;
-			}
-			angle = atan2(dy,dx); //角度を求める
-			if(dx < 0){ //xの調整
-				if(dx/asp > gMiniMapImage->w -20){
-					point[i].x = center.x - (rd*cos(angle));
-				}else{
-					point[i].x = center.x - (dx/asp * cos(angle));
-				}
-			}else{
-				if(dx/asp > gMiniMapImage->w -20){
-					point[i].x = center.x + (rd*cos(angle));
-				}else{
-					point[i].x = center.x + (dx/asp * cos(angle));
-				}
-			}
+		for (i = 0; i < MAX_OBJECT; i++) { //オブジェクトの場所の描画
+				if (object[i].type == OBJECT_EMPTY)
+						continue;
+				point[i].w = 5; point[i].h = 5;
+				double dx = object[i].pos.x - myPos->x;	
+				double dy = object[i].pos.y - myPos->y;
+				double range = pow(dx, 2) + pow(dy, 2);
+				if (range < pow(rd, 2)) {
+						double angle;
+						if (dx == 0) {
+								angle = dy > 0 ? 90 * PI / HALF_DEGRESS : -90 * PI / HALF_DEGRESS;
+						} else if (dy == 0) {
+								angle = dx < 0 ? 180 * PI / HALF_DEGRESS : 0;
+						}
+						angle = atan2(dy,dx); //角度を求める
 
-			if(angle < 0){ //yの調整
-				if(dy/asp > gMiniMapImage->h){
-					point[i].y = center.y - (rd*sin(angle));
-				}else{
-					point[i].y = center.y - (dy/asp * sin(angle));
+						point[i].x = center.x + dx / asp;
+						point[i].y = center.y + dy / asp;
+						printf("point[%d] [%d: %d]\n", i, point[i].x - 67, point[i].y - 67);
+
+						int size = 2;
+						switch(object[i].type) {
+								case OBJECT_CHARACTER: //キャラクター
+										if (((PLAYER*)object[i].typeBuffer)->num == myID) {
+												filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
+										} else {
+												filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xffd700); //敵
+										}
+										break;
+								case OBJECT_OBSTACLE: //障害物
+										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0xff0000ff);
+										printf("obstacle\n");
+										break;
+								case OBJECT_ITEM: //アイテム
+										filledCircleColor(gMiniMap, point[i].x, point[i].y, size, 0x0000ffff);
+										printf("item\n");
+										break;
+								default:
+										break;
+						}
 				}
-			}else{
-				if(dy/asp > gMiniMapImage->h){
-					point[i].y = center.y + (rd*sin(angle));
-				}else{
-					point[i].y = center.y + (dy/asp * sin(angle));
-				}
-			}
-			switch(object[i].type){
-				case OBJECT_CHARACTER:
-					if(((PLAYER*)object[i].typeBuffer)->num == myID){
-						filledCircleColor(gMiniMap, center.x, center.y, 4, 0xff00ffff); //自分の点を描画
-					}else{
-						SDL_FillRect(gMiniMap, &point[i], 0xffffff00); //敵の点を描画
-					}
-					break;
-				case OBJECT_OBSTACLE:
-					SDL_FillRect(gMiniMap, &point[i], 0xffff0000); //障害物の点を描画
-					break;
-				case OBJECT_ITEM:
-					SDL_FillRect(gMiniMap, &point[i], 0xff0000ff); //アイテムの点を描画
-					break;
-				case OBJECT_EMPTY:
-					break;
-			}
 		}
-		//3.mapをメインウィンドウに貼付け
+
+		//3.gMiniMapをメインウィンドウに貼付け
 		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
-
 }
-
-

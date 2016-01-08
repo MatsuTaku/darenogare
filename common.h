@@ -12,7 +12,7 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
-#define CPS 30
+#define CPS 20
 #define MIRI_SECOND		1000
 #define RETENTION_FRAME	0x7f
 
@@ -25,7 +25,7 @@
 #define MAX_ITEM		0x3f
 #define CT_NUM 4
 
-#define MAX_EVENT	0x3f
+#define MAX_EVENT	0x0f
 #define MAP_SIZE	10000
 #define WORLD_SIZE 		20000
 
