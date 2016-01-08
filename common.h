@@ -160,10 +160,11 @@ typedef struct {
 
 // イベント通知
 typedef enum {
-		EVENT_NONE = -1,
-		EVENT_OBSTACLE = 0,
-		EVENT_ITEM = 1,
-		EVENT_KILL = 2,
+		EVENT_NONE = 0,
+		EVENT_OBSTACLE = 1,
+		EVENT_DELETE = 2,
+		EVENT_ITEM = 3,
+		EVENT_KILL = 4,
 } EVENT;
 
 typedef struct {
