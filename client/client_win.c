@@ -143,10 +143,11 @@ int initWindows(int clientID, int num) { //ウィンドウ生成
 				return -1;
 		}
 		//MiniMap
-		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0, 0, 0, 0)) == NULL) {
+		if((gMiniMap = SDL_CreateRGBSurface(SDL_SWSURFACE, gMiniMapImage->w, gMiniMapImage->h, 32, 0xffffff, 0xffffff, 0xffffff, 0xffffff)) == NULL) {
 				printf("failed to initialize minimap");
 				return -1;
 		}
+
 		if(TTF_Init() < 0){ //フォントの初期化
 				printf("failed to initialize font");
 				return -1;
@@ -816,6 +817,9 @@ void drawStatus(void){ //ステータスの描画
 
 void drawMiniMap(POSITION* myPos) { //ミニマップの描画
 		//1.gMiniMapの初期化
+		SDL_FillRect(gMiniMap, NULL, 0xffffff); //白で塗りつぶし
+		SDL_SetColorKey(gMiniMap, SDL_SRCCOLORKEY, SDL_MapRGB(gMiniMap->format, 0xff, 0xff, 0xff)); //白を透過
+		gMiniMap = SDL_DisplayFormat(gMiniMap);
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
