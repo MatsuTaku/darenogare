@@ -84,6 +84,7 @@ static void initPlayer(PLAYER* player, int id) {
 		player->rotate = 0;
 		player->action = 0;
 		player->item = 0;
+		player->launchCount = 0;
 		player->warn = 0;
 		player->deadTime = 0;
 		player->lastTime = 0;
@@ -138,6 +139,7 @@ static bool generateObstacle(int id, int num, POSITION* pos, double angle, doubl
 		}
 		curObs->object->pos = *pos;
 		curObs->object->id = id;
+		curObs->num = num;
 		curObs->angle = angle;
 		curObs->ver = ver;
 		return true;
@@ -203,7 +205,11 @@ static bool averageFromFrequency(double freq) {
 
 static bool randomGenerateObstacle() {
 		double randAngle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS) * PI / HALF_DEGRESS;
-		double randVer = MAXIMUM_SPEED_OBSTACLE;
+		double randVer = VER_ROCK;
+		/* Set random position in map.
+		 * Get position on edge of world, that's direction to is last position.
+		 * World's shape is circle.
+		 */
 		double r = MAP_SIZE;
 		double a = tan(randAngle);
 		int toX, toY;
@@ -217,11 +223,11 @@ static bool randomGenerateObstacle() {
 		POSITION randPos = {x, y};
 		printf("obstacle pos[%.0f: %.0f]\n", x, y);
 
-		//if (generateObstacle(ownerObject, 0, &randPos, randAngle, randVer)) {
+		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
 				eventNotification event;
 				event.type = EVENT_OBSTACLE;
 				event.playerId = OWNER;
-				event.objId = 0;
+				event.objId = OBS_ROCK;
 				event.id = ownerObject;
 				event.pos = randPos;
 				event.angle = randAngle;

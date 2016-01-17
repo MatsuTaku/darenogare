@@ -57,16 +57,9 @@ int main(int argc,char *argv[])
 		/* メインループ */
 		// 1000とFPSの最小公倍数を基準に分数で計算
 		int ms = MIRI_SECOND;
-		int a = ms, b = FPS;
-		int r = a % b;
-		while(r != 0) {
-				a = b;
-				b = r;
-				r = a % b;
-		}
-		double gcd = ms * FPS / b;
-		Uint32 loopInterval = ms / b;
-		int timeRate = FPS / b;
+		int src = gcd(ms, FPS);
+		Uint32 loopInterval = ms / src;
+		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
 		while((endFlag = windowEvent()) == false && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
@@ -77,7 +70,7 @@ int main(int argc,char *argv[])
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				// printf("FPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : FPS);
+				printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
 #endif
 		};
 
@@ -89,6 +82,7 @@ int main(int argc,char *argv[])
 		}
 
 		destroyWindow();
+		destroySystem();
 		closeSoc();
 		return 0;
 }
@@ -98,16 +92,9 @@ static int networkEvent(void* data) {
 		bool *endFlag = (bool *)data;
 		// 1000とCPSの最小公倍数を基準に分数で計算
 		int ms = MIRI_SECOND;
-		int a = ms, b = CPS;
-		int r = a % b;
-		while(r != 0) {
-				a = b;
-				b = r;
-				r = a % b;
-		}
-		double gcd = ms * CPS / b;
-		Uint32 loopInterval = ms / b;
-		int timeRate = CPS / b;
+		int src = gcd(ms, CPS);
+		Uint32 loopInterval = ms / src;
+		int timeRate = CPS / src;
 		Uint32 startTime, endTime, toTime;
 		while(!*endFlag) {
 				startTime = SDL_GetTicks() * timeRate;
@@ -118,7 +105,7 @@ static int networkEvent(void* data) {
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				// printf("CPS: %d\n", endTime > toTime ? (int)(gcd / (endTime - startTime)) : CPS);
+				printf("CPS: %d\n", endTime > toTime ? (int)(lcm(ms, CPS) / (endTime - startTime)) : CPS);
 #endif
 		};
 		return 0;
@@ -133,4 +120,21 @@ static Uint32 timerEvent(Uint32 frame) {
 		drawWindow();
 		w = SDL_GetTicks();
 	//	printf("time system: %d,	window: %d\n", e - s, w - e);
+}
+
+
+int gcd(int a, int b) {
+		if (!a || !b)	return 0;
+		int r;
+		while ((r = a % b) != 0) {
+				a = b;
+				b = r;
+		}
+		return b;
+}
+
+
+int lcm (int a, int b) {
+		if (!a || !b)	return 0;
+		return (a * b / gcd(a, b));
 }

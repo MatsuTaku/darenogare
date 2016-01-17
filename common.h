@@ -12,7 +12,7 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
-#define CPS 20
+#define CPS 30
 #define MIRI_SECOND		1000
 #define RETENTION_FRAME	0x7f
 
@@ -20,9 +20,9 @@
 #define MAX_NAME_SIZE	10 				
 
 #define MAX_DATA		200				
-#define MAX_OBJECT		0xff
-#define MAX_OBSTACLE	0x6f
-#define MAX_ITEM		0x3f
+#define MAX_OBJECT		0xfff
+#define MAX_OBSTACLE	0x6ff
+#define MAX_ITEM		0x3ff
 #define CT_NUM 4
 
 #define MAX_EVENT	0x0f
@@ -31,7 +31,6 @@
 
 #define PI				3.14159265
 #define HALF_DEGRESS	180
-#define MAXIMUM_SPEED_OBSTACLE 200
 
 typedef enum {
 		END_COMMAND = 1
@@ -68,8 +67,22 @@ typedef struct {
 
 
 /* OBSTACLE Values */
+typedef enum {
+		OBS_ROCK,
+		OBS_MISSILE,
+		OBS_LASER
+} OBSTACLE_TYPE;
+
+enum {
+		VER_ROCK = 200,
+		VER_MISSILE = 1000,
+		VER_LASER = 10000,
+};
+
 typedef struct {
 		OBJECT* object;
+		OBSTACLE_TYPE num;
+		int owner;
 		double angle;
 		double ver;
 } OBSTACLE;
@@ -77,14 +90,14 @@ typedef struct {
 
 /* ITEM Values */
 typedef enum {
-		ITEM_EMPTY      = -1,
-		ITEM_NOIZING	= 0,
-		ITEM_LASER	= 1,
-		ITEM_MISSILE	= 2,
-		ITEM_MINIMUM	= 3,
-		ITEM_BARRIER	= 4,
-		ITEM_NUM	= 5
-} ITEM_NUMBER ;
+		ITEM_EMPTY = -1,
+		ITEM_NOIZING,
+		ITEM_LASER,
+		ITEM_MISSILE,
+		ITEM_MINIMUM,
+		ITEM_BARRIER,
+		ITEM_NUM		
+} ITEM_NUMBER;
 
 typedef struct {
 		// MARK
@@ -126,6 +139,7 @@ typedef enum {
 typedef enum {
 		ACTION_NONE,
 		ACTION_USE_ITEM,
+		ACTION_CD_LASER
 } ACTION_FLAG;
 
 typedef enum {
@@ -144,6 +158,7 @@ typedef struct {
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
+		int launchCount;	// launch laesr time
 		WARNING_FLAG warn;	// 警告フラグ
 		int deadTime;		// 死亡時間(生存領域外にいるとき)
 		int lastTime;		// 生存可能時間（〃）
@@ -160,11 +175,11 @@ typedef struct {
 
 // イベント通知
 typedef enum {
-		EVENT_NONE = 0,
-		EVENT_OBSTACLE = 1,
-		EVENT_DELETE = 2,
-		EVENT_ITEM = 3,
-		EVENT_KILL = 4,
+		EVENT_NONE,
+		EVENT_OBSTACLE,
+		EVENT_DELETE,
+		EVENT_ITEM,
+		EVENT_KILL,
 } EVENT;
 
 typedef struct {

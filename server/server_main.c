@@ -34,16 +34,9 @@ int main(int argc,char *argv[]) {
 
 		/* ネットワークループ */
 		int ms = MIRI_SECOND;
-		int a = ms, b = FPS;
-		int r = a % b;
-		while(r != 0) {
-				a = b;
-				b = r;
-				r = a % b;
-		}
-		double gcd = ms * FPS / b;
-		Uint32 loopInterval = ms / b;
-		int timeRate = FPS / b;
+		int src = gcd(ms, FPS);
+		Uint32 loopInterval = ms / src;
+		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
 		while(!endFlag) {
 				startTime = SDL_GetTicks() * timeRate;
