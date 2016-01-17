@@ -109,6 +109,8 @@ typedef struct {
 /* Range of objects */
 typedef enum {
 		RANGE_CHARACTER = 40,
+		RANGE_BARRIER = 65,
+		RANGE_MINIMUM = 20,
 		RANGE_ITEM = 25,
 		RANGE_ROCK = 15,
 } OBJECT_RANGE;

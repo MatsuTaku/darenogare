@@ -435,7 +435,8 @@ static void collisionDetection() {
 										if (((OBSTACLE *)curObject->typeBuffer)->owner == myPlayer->num)
 												break;
 										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->alive = false;
+												if (myPlayer->mode != MODE_BARRIER)
+														myPlayer->alive = false;
 												hitDeleteObject(curObject);
 										}
 										break;
@@ -735,7 +736,20 @@ static double getObjectSize(OBJECT* object) {
 		double size = 0;
 		switch (object->type) {
 				case OBJECT_CHARACTER:
-						size = RANGE_CHARACTER;
+						switch (((PLAYER *)object->typeBuffer)->mode) {
+								case MODE_NEUTRAL:
+										size = RANGE_CHARACTER;
+										break;
+								case MODE_BARRIER:
+										size = RANGE_BARRIER;
+										break;
+								case MODE_MINIMUM:
+										size = RANGE_MINIMUM;
+										break;
+								default:
+										size = RANGE_CHARACTER;
+										break;
+						}
 						break;
 				case OBJECT_ITEM:
 						size = RANGE_ITEM;
