@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
 						else	skipFrame = (endTime - startTime) / loopInterval;
 				}
 #ifndef NDEBUG
-				printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
+		//		printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
 #endif
 		};
 
@@ -107,7 +107,7 @@ static int networkEvent(void* data) {
 						SDL_Delay((toTime - endTime) / timeRate);
 				}
 #ifndef NDEBUG
-				printf("CPS: %d\n", endTime > toTime ? (int)(lcm(ms, CPS) / (endTime - startTime)) : CPS);
+				// printf("CPS: %d\n", endTime > toTime ? (int)(lcm(ms, CPS) / (endTime - startTime)) : CPS);
 #endif
 		};
 		return 0;
@@ -122,7 +122,7 @@ static Uint32 timerEvent(Uint32 frame) {
 		if (skipFrame <= 0)	drawWindow();
 		else	skipFrame--;
 		w = SDL_GetTicks();
-		printf("time system: %d,	window: %d\n", e - s, w - e);
+		// printf("time system: %d,	window: %d\n", e - s, w - e);
 }
 
 
