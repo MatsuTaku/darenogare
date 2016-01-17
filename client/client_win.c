@@ -15,7 +15,7 @@
 
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/WallL.gif"; //マップ
-static char gObstacleImgFile[] = "IMG/obstacle.png"; //隕石
+static char gRockImgFile[] = "IMG/obstacle.png"; //隕石
 static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテムボックス
 static char gBoostImgFile[] = "IMG/boost.png"; //噴射炎
 static char gWarningImgFile[] = "IMG/warning.png"; //警告マーク
@@ -76,7 +76,7 @@ static SDL_Surface *gItemBox; //アイテム欄
 static SDL_Surface *gCharaImage[MAX_CLIENTS];//プレイヤー
 static SDL_Surface *gBoostImage; //ブースト
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
-static SDL_Surface *gObstacleImage[3]; //障害物
+static SDL_Surface *gRockImage; //障害物
 static SDL_Surface *gMissileImage; //ミサイル
 static SDL_Surface *gNoizingImage; //妨害電波（ジャミング）
 static SDL_Surface *gBarrierImage; //バリア
@@ -95,7 +95,7 @@ static void drawArroundEffect(int use_item, SDL_Surface *c_window);
 static void drawBoost(int chara_id, SDL_Surface *c_window);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
-static void drawObstacle(POSITION *obsPos);
+static void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir);
 //static void drawLaser(POSITION *charaPos, int chara_id);
 static void drawStatus();
 static void drawWarning();
@@ -183,7 +183,6 @@ int drawWindow() {
 
 		int endFlag = 1;
 		clearWindow(); //ウィンドウのクリア
-
 		now = SDL_GetTicks(); //現在の時刻を取得
 		if(now >= interval){ //0.1秒経ったら
 			if(pn_flag != 0){
@@ -191,11 +190,9 @@ int drawWindow() {
 			}
 			interval = now + 100; //次の開始時間を0.1秒後に設定
 		}
-
 		drawObject(); //オブジェクトの描画
 		//drawLaser(); //レーザーの描画
 		drawStatus(); //ステータスの描画
-
 		if(myPlayer->alive){ //生存状態
 			drawMiniMap(&myPlayer->object->pos); //ミニマップの描画
 			if(myPlayer->warn == WARN_OUT_AREA){
@@ -210,7 +207,6 @@ int drawWindow() {
 				drawPunishment(); //お仕置きアニメーション
 			}
 		}
-
 		SDL_Flip(gMainWindow);//描画更新
 		return endFlag; //endflagは1で返す(継続)
 }
@@ -220,15 +216,9 @@ void destroyWindow(void) {
 		SDL_FreeSurface(gMainWindow);
 		SDL_FreeSurface(gStatusWindow);
 		SDL_FreeSurface(gMiniMap);
-<<<<<<< HEAD
-		SDL_FreeSurface (gBackGround);
-		SDL_FreeSurface (gObstacleImage[0]);
-		SDL_FreeSurface (gItemBox);
-=======
 		SDL_FreeSurface(gBackGround);
-		SDL_FreeSurface(gObstacleImage);
+		SDL_FreeSurface(gRockImage);
 		SDL_FreeSurface(gItemBox);
->>>>>>> 62988792df7a8bc537eb55d6a372e2fa5e89c703
 		SDL_FreeSurface(gMiniMapImage);
 		SDL_FreeSurface(gTargetImage);
 		SDL_FreeSurface(gBoomImage);
@@ -333,8 +323,8 @@ int initImage(void){
 				printf("not find world image\n");
 				return(-1);
 		}
-		gObstacleImage[0] = IMG_Load( gObstacleImgFile ); //障害物
-		if( gObstacleImage[0] == NULL ){
+		gRockImage = IMG_Load( gRockImgFile ); //障害物
+		if( gRockImage == NULL ){
 				printf("not find obstacle image\n");
 				return(-1);
 		}
@@ -458,6 +448,7 @@ void drawObject(void) {
 
 	int i;
 	int id;
+	double dir;
 	SDL_Rect src_rect;
 	SDL_Rect dst_rect;
 	POSITION diffPos;
@@ -465,7 +456,6 @@ void drawObject(void) {
 	POSITION* myPos = &myPlayer->object->pos; //マイポジション
 	src_rect.x = 0;
 	src_rect.y = 0;
-
 	for(i=0; i<MAX_OBJECT; i++){
 	    if(judgeRange(&object[i].pos, myPos) > 0){ //表示範囲内にあれば
 		switch(object[i].type){
@@ -474,9 +464,9 @@ void drawObject(void) {
 			if(id != myID){
 				if(!player[id].alive){
 					drawDeadChara(&object[i].pos, id); //死亡キャラの描画
-					break;
+				}else{
+					drawChara(&object[i].pos, id); //キャラクターの描画
 				}
-				drawChara(&object[i].pos, id); //キャラクターの描画
 			}
 			break;
 		  case OBJECT_ITEM: //アイテム
@@ -484,7 +474,9 @@ void drawObject(void) {
 			drawItem(&object[i].pos, id); //アイテムの描画
 			break;
 		  case OBJECT_OBSTACLE: //障害物
-			drawObstacle(&object[i].pos); //障害物の描画
+			id = ((OBSTACLE*)object[i].typeBuffer)->num; //障害物番号
+			dir = ((OBSTACLE*)object[i].typeBuffer)->angle * HALF_DEGRESS / PI; //角度（度数）
+			drawObstacle(&object[i].pos, id, dir); //障害物の描画
 			break;
 		  case OBJECT_EMPTY: //なし
 			break;
@@ -515,7 +507,6 @@ int judgeRange(POSITION *objPos, POSITION *myPos){
 
 /*キャラクターの描画*/
 void drawChara(POSITION *charaPos, int chara_id){
-
 		static SDL_Surface *c_window, *reImage; //回転後のサーフェス
 		double angle,ar_angle;
 		POSITION c_center;
@@ -535,19 +526,16 @@ void drawChara(POSITION *charaPos, int chara_id){
 		c_window = SDL_DisplayFormat(c_window);
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
-
 		//1.特定のアイテム使用時のエフェクトをc_windowに描画
 		if(player[chara_id].action == ACTION_USE_ITEM){
 			drawArroundEffect(2, c_window);
 		}
 		//2.噴射炎をc_windowに描画
 		drawBoost(chara_id, c_window);
-
 		//3.キャラをc_windowに描画
 		SDL_Rect src_rect = {0, 0, gCharaImage[chara_id]->w, gCharaImage[chara_id]->h};
 		SDL_Rect dst_rect = {c_center.x - gCharaImage[chara_id]->w/2, c_center.y - gCharaImage[chara_id]->h/2};
 		SDL_BlitSurface(gCharaImage[chara_id], &src_rect, c_window, &dst_rect);
-
 		//4.c_windowをウインドウに描画
 		angle = player[chara_id].dir * HALF_DEGRESS / PI; //キャラの向き
 		if(chara_id != myID){
@@ -562,12 +550,8 @@ void drawChara(POSITION *charaPos, int chara_id){
 		adjustWindowPosition(&dst_rect, &diffPos);
 		SDL_BlitSurface(reImage, &c_rect, gMainWindow, &dst_rect); //描画
 
-		if(reImage != NULL){
-			SDL_FreeSurface(reImage);
-		}
-		if(c_window != NULL){
-			SDL_FreeSurface(c_window);
-		}
+		SDL_FreeSurface(reImage);
+		SDL_FreeSurface(c_window);
 
 }
 
@@ -612,72 +596,72 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 		boost.src.x = 0; boost.src.y = 0; 
-
-		if(bst_flag != BOOST_NEUTRAL){		    
-		    if(bst_flag == BOOST_GO){ //前噴射の場合
-			for(i = 0; i < 2; i++){
-				reImage = rotozoomSurface(gBoostImage, i*-2, 0.5, 1); //縮小
+		/*前進・後退*/
+		if(bst_flag != BOOST_NEUTRAL){
+			if(bst_flag == BOOST_GO){ //前噴射の場合
+				for(i = 0; i < 2; i++){
+					reImage = rotozoomSurface(gBoostImage, i*-2, 0.5, 1); //縮小
+					boost.src.w = reImage->w; boost.src.h = reImage->h;
+					dx = reImage->w - gBoostImage->w; //調整差分
+					dy = reImage->h - gBoostImage->h;
+					boost.dst.x = c_center.x - gCharaImage[chara_id]->w*1.0 -4 - dx;
+					boost.dst.y = (c_center.y - reImage->h/2 - 1) - i*26 - dy;
+					SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+				}
+			    }
+		 	if(bst_flag == BOOST_BACK){ //後噴射の場合
+				reImage = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
 				boost.src.w = reImage->w; boost.src.h = reImage->h;
-				dx = reImage->w - gBoostImage->w; //調整差分
+				dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
 				dy = reImage->h - gBoostImage->h;
-				boost.dst.x = c_center.x - gCharaImage[chara_id]->w*1.0 -4 - dx;
-				boost.dst.y = (c_center.y - reImage->h/2 - 1) - i*26 - dy;
+				boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
+				boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
 				SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-			}
-		    }
-		    if(bst_flag == BOOST_BACK){ //後噴射の場合
-			reImage = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
-			boost.src.w = reImage->w; boost.src.h = reImage->h;
-			dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
-			dy = reImage->h - gBoostImage->h;
-			boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
-			boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
-			SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-		    }
+		 	   }
+			SDL_FreeSurface(reImage);
 		}
+		/*回転*/
 		if(rtt_flag != ROTATE_NEUTRAL){
-		    if(rtt_flag == ROTATE_RIGHT){ //右回転の場合
-			reImage = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
-			boost.src.w = reImage->w; boost.src.h = reImage->h;
-			dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
-			dy = reImage->h - gBoostImage->h;
-			for(i = 0; i < 2; i++){ //頭部の噴射炎
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
-			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
-			    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+			if(rtt_flag == ROTATE_RIGHT){ //右回転の場合
+				reImage = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
+				boost.src.w = reImage->w; boost.src.h = reImage->h;
+				dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
+				dy = reImage->h - gBoostImage->h;
+				for(i = 0; i < 2; i++){ //頭部の噴射炎
+				    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
+				    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+				}
+				reImage = rotozoomSurface(gBoostImage, 90, 0.4, 1);
+				boost.src.w = reImage->w; boost.src.h = reImage->h;
+				dx = reImage->w - gBoostImage->w;
+				dy = reImage->h - gBoostImage->h;
+				for(i = 0; i < 3; i++){ //後部の噴射炎
+				    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+				    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+				}
+			    }
+			if(rtt_flag == ROTATE_LEFT){ //左回転の場合
+				reImage = rotozoomSurface(gBoostImage, 90, 0.4, 1); //角度の変更
+				boost.src.w = reImage->w; boost.src.h = reImage->h;
+				dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
+				dy = reImage->h - gBoostImage->h;
+				for(i = 0; i < 2; i++){ //頭部
+				    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
+				    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
+				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+				}
+				reImage = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
+				boost.src.w = reImage->w; boost.src.h = reImage->h;
+				dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
+				dy = reImage->h - gBoostImage->h;
+				for(i = 0; i < 3; i++){ //後部
+				    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
+				    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
+				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
+				}
 			}
-			reImage = rotozoomSurface(gBoostImage, 90, 0.4, 1);
-			boost.src.w = reImage->w; boost.src.h = reImage->h;
-			dx = reImage->w - gBoostImage->w;
-			dy = reImage->h - gBoostImage->h;
-			for(i = 0; i < 3; i++){ //後部の噴射炎
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
-			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
-			    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-			}
-		    }
-		    if(rtt_flag == ROTATE_LEFT){ //左回転の場合
-			reImage = rotozoomSurface(gBoostImage, 90, 0.4, 1); //角度の変更
-			boost.src.w = reImage->w; boost.src.h = reImage->h;
-			dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
-			dy = reImage->h - gBoostImage->h;
-			for(i = 0; i < 2; i++){ //頭部
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 + (i+1)*15;
-			    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
-			    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-			}
-			reImage = rotozoomSurface(gBoostImage, 270, 0.4, 1); //角度の変更
-			boost.src.w = reImage->w; boost.src.h = reImage->h;
-			dx = reImage->w - gBoostImage->w; //回転によるずれの調整差分
-			dy = reImage->h - gBoostImage->h;
-			for(i = 0; i < 3; i++){ //後部
-			    boost.dst.x = c_center.x - gBoostImage->w/2 - dx/2 - (i+1)*15 + 10;
-			    boost.dst.y = c_center.y - gCharaImage[chara_id]->h/2 - gBoostImage->h- dy/2 + 10 + i*10;
-			    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-			}
-		    }
-		}
-		if(reImage != NULL){
 			SDL_FreeSurface(reImage);
 		}
 }
@@ -733,17 +717,44 @@ void drawItem(POSITION *itemPos, int item_id){
 }
 
 /*障害物の描画*/
-void drawObstacle(POSITION *obsPos){
+void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		SDL_Rect dst_rect;
-		SDL_Rect src_rect = {0, 0, gObstacleImage[0]->w, gObstacleImage[0]->h};
+		SDL_Surface *ObsImage;
+		SDL_Surface *reImage;
+		switch(obs_id){
+			case OBS_ROCK:
+				ObsImage = gRockImage;
+				break;
+			case OBS_MISSILE:
+				ObsImage = gMissileImage;
+				break;
+			case OBS_LASER:
+				break;
+			default:
+				return;
+				break;
+		}
+		if(obs_id != OBS_LASER){
+			reImage = rotozoomSurface(ObsImage, obs_dir, 1.0, 1); //角度の変更
+			SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
+			int dx = reImage->w - ObsImage->w;
+			int dy = reImage->h - ObsImage->h;
+			diffPos.x = obsPos->x - myPos->x - (reImage->w /2) - dx;
+			diffPos.y = obsPos->y - myPos->y - (reImage->h /2) - dy;
+			SDL_Rect dst_rect;
+			adjustWindowPosition(&dst_rect, &diffPos); //貼り付け位置を計算
+			SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect); //描画
+		}
 
-		diffPos.x = obsPos->x - myPos->x - (gObstacleImage[0]->w /2);
-		diffPos.y = obsPos->y - myPos->y - (gObstacleImage[0]->h /2);
-		adjustWindowPosition(&dst_rect, &diffPos); //貼り付け位置を計算
-		SDL_BlitSurface(gObstacleImage[0], &src_rect, gMainWindow, &dst_rect); //描画
+		if(ObsImage != NULL){
+			//SDL_FreeSurface(ObsImage);
+		}
+		if(reImage != NULL){
+			SDL_FreeSurface(reImage);
+		}
 }
+
 
 /*レーザーの描画*/
 /*
@@ -841,11 +852,11 @@ void drawPunishment(void){
 		}else if(pn_flag == 2){ //2.巨大隕石の襲来
 			div = 5;
 			Rect meteo;
-			meteoImage = rotozoomSurface(gObstacleImage[0], 90, 6.0, 1); //画像の巨大化
+			meteoImage = rotozoomSurface(gRockImage, 90, 6.0, 1); //画像の巨大化
 			meteo.src.x = 0;	meteo.src.y = 0;
 			meteo.src.w = meteoImage->w;		meteo.src.h = meteoImage->h;
-			int dx = meteoImage->w - gObstacleImage[0]->w; //画像の調整差分
-			int dy = meteoImage->h - gObstacleImage[0]->h;
+			int dx = meteoImage->w - gRockImage->w; //画像の調整差分
+			int dy = meteoImage->h - gRockImage->h;
 			meteo.dst.x = gMainWindow->w - (gMainWindow->w/div * pn_anm) - dx;
 			meteo.dst.y = gMainWindow->h/2 - meteoImage->h/2;
 			SDL_BlitSurface(meteoImage, &meteo.src, gMainWindow, &meteo.dst);
