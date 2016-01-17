@@ -91,7 +91,7 @@ static SDL_Surface *gTargetImage; //中心位置への方向
 static int initImage();
 static void drawObject();
 static void drawChara(POSITION *charaPos, int chara_id);
-static void drawArroundEffect(int use_item, SDL_Surface *c_window);
+static void drawArroundEffect(MODE mode, SDL_Surface *c_window);
 static void drawBoost(int chara_id, SDL_Surface *c_window);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
@@ -527,9 +527,7 @@ void drawChara(POSITION *charaPos, int chara_id){
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 		//1.特定のアイテム使用時のエフェクトをc_windowに描画
-		if(player[chara_id].action == ACTION_USE_ITEM){
-			drawArroundEffect(2, c_window);
-		}
+		drawArroundEffect(player[chara_id].mode, c_window);
 		//2.噴射炎をc_windowに描画
 		drawBoost(chara_id, c_window);
 		//3.キャラをc_windowに描画
@@ -556,21 +554,21 @@ void drawChara(POSITION *charaPos, int chara_id){
 }
 
 /*キャラ周りのエフェクトの描画*/
-void drawArroundEffect(int use_item, SDL_Surface *c_window){
+void drawArroundEffect(MODE mode, SDL_Surface *c_window){
 		Rect effect;
 		POSITION c_center;
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 		effect.src.x = 0; effect.src.y = 0;
 
-		switch(use_item){
-			case 1: //ジャミング
+		switch(mode){
+			case 125: //ジャミング
 				effect.src.w = gNoizingImage->w;   effect.src.h = gNoizingImage->h;
 				effect.dst.x = c_center.x + gCharaImage[myID]->w/2;
 				effect.dst.y = c_center.y - gNoizingImage->h/2;
 				SDL_BlitSurface(gNoizingImage, &effect.src, c_window, &effect.dst); //描画
 				break;
-			case 2: //バリア
+			case MODE_BARRIER: //バリア
 				effect.src.w = gBarrierImage->w;   effect.src.h = gBarrierImage->h;
 				effect.dst.x = c_center.x - gBarrierImage->w/2;
 				effect.dst.y = c_center.y - gBarrierImage->h/2;
@@ -736,7 +734,8 @@ void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
 				break;
 		}
 		if(obs_id != OBS_LASER){
-			reImage = rotozoomSurface(ObsImage, obs_dir, 1.0, 1); //角度の変更
+			double angle = obs_dir - 90;
+			reImage = rotozoomSurface(ObsImage, angle, 1.0, 1); //角度の変更
 			SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
 			int dx = reImage->w - ObsImage->w;
 			int dy = reImage->h - ObsImage->h;
