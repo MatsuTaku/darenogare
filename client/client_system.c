@@ -552,8 +552,8 @@ static void launchMissile() {
 static void modeMinimum() {
 		myPlayer->mode = MODE_MINIMUM;
 		myPlayer->item = ITEM_EMPTY;
-		myPlayer->modeTime = MODE_TIME_MINIMUM;
-		myPlayer->action = ACTION_NONE * MIRI_SECOND;
+		myPlayer->modeTime = MODE_TIME_MINIMUM * MIRI_SECOND;
+		myPlayer->action = ACTION_NONE;
 }
 
 static void updateMinimum() {
@@ -566,8 +566,8 @@ static void updateMinimum() {
 static void modeBarrier() {
 		myPlayer->mode = MODE_BARRIER;
 		myPlayer->item = ITEM_EMPTY;
-		myPlayer->modeTime = MODE_TIME_BARRIER;
-		myPlayer->action = ACTION_NONE * MIRI_SECOND;
+		myPlayer->modeTime = MODE_TIME_BARRIER * MIRI_SECOND;
+		myPlayer->action = ACTION_NONE;
 }
 
 static void updateBarrier() {
