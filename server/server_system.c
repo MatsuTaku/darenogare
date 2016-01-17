@@ -364,6 +364,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						player->rotate = curPlayer->rotate - latestPlayer->rotate;
 						player->action = curPlayer->action - latestPlayer->action;
 						player->item = curPlayer->item - latestPlayer->item;
+						player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
 						player->warn = curPlayer->warn - latestPlayer->warn;
 						player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
 						player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;

@@ -749,6 +749,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate;
 								curPlayer->action += deltaPlayer->action;
 								curPlayer->item += deltaPlayer->item;
+								curPlayer->launchCount += deltaPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime;
 								curPlayer->lastTime += deltaPlayer->lastTime;
@@ -771,6 +772,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
 								curPlayer->action += deltaPlayer->action - lastPlayer->action;
 								curPlayer->item += deltaPlayer->item - lastPlayer->item;
+								curPlayer->launchCount += deltaPlayer->launchCount - lastPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn - lastPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime - lastPlayer->deadTime;
 								curPlayer->lastTime += deltaPlayer->lastTime - lastPlayer->lastTime;
