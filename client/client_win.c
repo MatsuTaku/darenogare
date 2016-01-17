@@ -217,11 +217,11 @@ int drawWindow() {//ゲーム画面の描画
 
 void destroyWindow(void) { //サーフェスの解放
 		SDL_FreeSurface(gMainWindow);
-		SDL_FreeSurface (gStatusWindow);
+		SDL_FreeSurface(gStatusWindow);
 		SDL_FreeSurface(gMiniMap);
-		SDL_FreeSurface (gBackGround);
-		SDL_FreeSurface (gObstacleImage);
-		SDL_FreeSurface (gItemBox);
+		SDL_FreeSurface(gBackGround);
+		SDL_FreeSurface(gObstacleImage);
+		SDL_FreeSurface(gItemBox);
 		SDL_FreeSurface(gMiniMapImage);
 		SDL_FreeSurface(gTargetImage);
 		SDL_FreeSurface(gBoomImage);
@@ -231,18 +231,17 @@ void destroyWindow(void) { //サーフェスの解放
 		SDL_FreeSurface(gNoizingImage);
 		SDL_FreeSurface(gBarrierImage);
 		int i;
-		for(i = 0; i < ITEM_NUM; i++){
+		for (i = 0; i < ITEM_NUM; i++){
 				SDL_FreeSurface (gItemImage[i]);
 		}
-		for(i = 0; i < MAX_CLIENTS; i++){
+		for (i = 0; i < MAX_CLIENTS; i++){
 				SDL_FreeSurface (gCharaImage[i]);
 				SDL_FreeSurface (gIcon[i]);
 		}
-		for(i = 0; i < 2; i++){
+		for (i = 0; i < 2; i++)
 				SDL_FreeSurface (gLaserImage[i]);
-		}
 
-		if (joystick != NULL)
+		if (joystick)
 				SDL_JoystickClose(joystick);
 
 		SDL_Quit();
@@ -264,7 +263,7 @@ bool windowEvent() {
 								break;
 						case SDL_JOYBUTTONDOWN: //ボタンが押された時
 #ifndef NDEBUG
-								printf("press buton: %d\n", event.jbutton.button);
+								// printf("press buton: %d\n", event.jbutton.button);
 #endif
 								switch(event.jbutton.button) { //ボタン毎の処理
 										case BUTTON_CIRCLE: //ジェット噴射
@@ -275,6 +274,9 @@ bool windowEvent() {
 												//速度下降（逆方向にブースト）
 												deceleration();
 												break;
+										case BUTTON_TRIANGLE:	//アイテム使用
+												useItem();
+												break;
 								}
 								break;
 						case SDL_JOYBUTTONUP: //ボタンが離された時
@@ -282,8 +284,6 @@ bool windowEvent() {
 										case BUTTON_CIRCLE:
 										case BUTTON_CROSS:
 												inertialNavigation();
-										case BUTTON_TRIANGLE:	//アイテム使用
-												useItem();
 												break;
 										default:
 												break;
@@ -926,5 +926,3 @@ void drawMiniMap(POSITION* myPos) { //ミニマップの描画
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
 }
-
-

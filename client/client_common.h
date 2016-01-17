@@ -11,6 +11,7 @@
 #define MAXIMUM_SPEED	800
 // #define RESISTANCE		-0	// 抵抗
 #define WARN_TIME_RIMIT	10	// 帰還制限時間（秒）
+#define FIRE_TIME_LASER 3	// レーザー照射時間
 
 
 // ジョイパッドのボタン一覧

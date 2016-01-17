@@ -84,6 +84,7 @@ static void initPlayer(PLAYER* player, int id) {
 		player->rotate = 0;
 		player->action = 0;
 		player->item = 0;
+		player->launchCount = 0;
 		player->warn = 0;
 		player->deadTime = 0;
 		player->lastTime = 0;
@@ -204,7 +205,11 @@ static bool averageFromFrequency(double freq) {
 
 static bool randomGenerateObstacle() {
 		double randAngle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS) * PI / HALF_DEGRESS;
-		double randVer = MAXIMUM_SPEED_OBSTACLE;
+		double randVer = VER_ROCK;
+		/* Set random position in map.
+		 * Get position on edge of world, that's direction to is last position.
+		 * World's shape is circle.
+		 */
 		double r = MAP_SIZE;
 		double a = tan(randAngle);
 		int toX, toY;

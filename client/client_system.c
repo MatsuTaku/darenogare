@@ -19,8 +19,7 @@ static entityStateGet getEntity[FRAME_NUM];
 static void initObject(OBJECT* object);
 static bool deleteObject(int objectId);
 static void initPlayer(PLAYER* player, int num);
-static void initObstacle(OBSTACLE* obstacle);
-static bool generateObstacle(int id,int num, POSITION* pos, double angle, double ver);
+static bool generateObstacle(int owner, int id,int num, POSITION* pos, double angle, double ver);
 static bool insertItem(int id, int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void initEvent();
@@ -34,6 +33,9 @@ static void setPlayerPosition();
 static void setPos(POSITION* pos, int x, int y);
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static void hitDeleteObject(OBJECT* object);
+static void countDownFireLaser();
+static void laserPreparation();
+static void launchMissile();
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 static bool judgeSafety(POSITION* pos);
@@ -140,6 +142,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->boost = BOOST_NEUTRAL;
 		player->rotate = ROTATE_NEUTRAL;
 		player->action = ACTION_NONE;
+		player->launchCount = 0;
 		player->warn = WARN_SAFETY;
 		player->deadTime = 0;
 		player->lastTime = 0;
@@ -148,37 +151,11 @@ static void initPlayer(PLAYER* player, int num) {
 }
 
 
-static void initObstacle(OBSTACLE* obstacle) {
-		double angle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS + 1) * PI / HALF_DEGRESS;
-		obstacle->angle = angle;
-		obstacle->ver = MAXIMUM_SPEED_OBSTACLE;
-
-		/* マップ内に目標点をランダムに設定。
-		 * その座標に向かうように初期点をワールドの端に設定する。
-		 * ワールドは円形。
-		 */
-		// double r = WORLD_SIZE;
-		double r = MAP_SIZE;
-		double a = sin(angle) / cos(angle);
-		int toX, toY;
-		do {
-				toX = rand() % MAP_SIZE - MAP_SIZE / 2;
-				toY = rand() % MAP_SIZE - MAP_SIZE / 2;
-		} while (pow(toX, 2) + pow(toY, 2) > pow(MAP_SIZE, 2));
-		double b = toY - a * toX;
-		double x, y;
-		x =	(-(a * b) + (cos(angle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2)))
-				/ (pow(a, 2) + 1);
-		y = (sin(angle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2)); 
-		setPos(&obstacle->object->pos, x, y);
-}
-
-
 /**
  * 障害物の挿入
  * return: 成功・失敗
  */
-static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver) {
+static bool generateObstacle(int owner, int id, int num, POSITION* pos, double angle, double ver) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
@@ -190,6 +167,7 @@ static bool generateObstacle(int id, int num, POSITION* pos, double angle, doubl
 		}
 		curObs->object->pos.x = pos->x;
 		curObs->object->pos.y = pos->y;
+		curObs->owner = owner;
 		curObs->num = num;
 		curObs->angle = angle;
 		curObs->ver = ver;
@@ -310,9 +288,26 @@ static void updatePlayer() {
 				switch (myPlayer->action) {
 						case ACTION_NONE:	break;
 						case ACTION_USE_ITEM:
-											break;
-						default:
-											break;
+								switch (myPlayer->item) {
+										case ITEM_NOIZING:
+												break;
+										case ITEM_LASER:
+												countDownFireLaser();
+												break;
+										case ITEM_MISSILE:
+												launchMissile();
+												break;
+										case ITEM_MINIMUM:
+												break;
+										case ITEM_BARRIER:
+												break;
+										default:	break;
+								}
+								break;
+						case ACTION_CD_LASER:
+								laserPreparation();
+								break;
+						default:	break;
 				}
 
 				/* 旋回 */
@@ -417,6 +412,8 @@ static void collisionDetection() {
 						if (curObject->type == OBJECT_EMPTY)	continue;
 						switch (curObject->type) {
 								case OBJECT_OBSTACLE:
+										if (((OBSTACLE *)curObject->typeBuffer)->owner == myPlayer->num)
+												break;
 										if (hitObject(myPlayer->object, curObject)) {
 												myPlayer->alive = false;
 												hitDeleteObject(curObject);
@@ -472,6 +469,61 @@ static void hitDeleteObject(OBJECT* object) {
 		insertEvent(&event);
 
 		initObject(object);
+}
+
+
+static void countDownFireLaser() {
+		myPlayer->launchCount = FIRE_TIME_LASER * MIRI_SECOND;
+		myPlayer->action = ACTION_CD_LASER;
+}
+
+static void laserPreparation() {
+		myPlayer->launchCount -= MIRI_SECOND / FPS;
+		if (myPlayer->launchCount <= 0) {
+				int owner = myPlayer->num;
+				int objectId = selfObject++;
+				int num = OBS_LASER;
+				POSITION *pos = &myPlayer->object->pos;
+				double angle = myPlayer->dir;
+				double ver = VER_LASER;
+				generateObstacle(owner, objectId, num, pos, angle, ver);
+
+				eventNotification event;
+				event.playerId = owner;
+				event.type = EVENT_OBSTACLE;
+				event.id = objectId;
+				event.objId = num;
+				event.pos = *pos;
+				event.angle = angle;
+				event.ver = ver;
+				insertEvent(&event);
+
+				myPlayer->item = ITEM_EMPTY;
+				myPlayer->action = ACTION_NONE;
+		}
+}
+
+
+static void launchMissile() {
+		int objectId = selfObject++;
+		int num = OBS_MISSILE;
+		int owner = myPlayer->num;
+		POSITION *pos = &myPlayer->object->pos;
+		double angle = myPlayer->dir;
+		double ver = VER_MISSILE;
+		generateObstacle(owner, objectId, num, pos, angle, ver);
+		eventNotification event;
+		event.playerId = myPlayer->num;
+		event.type = EVENT_OBSTACLE;
+		event.id = objectId;
+		event.objId = num;
+		event.pos = *pos;
+		event.angle = angle;
+		event.ver = ver;
+		insertEvent(&event);
+
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->action = ACTION_NONE;
 }
 
 
@@ -751,7 +803,7 @@ static void launchEvent(eventNotification *event) {
 #endif
 		switch (event->type) {
 				case EVENT_OBSTACLE:
-						generateObstacle(event->id, event->objId, &event->pos, event->angle, event->ver);
+						generateObstacle(event->playerId, event->id, event->objId, &event->pos, event->angle, event->ver);
 						break;
 				case EVENT_DELETE:
 						deleteObject(event->id);
