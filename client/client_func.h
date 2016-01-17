@@ -4,6 +4,8 @@
 #include"../common.h"
 
 /* client_main.c */
+extern int gcd(int a, int b);
+extern int lcm(int a, int b);
 
 /* client_net.c */
 extern int setUpClient(char* hostName,int *clientID,int *num);
