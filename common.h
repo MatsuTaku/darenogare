@@ -12,7 +12,7 @@
 #define PORT			(u_short)51001
 
 #define FPS	60
-#define CPS 20
+#define CPS 30
 #define MIRI_SECOND		1000
 #define RETENTION_FRAME	0x7f
 
@@ -20,9 +20,9 @@
 #define MAX_NAME_SIZE	10 				
 
 #define MAX_DATA		200				
-#define MAX_OBJECT		0xff
-#define MAX_OBSTACLE	0x6f
-#define MAX_ITEM		0x3f
+#define MAX_OBJECT		0xfff
+#define MAX_OBSTACLE	0x6ff
+#define MAX_ITEM		0x3ff
 #define CT_NUM 4
 
 #define MAX_EVENT	0x0f
