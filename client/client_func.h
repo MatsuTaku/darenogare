@@ -27,6 +27,7 @@ extern void sendEndCommand(void);
 
 /* client_system.c */
 extern int initGameSystem(int myId, int playerNum);
+extern void destroySystem();
 extern void updateEvent();
 extern void getItem();
 extern void useItem();

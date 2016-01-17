@@ -68,8 +68,14 @@ typedef struct {
 
 
 /* OBSTACLE Values */
+typedef enum {
+		OBS_ROCK,
+		OBS_MISILE
+} OBSTACLE_TYPE;
+
 typedef struct {
 		OBJECT* object;
+		OBSTACLE_TYPE num;
 		double angle;
 		double ver;
 } OBSTACLE;

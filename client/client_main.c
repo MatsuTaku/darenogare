@@ -82,6 +82,7 @@ int main(int argc,char *argv[])
 		}
 
 		destroyWindow();
+		destroySystem();
 		closeSoc();
 		return 0;
 }

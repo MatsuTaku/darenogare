@@ -20,7 +20,7 @@ static void initObject(OBJECT* object);
 static bool deleteObject(int objectId);
 static void initPlayer(PLAYER* player, int num);
 static void initObstacle(OBSTACLE* obstacle);
-static bool generateObstacle(int id, POSITION* pos, double angle, double ver);
+static bool generateObstacle(int id,int num, POSITION* pos, double angle, double ver);
 static bool insertItem(int id, int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void initEvent();
@@ -78,6 +78,19 @@ int initGameSystem(int myId, int playerNum) {
 		}
 
 		return 0;
+}
+
+
+void destroySystem() {
+		int i;
+		// malloc の消去
+		for (i = 0; i < MAX_OBJECT; i++) {
+				OBJECT* curObj = &object[i];
+				if (curObj->type == OBJECT_OBSTACLE ||
+					curObj->type == OBJECT_ITEM) {
+						free(curObj->typeBuffer);
+				}
+		}
 }
 
 
@@ -165,7 +178,7 @@ static void initObstacle(OBSTACLE* obstacle) {
  * 障害物の挿入
  * return: 成功・失敗
  */
-static bool generateObstacle(int id, POSITION* pos, double angle, double ver) {
+static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
@@ -177,6 +190,7 @@ static bool generateObstacle(int id, POSITION* pos, double angle, double ver) {
 		}
 		curObs->object->pos.x = pos->x;
 		curObs->object->pos.y = pos->y;
+		curObs->num = num;
 		curObs->angle = angle;
 		curObs->ver = ver;
 }
@@ -737,7 +751,7 @@ static void launchEvent(eventNotification *event) {
 #endif
 		switch (event->type) {
 				case EVENT_OBSTACLE:
-						generateObstacle(event->id, &event->pos, event->angle, event->ver);
+						generateObstacle(event->id, event->objId, &event->pos, event->angle, event->ver);
 						break;
 				case EVENT_DELETE:
 						deleteObject(event->id);

@@ -138,6 +138,7 @@ static bool generateObstacle(int id, int num, POSITION* pos, double angle, doubl
 		}
 		curObs->object->pos = *pos;
 		curObs->object->id = id;
+		curObs->num = num;
 		curObs->angle = angle;
 		curObs->ver = ver;
 		return true;
@@ -217,11 +218,11 @@ static bool randomGenerateObstacle() {
 		POSITION randPos = {x, y};
 		printf("obstacle pos[%.0f: %.0f]\n", x, y);
 
-		//if (generateObstacle(ownerObject, 0, &randPos, randAngle, randVer)) {
+		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
 				eventNotification event;
 				event.type = EVENT_OBSTACLE;
 				event.playerId = OWNER;
-				event.objId = 0;
+				event.objId = OBS_ROCK;
 				event.id = ownerObject;
 				event.pos = randPos;
 				event.angle = randAngle;
