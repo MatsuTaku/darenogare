@@ -36,6 +36,10 @@ static void hitDeleteObject(OBJECT* object);
 static void countDownFireLaser();
 static void laserPreparation();
 static void launchMissile();
+static void modeMinimum();
+static void updateMinimum();
+static void modeBarrier();
+static void updateBarrier();
 static double getObjectSize(OBJECT* object);
 static double getRange(OBJECT* alpha, OBJECT* beta);
 static bool judgeSafety(POSITION* pos);
@@ -133,6 +137,8 @@ static bool deleteObject(int objectId) {
  */
 static void initPlayer(PLAYER* player, int num) {
 		player->num = num;
+		player->mode = MODE_NEUTRAL;
+		player->modeTime = 0;
 		player->item = ITEM_EMPTY;
 		player->dir = PI / 2;
 		player->toDir = player->dir;
@@ -284,7 +290,19 @@ static void initEvent() {
 static void updatePlayer() {
 		if (myPlayer->alive) {
 				/* プレイヤーの行動 */
-				// MARK
+				switch (myPlayer->mode) {
+						case MODE_NEUTRAL:
+								break;
+						case MODE_BARRIER:
+								updateBarrier();
+								break;
+						case MODE_MINIMUM:
+								updateMinimum();
+								break;
+						default:
+								break;
+				}
+
 				switch (myPlayer->action) {
 						case ACTION_NONE:	break;
 						case ACTION_USE_ITEM:
@@ -298,8 +316,10 @@ static void updatePlayer() {
 												launchMissile();
 												break;
 										case ITEM_MINIMUM:
+												modeMinimum();
 												break;
 										case ITEM_BARRIER:
+												modeBarrier();
 												break;
 										default:	break;
 								}
@@ -415,7 +435,8 @@ static void collisionDetection() {
 										if (((OBSTACLE *)curObject->typeBuffer)->owner == myPlayer->num)
 												break;
 										if (hitObject(myPlayer->object, curObject)) {
-												myPlayer->alive = false;
+												if (myPlayer->mode != MODE_BARRIER)
+														myPlayer->alive = false;
 												hitDeleteObject(curObject);
 										}
 										break;
@@ -475,6 +496,7 @@ static void hitDeleteObject(OBJECT* object) {
 static void countDownFireLaser() {
 		myPlayer->launchCount = FIRE_TIME_LASER * MIRI_SECOND;
 		myPlayer->action = ACTION_CD_LASER;
+		myPlayer->item = ITEM_EMPTY;
 }
 
 static void laserPreparation() {
@@ -524,6 +546,35 @@ static void launchMissile() {
 
 		myPlayer->item = ITEM_EMPTY;
 		myPlayer->action = ACTION_NONE;
+}
+
+
+static void modeMinimum() {
+		myPlayer->mode = MODE_MINIMUM;
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->modeTime = MODE_TIME_MINIMUM;
+		myPlayer->action = ACTION_NONE * MIRI_SECOND;
+}
+
+static void updateMinimum() {
+		myPlayer->modeTime -= MIRI_SECOND / FPS;
+		if (myPlayer->modeTime <= 0) {
+				myPlayer->mode = MODE_NEUTRAL;
+		}
+}
+
+static void modeBarrier() {
+		myPlayer->mode = MODE_BARRIER;
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->modeTime = MODE_TIME_BARRIER;
+		myPlayer->action = ACTION_NONE * MIRI_SECOND;
+}
+
+static void updateBarrier() {
+		myPlayer->modeTime -= MIRI_SECOND / FPS;
+		if (myPlayer->modeTime <= 0) {
+				myPlayer->mode = MODE_NEUTRAL;
+		}
 }
 
 
@@ -685,7 +736,20 @@ static double getObjectSize(OBJECT* object) {
 		double size = 0;
 		switch (object->type) {
 				case OBJECT_CHARACTER:
-						size = RANGE_CHARACTER;
+						switch (((PLAYER *)object->typeBuffer)->mode) {
+								case MODE_NEUTRAL:
+										size = RANGE_CHARACTER;
+										break;
+								case MODE_BARRIER:
+										size = RANGE_BARRIER;
+										break;
+								case MODE_MINIMUM:
+										size = RANGE_MINIMUM;
+										break;
+								default:
+										size = RANGE_CHARACTER;
+										break;
+						}
 						break;
 				case OBJECT_ITEM:
 						size = RANGE_ITEM;
@@ -740,6 +804,8 @@ void reflectDelta(entityStateGet* data) {
 						OBJECT* curObject = curPlayer->object;
 						OBJECT* deltaObject = &delta->plyObj[i];
 						if (recieved) {
+								curPlayer->mode += deltaPlayer->mode;
+								curPlayer->modeTime += deltaPlayer->modeTime;
 								curPlayer->dir += deltaPlayer->dir;
 								curPlayer->toDir += deltaPlayer->toDir;
 								curPlayer->ver.vx += deltaPlayer->ver.vx;
@@ -749,6 +815,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate;
 								curPlayer->action += deltaPlayer->action;
 								curPlayer->item += deltaPlayer->item;
+								curPlayer->launchCount += deltaPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime;
 								curPlayer->lastTime += deltaPlayer->lastTime;
@@ -762,6 +829,8 @@ void reflectDelta(entityStateGet* data) {
 								DELTA* lastDelta = &getEntity[FRAME_LAST].delta;
 								PLAYER* lastPlayer = &lastDelta->player[i];
 								OBJECT* lastObject = &lastDelta->plyObj[i];
+								curPlayer->mode += deltaPlayer->mode - lastPlayer->mode;
+								curPlayer->modeTime += deltaPlayer->modeTime - lastPlayer->modeTime;
 								curPlayer->dir += deltaPlayer->dir - lastPlayer->dir;
 								curPlayer->toDir += deltaPlayer->toDir - lastPlayer->toDir;
 								curPlayer->ver.vx += deltaPlayer->ver.vx - lastPlayer->ver.vx;
@@ -771,6 +840,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
 								curPlayer->action += deltaPlayer->action - lastPlayer->action;
 								curPlayer->item += deltaPlayer->item - lastPlayer->item;
+								curPlayer->launchCount += deltaPlayer->launchCount - lastPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn - lastPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime - lastPlayer->deadTime;
 								curPlayer->lastTime += deltaPlayer->lastTime - lastPlayer->lastTime;

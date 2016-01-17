@@ -109,6 +109,8 @@ typedef struct {
 /* Range of objects */
 typedef enum {
 		RANGE_CHARACTER = 40,
+		RANGE_BARRIER = 65,
+		RANGE_MINIMUM = 20,
 		RANGE_ITEM = 25,
 		RANGE_ROCK = 15,
 } OBJECT_RANGE;
@@ -143,6 +145,12 @@ typedef enum {
 } ACTION_FLAG;
 
 typedef enum {
+		MODE_NEUTRAL,
+		MODE_MINIMUM,
+		MODE_BARRIER
+} MODE;
+
+typedef enum {
 		WARN_SAFETY,
 		WARN_OUT_AREA
 } WARNING_FLAG;
@@ -150,6 +158,8 @@ typedef enum {
 typedef struct {
 		OBJECT* object;		// 固有オブジェクトバッファ
 		PLAYER_NUMBER num;	// プレイヤー番号
+		MODE mode;			// プレイヤーモード
+		int modeTime;		// last mode time
 		double dir;			// 進行方向
 		double toDir;		// 目標旋回角度
 		VEROCITY ver;		// 速度ベクトル

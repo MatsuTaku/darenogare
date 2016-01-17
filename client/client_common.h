@@ -12,6 +12,8 @@
 // #define RESISTANCE		-0	// 抵抗
 #define WARN_TIME_RIMIT	10	// 帰還制限時間（秒）
 #define FIRE_TIME_LASER 3	// レーザー照射時間
+#define MODE_TIME_MINIMUM 8
+#define MODE_TIME_BARRIER 6
 
 
 // ジョイパッドのボタン一覧

@@ -6,6 +6,7 @@
 static int networkEvent(void* data);
 static Uint32 drawEvent(Uint32 interval, void* param);
 static Uint32 timerEvent(Uint32 frame);
+static int skipFrame = 0;
 
 
 int main(int argc,char *argv[])
@@ -66,8 +67,9 @@ int main(int argc,char *argv[])
 				toTime = startTime + loopInterval;
 				timerEvent(++frame);
 				endTime = SDL_GetTicks() * timeRate;
-				if (endTime < toTime) {
-						SDL_Delay((toTime - endTime) / timeRate);
+				if (skipFrame <= 0) {
+						if (endTime < toTime)	SDL_Delay((toTime - endTime) / timeRate);
+						else	skipFrame = (endTime - startTime) / loopInterval;
 				}
 #ifndef NDEBUG
 				printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
@@ -117,9 +119,10 @@ static Uint32 timerEvent(Uint32 frame) {
 		s = SDL_GetTicks();
 		updateEvent();
 		e = SDL_GetTicks();
-		drawWindow();
+		if (skipFrame <= 0)	drawWindow();
+		else	skipFrame--;
 		w = SDL_GetTicks();
-	//	printf("time system: %d,	window: %d\n", e - s, w - e);
+		printf("time system: %d,	window: %d\n", e - s, w - e);
 }
 
 
