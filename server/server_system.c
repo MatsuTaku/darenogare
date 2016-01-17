@@ -75,6 +75,8 @@ static void initObject(OBJECT* object) {
 static void initPlayer(PLAYER* player, int id) {
 		player->object = NULL;
 		player->num = id;
+		player->mode = 0;
+		player->modeTime = 0;
 		player->dir = 0;
 		player->toDir = player->dir;
 		player->ver.vx = 0;
@@ -355,6 +357,8 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						PLAYER* player = &data.delta.player[i];
 						PLAYER *curPlayer = &curBuffer->player[i];
 						PLAYER* latestPlayer = &latestBuffer->player[i];
+						player->mode = curPlayer->mode - latestPlayer->mode;
+						player->mode = curPlayer->modeTime - latestPlayer->modeTime;
 						player->dir = curPlayer->dir - latestPlayer->dir;
 						player->toDir = curPlayer->toDir - latestPlayer->toDir;
 						player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
