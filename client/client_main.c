@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 						else	skipFrame = (endTime - startTime) / loopInterval;
 				}
 #ifndef NDEBUG
-				printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
+				// printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
 #endif
 		};
 

@@ -414,9 +414,22 @@ static void launchMissile() {
 		int num = OBS_MISSILE;
 		int owner = myPlayer->num;
 		POSITION *pos = &myPlayer->object->pos;
-		double angle = myPlayer->dir;
-		double ver = VER_MISSILE;
+		double absVer = VER_MISSILE;
+		double shipAngle = myPlayer->dir;
+		VEROCITY verStr = {
+				.vx = absVer * cos(shipAngle) + myPlayer->ver.vx,
+				.vy = -absVer * sin(shipAngle) + myPlayer->ver.vy,
+		};
+		double ver = sqrt(pow(verStr.vx, 2) + pow(verStr.vy, 2));
+		double angle = atan(-verStr.vy / verStr.vx);
+		if (verStr.vx < 0)	angle += PI;
 		generateObstacle(owner, objectId, num, pos, angle, ver);
+		/*
+		printf("verAbs		x: %f, y: %f\n", absVer * cos(shipAngle), -absVer * sin(shipAngle));
+		printf("verPlayer	x: %f, y: %f\n", myPlayer->ver.vx, myPlayer->ver.vy);
+		printf("verStr		x: %f, y: %f\n", verStr.vx, verStr.vy);
+		printf("srcAngle: %f, angle: %f\n", shipAngle, angle);
+		*/
 
 		eventNotification event;
 		event.playerId = myPlayer->num;
