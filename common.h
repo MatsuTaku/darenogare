@@ -168,6 +168,7 @@ typedef struct {
 		ROTATE_FLAG rotate;	// 旋回フラグ
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
+		int bullets;		// 残弾数
 		int launchCount;	// launch laesr time
 		WARNING_FLAG warn;	// 警告フラグ
 		int deadTime;		// 死亡時間(生存領域外にいるとき)

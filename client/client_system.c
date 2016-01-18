@@ -153,6 +153,7 @@ static void initPlayer(PLAYER* player, int num) {
 		player->boost = BOOST_NEUTRAL;
 		player->rotate = ROTATE_NEUTRAL;
 		player->action = ACTION_NONE;
+		player->bullets = 0;
 		player->launchCount = 0;
 		player->warn = WARN_SAFETY;
 		player->deadTime = 0;
@@ -410,6 +411,7 @@ static void laserPreparation() {
 
 
 static void launchMissile() {
+		myPlayer->bullets--;
 		int objectId = selfObject++;
 		int num = OBS_MISSILE;
 		int owner = myPlayer->num;
@@ -423,13 +425,8 @@ static void launchMissile() {
 		double ver = sqrt(pow(verStr.vx, 2) + pow(verStr.vy, 2));
 		double angle = atan(-verStr.vy / verStr.vx);
 		if (verStr.vx < 0)	angle += PI;
+
 		generateObstacle(owner, objectId, num, pos, angle, ver);
-		/*
-		printf("verAbs		x: %f, y: %f\n", absVer * cos(shipAngle), -absVer * sin(shipAngle));
-		printf("verPlayer	x: %f, y: %f\n", myPlayer->ver.vx, myPlayer->ver.vy);
-		printf("verStr		x: %f, y: %f\n", verStr.vx, verStr.vy);
-		printf("srcAngle: %f, angle: %f\n", shipAngle, angle);
-		*/
 
 		eventNotification event;
 		event.playerId = myPlayer->num;
@@ -441,8 +438,10 @@ static void launchMissile() {
 		event.ver = ver;
 		insertEvent(&event);
 
-		myPlayer->item = ITEM_EMPTY;
-		myPlayer->action = ACTION_NONE;
+		if (myPlayer->bullets == 0) {
+				myPlayer->item = ITEM_EMPTY;
+				myPlayer->action = ACTION_NONE;
+		}
 }
 
 
@@ -606,6 +605,8 @@ static void collisionDetection() {
 								case OBJECT_ITEM:
 										if (hitObject(myPlayer->object, curObject)) {
 												myPlayer->item = ((ITEM *)curObject->typeBuffer)->num;
+												if (myPlayer->item == ITEM_MISSILE)
+														myPlayer->bullets = MAX_MISSILE;
 												hitDeleteObject(curObject);
 										}
 										break;
@@ -843,6 +844,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate;
 								curPlayer->action += deltaPlayer->action;
 								curPlayer->item += deltaPlayer->item;
+								curPlayer->bullets += deltaPlayer->bullets;
 								curPlayer->launchCount += deltaPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime;
@@ -868,6 +870,7 @@ void reflectDelta(entityStateGet* data) {
 								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
 								curPlayer->action += deltaPlayer->action - lastPlayer->action;
 								curPlayer->item += deltaPlayer->item - lastPlayer->item;
+								curPlayer->bullets += deltaPlayer->bullets - lastPlayer->bullets;
 								curPlayer->launchCount += deltaPlayer->launchCount - lastPlayer->launchCount;
 								curPlayer->warn += deltaPlayer->warn - lastPlayer->warn;
 								curPlayer->deadTime +=deltaPlayer->deadTime - lastPlayer->deadTime;

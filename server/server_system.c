@@ -86,6 +86,7 @@ static void initPlayer(PLAYER* player, int id) {
 		player->rotate = 0;
 		player->action = 0;
 		player->item = 0;
+		player->bullets = 0;
 		player->launchCount = 0;
 		player->warn = 0;
 		player->deadTime = 0;
@@ -368,6 +369,7 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						player->rotate = curPlayer->rotate - latestPlayer->rotate;
 						player->action = curPlayer->action - latestPlayer->action;
 						player->item = curPlayer->item - latestPlayer->item;
+						player->bullets = curPlayer->bullets - latestPlayer->bullets;
 						player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
 						player->warn = curPlayer->warn - latestPlayer->warn;
 						player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;

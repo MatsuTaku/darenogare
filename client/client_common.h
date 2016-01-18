@@ -14,6 +14,7 @@
 #define FIRE_TIME_LASER 3	// レーザー照射時間
 #define MODE_TIME_MINIMUM 12
 #define MODE_TIME_BARRIER 6
+#define MAX_MISSILE  5	// ミサイル最大数
 
 
 // ジョイパッドのボタン一覧
