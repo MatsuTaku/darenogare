@@ -2,12 +2,16 @@
 #include "client_common.h"
 #include "client_func.h"
 
+/** Definitions */
 #define nextObj(a)	((a + 1) % MAX_OBJECT)
 
+/** Global Variables */
 ASSEMBLY allAssembly;
 OBJECT* object;
 PLAYER* player;
 PLAYER* myPlayer;
+
+/** Static Variables */
 static int clientNum;
 static int curObjNum;
 static int selfObject;
@@ -16,6 +20,7 @@ static eventNotification eventStack[MAX_EVENT];
 static int latestFrame;
 static entityStateGet getEntity[FRAME_NUM];
 
+/** Static Functions */
 static void initObject(OBJECT* object);
 static bool deleteObject(int objectId);
 static void initPlayer(PLAYER* player, int num);
@@ -236,7 +241,9 @@ static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 								default:
 										break;
 						}
-						printf("insert object[%d]\n", curObjNum);
+#ifndef NDEBUG
+						// printf("insert object[%d]\n", curObjNum);
+#endif
 						curObjNum = nextObj(curObjNum);
 						return curObject;
 				}
@@ -303,6 +310,7 @@ static void updatePlayer() {
 								break;
 				}
 
+				/* 行動 */
 				switch (myPlayer->action) {
 						case ACTION_NONE:	break;
 						case ACTION_USE_ITEM:
@@ -365,6 +373,148 @@ static void updatePlayer() {
 				printf("YOU DIED\n");
 #endif
 		}
+}
+
+
+static void countDownFireLaser() {
+		myPlayer->launchCount = FIRE_TIME_LASER * MIRI_SECOND;
+		myPlayer->action = ACTION_CD_LASER;
+		myPlayer->item = ITEM_EMPTY;
+}
+
+static void laserPreparation() {
+		myPlayer->launchCount -= MIRI_SECOND / FPS;
+		if (myPlayer->launchCount <= 0) {
+				int owner = myPlayer->num;
+				int objectId = selfObject++;
+				int num = OBS_LASER;
+				POSITION *pos = &myPlayer->object->pos;
+				double angle = myPlayer->dir;
+				double ver = VER_LASER;
+				generateObstacle(owner, objectId, num, pos, angle, ver);
+
+				eventNotification event;
+				event.playerId = owner;
+				event.type = EVENT_OBSTACLE;
+				event.id = objectId;
+				event.objId = num;
+				event.pos = *pos;
+				event.angle = angle;
+				event.ver = ver;
+				insertEvent(&event);
+
+				myPlayer->item = ITEM_EMPTY;
+				myPlayer->action = ACTION_NONE;
+		}
+}
+
+
+static void launchMissile() {
+		int objectId = selfObject++;
+		int num = OBS_MISSILE;
+		int owner = myPlayer->num;
+		POSITION *pos = &myPlayer->object->pos;
+		double angle = myPlayer->dir;
+		double ver = VER_MISSILE;
+		generateObstacle(owner, objectId, num, pos, angle, ver);
+
+		eventNotification event;
+		event.playerId = myPlayer->num;
+		event.type = EVENT_OBSTACLE;
+		event.id = objectId;
+		event.objId = num;
+		event.pos = *pos;
+		event.angle = angle;
+		event.ver = ver;
+		insertEvent(&event);
+
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->action = ACTION_NONE;
+}
+
+
+static void modeMinimum() {
+		myPlayer->mode = MODE_MINIMUM;
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->modeTime = MODE_TIME_MINIMUM * MIRI_SECOND;
+		myPlayer->action = ACTION_NONE;
+}
+
+static void updateMinimum() {
+		myPlayer->modeTime -= MIRI_SECOND / FPS;
+		if (myPlayer->modeTime <= 0) {
+				myPlayer->mode = MODE_NEUTRAL;
+		}
+}
+
+static void modeBarrier() {
+		myPlayer->mode = MODE_BARRIER;
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->modeTime = MODE_TIME_BARRIER * MIRI_SECOND;
+		myPlayer->action = ACTION_NONE;
+}
+
+static void updateBarrier() {
+		myPlayer->modeTime -= MIRI_SECOND / FPS;
+		if (myPlayer->modeTime <= 0) {
+				myPlayer->mode = MODE_NEUTRAL;
+		}
+}
+
+
+/**
+ * 機体を旋回
+ * input: 単位角速度
+ */
+static void rotateDirection(double sign) {
+		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY * PI / HALF_DEGRESS) / FPS);
+		double da = myPlayer->dir - myPlayer->toDir;
+		double db = toDir - myPlayer->toDir;
+		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
+				toDir = myPlayer->toDir;
+		}
+		// -PI ~ PI 
+		while (toDir > PI) 
+				toDir -= 2 * PI;
+		while (toDir <= -PI) 
+				toDir += 2 * PI;
+		myPlayer->dir = toDir;
+#ifndef NDEBUG
+		// printf("player direction[%3.0f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
+#endif	
+}
+
+
+/**
+ * 噴射と向きに基づく速度変更
+ * input: 機体の向きに対する加速度
+ */
+static void accelerateVerocity(double accel) {
+		double direction = myPlayer->dir;
+		myPlayer->ver.vx += accel * cos(direction) / FPS;
+		myPlayer->ver.vy -= accel * sin(direction) / FPS;
+		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
+		if (v > pow(MAXIMUM_SPEED, 2)) {
+				double av = MAXIMUM_SPEED / sqrt(v);
+				myPlayer->ver.vx *= av;
+				myPlayer->ver.vy *= av;
+		}
+#ifndef NDEBUG
+		// printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
+#endif
+}
+
+
+/**
+ * 機体の向きと速度から座標を移動
+ */
+static void setPlayerPosition() {
+		POSITION* pos = &(myPlayer->object->pos);
+		pos->x += myPlayer->ver.vx / FPS;
+		pos->y += myPlayer->ver.vy / FPS;
+#ifndef NDEBUG
+		// printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
+#endif
 }
 
 
@@ -493,147 +643,10 @@ static void hitDeleteObject(OBJECT* object) {
 }
 
 
-static void countDownFireLaser() {
-		myPlayer->launchCount = FIRE_TIME_LASER * MIRI_SECOND;
-		myPlayer->action = ACTION_CD_LASER;
-		myPlayer->item = ITEM_EMPTY;
-}
-
-static void laserPreparation() {
-		myPlayer->launchCount -= MIRI_SECOND / FPS;
-		if (myPlayer->launchCount <= 0) {
-				int owner = myPlayer->num;
-				int objectId = selfObject++;
-				int num = OBS_LASER;
-				POSITION *pos = &myPlayer->object->pos;
-				double angle = myPlayer->dir;
-				double ver = VER_LASER;
-				generateObstacle(owner, objectId, num, pos, angle, ver);
-
-				eventNotification event;
-				event.playerId = owner;
-				event.type = EVENT_OBSTACLE;
-				event.id = objectId;
-				event.objId = num;
-				event.pos = *pos;
-				event.angle = angle;
-				event.ver = ver;
-				insertEvent(&event);
-
-				myPlayer->item = ITEM_EMPTY;
-				myPlayer->action = ACTION_NONE;
-		}
-}
-
-
-static void launchMissile() {
-		int objectId = selfObject++;
-		int num = OBS_MISSILE;
-		int owner = myPlayer->num;
-		POSITION *pos = &myPlayer->object->pos;
-		double angle = myPlayer->dir;
-		double ver = VER_MISSILE;
-		generateObstacle(owner, objectId, num, pos, angle, ver);
-		eventNotification event;
-		event.playerId = myPlayer->num;
-		event.type = EVENT_OBSTACLE;
-		event.id = objectId;
-		event.objId = num;
-		event.pos = *pos;
-		event.angle = angle;
-		event.ver = ver;
-		insertEvent(&event);
-
-		myPlayer->item = ITEM_EMPTY;
-		myPlayer->action = ACTION_NONE;
-}
-
-
-static void modeMinimum() {
-		myPlayer->mode = MODE_MINIMUM;
-		myPlayer->item = ITEM_EMPTY;
-		myPlayer->modeTime = MODE_TIME_MINIMUM * MIRI_SECOND;
-		myPlayer->action = ACTION_NONE;
-}
-
-static void updateMinimum() {
-		myPlayer->modeTime -= MIRI_SECOND / FPS;
-		if (myPlayer->modeTime <= 0) {
-				myPlayer->mode = MODE_NEUTRAL;
-		}
-}
-
-static void modeBarrier() {
-		myPlayer->mode = MODE_BARRIER;
-		myPlayer->item = ITEM_EMPTY;
-		myPlayer->modeTime = MODE_TIME_BARRIER * MIRI_SECOND;
-		myPlayer->action = ACTION_NONE;
-}
-
-static void updateBarrier() {
-		myPlayer->modeTime -= MIRI_SECOND / FPS;
-		if (myPlayer->modeTime <= 0) {
-				myPlayer->mode = MODE_NEUTRAL;
-		}
-}
-
 
 /**
- * 機体を旋回
- * input: 単位角速度
+ * window event emethods
  */
-static void rotateDirection(double sign) {
-		double toDir = myPlayer->dir + sign * (((double)ANGULAR_VEROCITY * PI / HALF_DEGRESS) / FPS);
-		double da = myPlayer->dir - myPlayer->toDir;
-		double db = toDir - myPlayer->toDir;
-		if ((da * db) < 0 || abs(db) > 2 * PI) {	// 回転しすぎた場合
-				toDir = myPlayer->toDir;
-		}
-		// -PI ~ PI 
-		while (toDir > PI) 
-				toDir -= 2 * PI;
-		while (toDir <= -PI) 
-				toDir += 2 * PI;
-		myPlayer->dir = toDir;
-#ifndef NDEBUG
-		// printf("player direction[%3.0f°]\n", myPlayer->dir * HALF_DEGRESS / PI);
-#endif	
-}
-
-
-/**
- * 噴射と向きに基づく速度変更
- * input: 機体の向きに対する加速度
- */
-static void accelerateVerocity(double accel) {
-		double direction = myPlayer->dir;
-		myPlayer->ver.vx += accel * cos(direction) / FPS;
-		myPlayer->ver.vy -= accel * sin(direction) / FPS;
-		double v = pow(myPlayer->ver.vx, 2) + pow(myPlayer->ver.vy, 2);
-		if (v > pow(MAXIMUM_SPEED, 2)) {
-				double av = MAXIMUM_SPEED / sqrt(v);
-				myPlayer->ver.vx *= av;
-				myPlayer->ver.vy *= av;
-		}
-#ifndef NDEBUG
-		// printf("player verocity[|V|: %4.0f, vx: %4.0f, vy: %4.0f]\n", sqrt(v), myPlayer->ver.vx, myPlayer->ver.vy);
-#endif
-}
-
-
-/**
- * 機体の向きと速度から座標を移動
- */
-static void setPlayerPosition() {
-		POSITION* pos = &(myPlayer->object->pos);
-		pos->x += myPlayer->ver.vx / FPS;
-		pos->y += myPlayer->ver.vy / FPS;
-#ifndef NDEBUG
-		// printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
-#endif
-}
-
-
 
 void useItem() {	// アイテムの使用
 		if (myPlayer->item != ITEM_EMPTY) {
@@ -871,7 +884,7 @@ void reflectDelta(entityStateGet* data) {
 
 static void launchEvent(eventNotification *event) {
 #ifndef NDEBUG
-		printf("launchEvent type: %d\n", event->type);
+		// printf("launchEvent type: %d\n", event->type);
 #endif
 		switch (event->type) {
 				case EVENT_OBSTACLE:
@@ -906,17 +919,15 @@ static bool insertEvent(eventNotification* event) {
 
 
 void sendEntity() {
-		entityStateSet data;
-		data.latestFrame = latestFrame;
-		data.endFlag = false;
-		data.clientId = myPlayer->num;
-		data.pos.x = myPlayer->object->pos.x;
-		data.pos.y = myPlayer->object->pos.y;
-		data.player = *myPlayer;
+		entityStateSet data = {
+				.latestFrame = latestFrame,
+				.endFlag = false,
+				.clientId = myPlayer->num,
+				.pos = myPlayer->object->pos,
+				.player = *myPlayer,
+		};
 		int i;
-		for (i = 0; i < MAX_EVENT; i++) {
-				data.event[i] = eventStack[i];
-		}
+		for (i = 0; i < MAX_EVENT; i++)	data.event[i] = eventStack[i];
 		initEvent();
 
 		sendData(&data, sizeof(entityStateSet));

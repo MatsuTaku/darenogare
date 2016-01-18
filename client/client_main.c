@@ -9,8 +9,7 @@ static Uint32 timerEvent(Uint32 frame);
 static int skipFrame = 0;
 
 
-int main(int argc,char *argv[])
-{
+int main(int argc, char *argv[]) {
 		int		num;
 		int 	clientID;
 		bool	endFlag = false;
@@ -32,7 +31,7 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
-		if (setUpClient(serverName,&clientID,&num) == -1) {
+		if (setUpClient(serverName, &clientID, &num) == -1) {
 				fprintf(stderr,"setup failed : SetUpClient\n");
 				return -1;
 		}
@@ -42,16 +41,16 @@ int main(int argc,char *argv[])
 				return -1;
 		}
 
-		if (initWindows(clientID,num) == -1) {
+		if (initWindows(clientID, num) == -1) {
 				fprintf(stderr,"setup failed : InitWindows\n");
 				return -1;
 		}
 
 
 		/* ネットワーク処理スレッド作成 */
-		networkThread = SDL_CreateThread(networkEvent, &endNet);
-		if (networkThread == NULL) {
-				printf("\nSDL_CreateThread failed: %s\n", SDL_GetError());
+		if (!(networkThread = SDL_CreateThread(networkEvent, &endNet))) {
+				fprintf(stderr, "\nSDL_CreateThread failed: %s\n", SDL_GetError());
+				return -1;
 		}
 
 
@@ -62,7 +61,7 @@ int main(int argc,char *argv[])
 		Uint32 loopInterval = ms / src;
 		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
-		while((endFlag = windowEvent()) == false && !endNet){
+		while(!(endFlag = windowEvent()) && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
 				timerEvent(++frame);
@@ -72,7 +71,7 @@ int main(int argc,char *argv[])
 						else	skipFrame = (endTime - startTime) / loopInterval;
 				}
 #ifndef NDEBUG
-		//		printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
+				printf("FPS: %d\n", endTime > toTime ? (int)(lcm(ms, FPS) / (endTime - startTime)) : FPS);
 #endif
 		};
 

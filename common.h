@@ -229,4 +229,14 @@ typedef struct {
 		eventNotification event[MAX_EVENT];
 } entityStateGet;
 
+
+// ゲームシーン
+typedef enum {
+		SCENE_WAIT,
+		SCENE_PREPARE,
+		SCENE_BATTLE,
+		SCENE_DEAD,
+		SCENE_FINISH
+} GAME_SCENE;
+
 #endif
