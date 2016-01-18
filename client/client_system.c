@@ -638,6 +638,8 @@ static void setPlayerPosition() {
 void useItem() {	// アイテムの使用
 		if (myPlayer->item != ITEM_EMPTY) {
 				myPlayer->action = ACTION_USE_ITEM;
+		} else {
+				myPlayer->action = ACTION_NONE;
 		}
 }
 

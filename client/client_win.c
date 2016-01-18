@@ -89,6 +89,7 @@ static SDL_Surface *gTargetImage; //中心位置への方向
 
 /*関数*/
 static int initImage();
+static SDL_Surface* loadImage(char* imageName);
 static void drawObject();
 static void drawChara(POSITION *charaPos, int chara_id);
 //static void drawArroundEffect(アイテム使用フラグ, SDL_Surface c_window);
@@ -318,99 +319,42 @@ bool windowEvent() {
 
 /********* static *************/
 
+static int initImage(void) { //画像の読み込み
+		int i, endFlag = 0;
 
-int initImage(void){ //画像の読み込み
-		int i;
-		gBackGround = IMG_Load( gMapImgFile ); //背景画像 
-		if ( gBackGround == NULL ) {
-				printf("not find world image\n");
-				return(-1);
-		}
-		gObstacleImage = IMG_Load( gObstacleImgFile ); //障害物
-		if( gObstacleImage == NULL ){
-				printf("not find obstacle image\n");
-				return(-1);
-		}
-		gBoostImage = IMG_Load( gBoostImgFile ); //ブースト
-		if( gBoostImage == NULL ){
-				printf("not find boost image\n");
-				return(-1);
-		}
-		gItemBox = IMG_Load( gItemBoxImgFile ); //アイテムボックス
-		if( gItemBox == NULL){
-				printf("not find itembox image\n");
-				return(-1);
-		}
-		gDeadIcon = IMG_Load( gDeadIconImgFile ); //死亡時のアイコン
-		if( gDeadIcon == NULL){
-				printf("not find deadicon image\n");
-				return(-1);
-		}
-		gWarningImage = IMG_Load( gWarningImgFile ); //警告文
-		if( gWarningImage == NULL){
-				printf("not find warning image\n");
-				return(-1);
-		}
-		gBoomImage = IMG_Load( gBoomImgFile ); //爆発アニメーション
-		if( gBoomImage == NULL){
-				printf("not find boom image\n");
-				return(-1);
-		}
-		gMiniMapImage = IMG_Load( gMiniMapImgFile ); //ミニマップ
-		if( gMiniMapImage == NULL){
-				printf("not find minimap image\n");
-				return(-1);
-		}
-		gTargetImage = IMG_Load( gTargetImgFile ); //目的地
-		if(gTargetImage == NULL){
-				printf("not find arrow image\n");
-				return(-1);
-		}
-		gMissileImage = IMG_Load( gMissileImgFile ); //ミサイル
-		if(gMissileImage == NULL){
-				printf("not find missile image\n");
-				return(-1);
-		}
-		gNoizingImage = IMG_Load( gNoizingImgFile ); //ジャミング
-		if(gNoizingImage == NULL){
-				printf("not find noizing image\n");
-				return(-1);
-		}
-		gBarrierImage = IMG_Load( gBarrierImgFile ); //バリア
-		if(gBarrierImage == NULL){
-				printf("not find barrier image\n");
-				return(-1);
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //キャラクター画像
-				gCharaImage[i] = IMG_Load( gCharaImgFile[i] );
-				if( gCharaImage[i] == NULL ){
-						printf("not find chara%dimage\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < ITEM_NUM; i++){ //アイテム画像
-				gItemImage[i] = IMG_Load( gItemImgFile[i] );
-				if( gItemImage[i] == NULL ){
-						printf("not find item%dimage\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < 2; i++){ //レーザー画像
-				gLaserImage[i] = IMG_Load( gLaserImgFile[i] );
-				if( gLaserImage[i] == NULL){
-						printf("not find laser%dimage\n", i+1);
-						return(-1);
-				}
-		}
-		for(i = 0; i < MAX_CLIENTS; i++){ //アイコン画像
-				gIcon[i] = IMG_Load( gIconImgFile[i] );
-				if( gIcon[i] == NULL ){
-						printf("not find icon%d image\n", i+1);
-						return(-1);
-				}
-		}
+		if ((gBackGround = loadImage(gMapImgFile)) == NULL) endFlag = -1;	// 背景画像
+		if ((gObstacleImage = loadImage(gObstacleImgFile)) == NULL)	endFlag = -1;	// 障害物
+		if ((gBoostImage = loadImage(gBoostImgFile)) == NULL)	endFlag = -1;	// ブースト
+		if ((gItemBox = loadImage(gItemBoxImgFile)) == NULL)	endFlag = -1;	// アイテムボックス
+		if ((gDeadIcon = loadImage(gDeadIconImgFile)) == NULL)	endFlag = -1;	// 死亡時のアイコン
+		if ((gWarningImage = loadImage(gWarningImgFile)) == NULL)	endFlag = -1;	// 警告文
+		if ((gBoomImage = loadImage(gBoomImgFile)) == NULL)	endFlag = -1;	// 爆発アニメーション
+		if ((gMiniMapImage = loadImage(gMiniMapImgFile)) == NULL)	endFlag = -1;	// ミニマップ
+		if ((gTargetImage = loadImage(gTargetImgFile)) == NULL)	endFlag = -1;	// 目的地
+		if ((gMissileImage = loadImage(gMissileImgFile)) == NULL)	endFlag = -1;	// ミサイル
+		if ((gNoizingImage = loadImage(gNoizingImgFile)) == NULL)	endFlag = -1;	// ジャミング
+		if ((gBarrierImage = loadImage(gBarrierImgFile)) == NULL)	endFlag = -1;	// バリア
+		for (i = 0; i < MAX_CLIENTS; i++) //キャラクター画像
+				if ((gCharaImage[i] = loadImage(gCharaImgFile[i])) == NULL)	endFlag = -1;
+		for (i = 0; i < ITEM_NUM; i++) //アイテム画像
+				if ((gItemImage[i] = loadImage(gItemImgFile[i])) == NULL)	endFlag = -1;
+		for (i = 0; i < 2; i++) //レーザー画像
+				if ((gLaserImage[i] = loadImage(gLaserImgFile[i])) == NULL)	endFlag = -1;
+		for (i = 0; i < MAX_CLIENTS; i++) //アイコン画像
+				if ((gIcon[i] = loadImage(gIconImgFile[i])) == NULL)	endFlag = -1;
+
+		return endFlag;
 }
 
+
+static SDL_Surface* loadImage(char* imageName) {
+		SDL_Surface* image;
+		if (image = IMG_Load(imageName))
+				printf("Load [%s]\n", imageName);
+		else
+				printf("Not found [%s]\n", imageName);
+		return image;
+}
 
 
 void clearWindow(void){ //ウィンドウのクリア
@@ -681,6 +625,10 @@ void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 			if(!myPlayer->alive){ //"GAME OVER"の描写
 				SDL_Surface *strings;
 				SDL_Color red = {204, 0, 0};
+				/*
+				 * フォントファイルをループ内で読み込んでいることでメモリリークを起こしている。
+				 * フォントファイルの読み込みは初期化時に一度だけにするように修正してね.
+				 */
 				font = TTF_OpenFont(gFontFile, 48);
 				strings = TTF_RenderUTF8_Blended(font, "GAME OVER", red);
 				SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
@@ -688,21 +636,24 @@ void drawDeadChara(POSITION *charaPos, int chara_id){ //死亡キャラの描画
 				SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
 				SDL_FreeSurface(strings);
 			}
-			return;
-		}
-		//爆発アニメーション
-		double angle;
-		POSITION diffPos;
-		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		SDL_Rect src_rect = {0, 0, gBoomImage->w/8, gBoomImage->h/2};
-		SDL_Rect dst_rect;
-		diffPos.x = charaPos->x - myPos->x - (gBoomImage->w /8 /2);
-		diffPos.y = charaPos->y - myPos->y - (gBoomImage->h /2 /2);
-		adjustWindowPosition(&dst_rect, &diffPos);
+		} else {
+				//爆発アニメーション
+				POSITION* myPos = &myPlayer->object->pos; //マイポジション
+				int imgWidth = gBoomImage->w / 8;
+				int imgHeight = gBoomImage->h / 2;
+				Rect rect = {
+						.src.x = imgWidth * (animeNum % 8),
+						.src.y = imgHeight * (animeNum / 8),
+						.src.w = imgWidth,
+						.src.h = imgHeight,
+				};
+				POSITION diffPos;
+				diffPos.x = charaPos->x - myPos->x - (imgWidth /2);
+				diffPos.y = charaPos->y - myPos->y - (imgHeight /2);
+				adjustWindowPosition(&rect.dst, &diffPos);
 
-		src_rect.x = (gBoomImage->w / 8) * (animeNum % 8);
-		src_rect.y = (gBoomImage->h / 2) * (animeNum / 8);
-		SDL_BlitSurface(gBoomImage, &src_rect, gMainWindow, &dst_rect); //描画
+				SDL_BlitSurface(gBoomImage, &rect.src, gMainWindow, &rect.dst); //描画
+		}
 }
 
 
