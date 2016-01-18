@@ -93,6 +93,7 @@ static void drawObject();
 static void drawChara(POSITION *charaPos, int chara_id);
 static void drawArroundEffect(MODE mode, SDL_Surface *c_window);
 static void drawBoost(int chara_id, SDL_Surface *c_window);
+static void drawForecast(int id, POSITION *charaPos);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
 static void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir);
@@ -539,7 +540,13 @@ void drawChara(POSITION *charaPos, int chara_id){
 		if(chara_id != myID){
 			angle -= 90;
 		}
-		reImage = rotozoomSurface(c_window, angle, 1.0, 1); //角度の変更
+		double size;
+		if(player[chara_id].mode == MODE_MINIMUM){ //ミニマム状態ならサイズを小さく
+			size = 0.5;
+		}else{
+			size = 1.0;
+		}
+		reImage = rotozoomSurface(c_window, angle, size, 1); //角度の変更
 		SDL_Rect c_rect = {0, 0, reImage->w, reImage->h};
 		dx = reImage->w - c_window->w; //回転によるずれの調整差分
 		dy = reImage->h - c_window->h;
@@ -547,6 +554,10 @@ void drawChara(POSITION *charaPos, int chara_id){
 		diffPos.y = charaPos->y - myPos->y - (c_window->h /2) - dy/2;
 		adjustWindowPosition(&dst_rect, &diffPos);
 		SDL_BlitSurface(reImage, &c_rect, gMainWindow, &dst_rect); //描画
+		/*レーザの予測線の描画*/
+		if(player[chara_id].action == ACTION_CD_LASER){
+			drawForecast(chara_id, charaPos);
+		}
 
 		SDL_FreeSurface(reImage);
 		SDL_FreeSurface(c_window);
@@ -664,6 +675,26 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 		}
 }
 
+/*レーザの予測線の描画*/
+void drawForecast(int id, POSITION* charaPos){
+
+		SDL_Rect src_rect, dst_rect;
+		POSITION diffPos;
+		POSITION* myPos = &myPlayer->object->pos; //マイポジション
+		SDL_Surface* reImage;
+		double angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
+
+		reImage = rotozoomSurface(gLaserImage[0], angle, 1.0, 1.0); //画像の回転
+		int dx = reImage->w - gLaserImage[0]->w; //調整差分
+		int dy = reImage->h - gLaserImage[0]->h;
+		src_rect.x = 0;		src_rect.y = 0;
+		src_rect.w = reImage->w;	src_rect.h = reImage->h;
+		diffPos.x = charaPos->x - myPos->x - reImage->w/2 - dx/2;
+		diffPos.y = charaPos->y - myPos->x - reImage->h/2 - dy/2;
+		adjustWindowPosition(&dst_rect, &diffPos);
+		SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect);
+}
+
 
 /*死亡キャラの描画*/
 void drawDeadChara(POSITION *charaPos, int chara_id){
@@ -728,26 +759,19 @@ void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
 				ObsImage = gMissileImage;
 				break;
 			case OBS_LASER:
-				break;
-			default:
-				return;
+				//drawLaser(obsPos, obs_dir);
 				break;
 		}
 		if(obs_id != OBS_LASER){
-			double angle = obs_dir - 90;
-			reImage = rotozoomSurface(ObsImage, angle, 1.0, 1); //角度の変更
+			reImage = rotozoomSurface(ObsImage, obs_dir, 1.0, 1); //角度の変更
 			SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
 			int dx = reImage->w - ObsImage->w;
 			int dy = reImage->h - ObsImage->h;
-			diffPos.x = obsPos->x - myPos->x - (reImage->w /2) - dx;
-			diffPos.y = obsPos->y - myPos->y - (reImage->h /2) - dy;
+			diffPos.x = obsPos->x - myPos->x - (reImage->w /2) - dx/2;
+			diffPos.y = obsPos->y - myPos->y - (reImage->h /2) - dy/2;
 			SDL_Rect dst_rect;
 			adjustWindowPosition(&dst_rect, &diffPos); //貼り付け位置を計算
 			SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect); //描画
-		}
-
-		if(ObsImage != NULL){
-			//SDL_FreeSurface(ObsImage);
 		}
 		if(reImage != NULL){
 			SDL_FreeSurface(reImage);
@@ -755,24 +779,14 @@ void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
 }
 
 
+
 /*レーザーの描画*/
-/*
-void drawLaser(POSITION *charaPos, int chara_id){
+/*void drawLaser(POSITION *lsPos, int angle){
 
 		Rect shadow, entity;
 		SDL_Surface *reImage;
 		POSITION diffPos;
-		int dir = player[chara_id].dir *HALF_DEGRESS /PI; //キャラの向き(度数)
 
-		//影の描画
-		reImage = rotozoomSurface(gLaserImage[0], dir, 1.0, 1.0);
-		dx = reImage->w - gLaserImage[0]->w;	dy = reImage->h - gLaserImage[0]->h;
-		shadow.src.x = 0;	shadow.src.y = 0;
-		shadow.src.w = gLaserImage[0]->w;	shadow.src.h = gLaserImage[0]->h;
-		diffPos.x = ポジション - myPos->x - reImage->w/2 - dx;
-		diffPos.y = ポジション - myPos->x - reImage->h/2 - dy;
-		adjustWindowPosition(&shadow.dst, &diffPos);
-		SDL_BlitSurface(reImage, &shadow.src, gMainWindow, &shadow.dst);
 		//レーザーの描写
 		reImage = rotozoomSurface(gLaserImage[1], dir, 1.0, 1.0);
 		dx = reImage->w - gLaserImage[1]->w;	dy = reImage->h - gLaserImage[1]->h;
@@ -784,8 +798,8 @@ void drawLaser(POSITION *charaPos, int chara_id){
 		adjustWindowPosition(&entity.dst, &diffPos);
 		SDL_BlitSurface(reImage, &entity.src, gMainWindow, &entity.dst);
 		
-}
-*/
+}*/
+
 
 /*警告の描画*/
 void drawWarning(void){
