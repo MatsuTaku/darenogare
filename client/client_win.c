@@ -715,6 +715,7 @@ void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
 		}
 		if(obs_id != OBS_LASER){
 			reImage = rotozoomSurface(ObsImage, obs_dir, 1.0, 1); //角度の変更
+			SDL_FreeSurface(ObsImage);
 			SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
 			int dx = reImage->w - ObsImage->w;
 			int dy = reImage->h - ObsImage->h;

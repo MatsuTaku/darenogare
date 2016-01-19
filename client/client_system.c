@@ -23,7 +23,7 @@ static entityStateGet getEntity[FRAME_NUM];
 /** Static Functions */
 static void initObject(OBJECT* object);
 static bool deleteObject(int objectId);
-static void initPlayer(PLAYER* player, int num);
+static void initPlayer(PLAYER* player, int num, int playerNum);
 static bool generateObstacle(int owner, int id,int num, POSITION* pos, double angle, double ver);
 static bool insertItem(int id, int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
@@ -85,7 +85,7 @@ int initGameSystem(int myId, int playerNum) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
-				initPlayer(curPlayer, i);
+				initPlayer(curPlayer, i, playerNum);
 		}
 
 		return 0;
@@ -140,7 +140,7 @@ static bool deleteObject(int objectId) {
  * input1: プレイヤーポインタ
  * input2: プレイヤーID
  */
-static void initPlayer(PLAYER* player, int num) {
+static void initPlayer(PLAYER* player, int num, int playerNum) {
 		player->num = num;
 		player->mode = MODE_NEUTRAL;
 		player->modeTime = 0;
@@ -159,7 +159,17 @@ static void initPlayer(PLAYER* player, int num) {
 		player->deadTime = 0;
 		player->lastTime = 0;
 		player->deadAnimation = -1;
-		setPos(&player->object->pos, 0, 0);
+		if (playerNum == 1) {
+				setPos(&player->object->pos, 0, 0);
+		} else {
+				double startAngle = START_ANGLE + 2 * PI / playerNum * num;
+				POSITION pos = {
+						.x = START_RANGE * cos(startAngle),
+						.y = -(START_RANGE * sin(startAngle)),
+				};
+				setPos(&player->object->pos, pos.x, pos.y);
+				printf("player[%d] angle: %f\n", num, startAngle);
+		}
 }
 
 
