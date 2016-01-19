@@ -61,7 +61,8 @@ static int weitFlag = 0;
 static int myID; //プレイヤー番号
 
 /* フォント */
-TTF_Font* font;
+TTF_Font* wFont;
+TTF_Font* gFont;
 
 /* ジョイスティック */
 SDL_Joystick* joystick;
@@ -98,6 +99,7 @@ static void drawForecast(int id, POSITION *charaPos);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
 static void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir);
+static void drawRock_Missile(SDL_Surface* ObsImage, double angle, POSITION *obsPos);
 //static void drawLaser(POSITION *charaPos, int chara_id);
 static void drawStatus();
 static void drawWarning();
@@ -155,7 +157,8 @@ int initWindows(int clientID, int num) {
 				printf("failed to initialize font");
 				return -1;
 		}
-		font = TTF_OpenFont(gFontFile, 24);
+		wFont = TTF_OpenFont(gFontFile, 24);
+		gFont = TTF_OpenFont(gFontFile, 48);
 		//各グローバル変数の初期化
 		interval = SDL_GetTicks() + 100;
 		pn_flag = 0;
@@ -623,20 +626,25 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 void drawForecast(int id, POSITION* charaPos){
 
 		SDL_Rect src_rect, dst_rect;
-		POSITION diffPos;
+		POSITION  fcPos,diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
 		SDL_Surface* reImage;
 		double angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
 
-		reImage = rotozoomSurface(gLaserImage[0], angle, 1.0, 1.0); //画像の回転
+		fcPos.x = charaPos->x + (gLaserImage[0]->w *cos(player[id].dir));
+		fcPos.y = charaPos->y + (gLaserImage[0]->h *sin(player[id].dir));
+		reImage = rotozoomSurface(gLaserImage[0], angle, 0.7, 1.0); //画像の回転
 		int dx = reImage->w - gLaserImage[0]->w; //調整差分
 		int dy = reImage->h - gLaserImage[0]->h;
 		src_rect.x = 0;		src_rect.y = 0;
 		src_rect.w = reImage->w;	src_rect.h = reImage->h;
-		diffPos.x = charaPos->x - myPos->x - reImage->w/2 - dx/2;
-		diffPos.y = charaPos->y - myPos->x - reImage->h/2 - dy/2;
+		diffPos.x = charaPos->x - myPos->x - (gLaserImage[0]->w /2) - dx/2;
+		diffPos.y = charaPos->y - myPos->y - (gLaserImage[0]->h /2) - dy/2;
 		adjustWindowPosition(&dst_rect, &diffPos);
 		SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect);
+		if(reImage != NULL){
+			SDL_FreeSurface(reImage);
+		}
 }
 
 
@@ -651,12 +659,7 @@ void drawDeadChara(POSITION *charaPos, int chara_id){
 			if(!myPlayer->alive){ //"GAME OVER"の描写
 				SDL_Surface *strings;
 				SDL_Color red = {204, 0, 0};
-				/*
-				 * フォントファイルをループ内で読み込んでいることでメモリリークを起こしている。
-				 * フォントファイルの読み込みは初期化時に一度だけにするように修正してね.
-				 */
-				font = TTF_OpenFont(gFontFile, 48);
-				strings = TTF_RenderUTF8_Blended(font, "GAME OVER", red);
+				strings = TTF_RenderUTF8_Blended(gFont, "GAME OVER", red);
 				SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
 				SDL_Rect go_src = {0, 0, strings->w, strings->h};
 				SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
@@ -698,42 +701,41 @@ void drawItem(POSITION *itemPos, int item_id){
 
 /*障害物の描画*/
 void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir){
-		POSITION diffPos;
-		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		SDL_Surface *ObsImage;
-		SDL_Surface *reImage;
 		switch(obs_id){
-			case OBS_ROCK:
-				ObsImage = gRockImage;
+			case OBS_ROCK: //隕石
+				drawRock_Missile(gRockImage, obs_dir, obsPos);
 				break;
-			case OBS_MISSILE:
-				ObsImage = gMissileImage;
+			case OBS_MISSILE: //ミサイル
+				drawRock_Missile(gMissileImage, obs_dir, obsPos);
 				break;
-			case OBS_LASER:
+			case OBS_LASER: //レーザの描画
 				//drawLaser(obsPos, obs_dir);
 				break;
 		}
-		if(obs_id != OBS_LASER){
-			reImage = rotozoomSurface(ObsImage, obs_dir, 1.0, 1); //角度の変更
-			SDL_FreeSurface(ObsImage);
-			SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
-			int dx = reImage->w - ObsImage->w;
-			int dy = reImage->h - ObsImage->h;
-			diffPos.x = obsPos->x - myPos->x - (reImage->w /2) - dx/2;
-			diffPos.y = obsPos->y - myPos->y - (reImage->h /2) - dy/2;
-			SDL_Rect dst_rect;
-			adjustWindowPosition(&dst_rect, &diffPos); //貼り付け位置を計算
-			SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect); //描画
-		}
+}
+
+/*隕石とミサイルの描画*/
+void drawRock_Missile(SDL_Surface *ObsImage, double angle, POSITION *obsPos){
+		SDL_Surface* reImage;
+		POSITION diffPos;
+		POSITION* myPos = &myPlayer->object->pos; //マイポジション
+
+		reImage = rotozoomSurface(ObsImage, angle, 1.0, 1); //角度の変更
+		SDL_Rect src_rect = {0, 0, reImage->w, reImage->h};
+		int dx = reImage->w - ObsImage->w;
+		int dy = reImage->h - ObsImage->h;
+		diffPos.x = obsPos->x - myPos->x - reImage->w/2 - dx/2;
+		diffPos.y = obsPos->y - myPos->y - reImage->h/2 - dy/2;
+		SDL_Rect dst_rect;
+		adjustWindowPosition(&dst_rect, &diffPos); //貼り付け位置を計算
+		SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect); //描画
 		if(reImage != NULL){
 			SDL_FreeSurface(reImage);
 		}
 }
 
-
-
-/*レーザーの描画*/
-/*void drawLaser(POSITION *lsPos, int angle){
+/*レーザの描画*/
+/*void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, int angle){
 
 		Rect shadow, entity;
 		SDL_Surface *reImage;
@@ -771,7 +773,7 @@ void drawWarning(void){
 		l = myPlayer->lastTime/1000; //残り時間の整数部分
 		m = myPlayer->lastTime%1000; //少数部分
 		sprintf(warn_st ,"Back to Area!!!    %d.%d", l,m);
-		strings = TTF_RenderUTF8_Blended(font, warn_st, red);
+		strings = TTF_RenderUTF8_Blended(wFont, warn_st, red);
 		warn_dst.y += 150;
 		warn_src.w = strings->w; warn_src.h = strings->h;
 		SDL_BlitSurface(strings, &warn_src, gMainWindow, &warn_dst);
