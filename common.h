@@ -233,11 +233,10 @@ typedef struct {
 
 // ゲームシーン
 typedef enum {
-		SCENE_WAIT,
 		SCENE_PREPARE,
 		SCENE_BATTLE,
 		SCENE_DEAD,
 		SCENE_FINISH
-} GAME_SCENE;
+} SCENE;
 
 #endif

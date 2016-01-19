@@ -13,11 +13,10 @@ PLAYER* myPlayer;
 
 /** Static Variables */
 static int clientNum;
-static int curObjNum;
+static int curObjNum = 0;
 static int selfObject;
 static eventNotification eventStack[MAX_EVENT];
-
-static int latestFrame;
+static int latestFrame = 0;
 static entityStateGet getEntity[FRAME_NUM];
 
 /** Static Functions */
@@ -61,7 +60,6 @@ int initGameSystem(int myId, int playerNum) {
 		srand((unsigned)time(NULL));
 
 		clientNum = playerNum;
-		latestFrame = 0;
 		for (i = 0; i < FRAME_NUM; i++) {
 				getEntity[i].lastFrame = 0;
 				getEntity[i].latestFrame = 0;
@@ -74,7 +72,6 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* curObj = &object[i];
 				initObject(curObj);
 		}
-		curObjNum = 0;
 		selfObject = 0x1000 * (myId + 1);
 
 		myPlayer = &player[myId];
@@ -168,7 +165,7 @@ static void initPlayer(PLAYER* player, int num, int playerNum) {
 						.y = -(START_RANGE * sin(startAngle)),
 				};
 				setPos(&player->object->pos, pos.x, pos.y);
-				printf("player[%d] angle: %f\n", num, startAngle);
+				// printf("player[%d] angle: %f\n", num, startAngle);
 		}
 }
 

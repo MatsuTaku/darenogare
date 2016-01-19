@@ -73,6 +73,11 @@ static void initObject(OBJECT* object) {
 }
 
 static void initPlayer(PLAYER* player, int id) {
+		PLAYER source = {
+				.num = id,
+		};
+		*player = source;
+		/*
 		player->object = NULL;
 		player->num = id;
 		player->mode = 0;
@@ -92,6 +97,7 @@ static void initPlayer(PLAYER* player, int id) {
 		player->deadTime = 0;
 		player->lastTime = 0;
 		player->deadAnimation = 0;
+		*/
 }
 
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
