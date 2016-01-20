@@ -23,7 +23,7 @@ static entityStateGet getEntity[FRAME_NUM];
 static void initObject(OBJECT* object);
 static bool deleteObject(int objectId);
 static void initPlayer(PLAYER* player, int num, int playerNum);
-static bool generateObstacle(int owner, int id,int num, POSITION* pos, double angle, double ver);
+static bool generateObstacle(int owner, int id,int num, POSITION* pos, double angle, VEROCITY *ver);
 static bool insertItem(int id, int num, POSITION* pos);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void initEvent();
@@ -174,7 +174,7 @@ static void initPlayer(PLAYER* player, int num, int playerNum) {
  * 障害物の挿入
  * return: 成功・失敗
  */
-static bool generateObstacle(int owner, int id, int num, POSITION* pos, double angle, double ver) {
+static bool generateObstacle(int owner, int id, int num, POSITION* pos, double angle, VEROCITY *ver) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
@@ -189,7 +189,7 @@ static bool generateObstacle(int owner, int id, int num, POSITION* pos, double a
 		curObs->owner = owner;
 		curObs->num = num;
 		curObs->angle = angle;
-		curObs->ver = ver;
+		curObs->ver = *ver;
 }
 
 
@@ -293,7 +293,8 @@ static void initEvent() {
 				event->killTo = -1;
 				setPos(&event->pos, 0, 0);
 				event->angle = 0;
-				event->ver = 0;
+				event->ver.vx = 0;
+				event->ver.vy = 0;
 				event->killTo = 0;
 		}
 }
@@ -378,7 +379,7 @@ static void updatePlayer() {
 				setPlayerPosition();
 		} else {	// 死亡時処理
 #ifndef NDEBUG
-				printf("YOU DIED\n");
+				// printf("YOU DIED\n");
 #endif
 		}
 }
@@ -398,8 +399,11 @@ static void laserPreparation() {
 				int num = OBS_LASER;
 				POSITION *pos = &myPlayer->object->pos;
 				double angle = myPlayer->dir;
-				double ver = VER_LASER;
-				generateObstacle(owner, objectId, num, pos, angle, ver);
+				VEROCITY ver = {
+						.vx = VER_LASER * cos(angle),
+						.vy = -VER_LASER * sin(angle),
+				};
+				generateObstacle(owner, objectId, num, pos, angle, &ver);
 
 				eventNotification event;
 				event.playerId = owner;
@@ -423,26 +427,23 @@ static void launchMissile() {
 		int num = OBS_MISSILE;
 		int owner = myPlayer->num;
 		POSITION *pos = &myPlayer->object->pos;
+		double angle = myPlayer->dir;
 		double absVer = VER_MISSILE;
-		double shipAngle = myPlayer->dir;
-		VEROCITY verStr = {
-				.vx = absVer * cos(shipAngle) + myPlayer->ver.vx,
-				.vy = -absVer * sin(shipAngle) + myPlayer->ver.vy,
+		VEROCITY ver = {
+				.vx = absVer * cos(angle) + myPlayer->ver.vx,
+				.vy = absVer * -sin(angle) + myPlayer->ver.vy,
 		};
-		double ver = sqrt(pow(verStr.vx, 2) + pow(verStr.vy, 2));
-		double angle = atan(-verStr.vy / verStr.vx);
-		if (verStr.vx < 0)	angle += PI;
+		generateObstacle(owner, objectId, num, pos, angle, &ver);
 
-		generateObstacle(owner, objectId, num, pos, angle, ver);
-
-		eventNotification event;
-		event.playerId = myPlayer->num;
-		event.type = EVENT_OBSTACLE;
-		event.id = objectId;
-		event.objId = num;
-		event.pos = *pos;
-		event.angle = angle;
-		event.ver = ver;
+		eventNotification event = {
+				.playerId = myPlayer->num,
+				.type = EVENT_OBSTACLE,
+				.id = objectId,
+				.objId = num,
+				.pos = *pos,
+				.angle = angle,
+				.ver = ver,
+		};
 		insertEvent(&event);
 
 		if (myPlayer->bullets == 0) {
@@ -574,12 +575,9 @@ static void updateObject() {
  * 障害物データ更新
  */
 static void updateObstacle(OBSTACLE* obstacle) {
-		double ver = obstacle->ver;
-		double angle = obstacle->angle;
 		POSITION* pos = &obstacle->object->pos;
-		pos->x += ver * cos(angle) / FPS;
-		pos->y -= ver * sin(angle) / FPS;
-		// printf("objAngle: %.0f\n", angle * HALF_DEGRESS / PI);
+		pos->x += obstacle->ver.vx / FPS;
+		pos->y += obstacle->ver.vy / FPS;
 
 		// 範囲外の障害物の消去
 		if (pow(pos->x, 2) + pow(pos->y, 2) > pow(WORLD_SIZE, 2)) {
@@ -911,7 +909,7 @@ static void launchEvent(eventNotification *event) {
 #endif
 		switch (event->type) {
 				case EVENT_OBSTACLE:
-						generateObstacle(event->playerId, event->id, event->objId, &event->pos, event->angle, event->ver);
+						generateObstacle(event->playerId, event->id, event->objId, &event->pos, event->angle, &event->ver);
 						break;
 				case EVENT_DELETE:
 						deleteObject(event->id);

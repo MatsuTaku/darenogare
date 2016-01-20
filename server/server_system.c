@@ -16,7 +16,7 @@ static int ownerObject;
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int id);
-static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver);
+static bool generateObstacle(int id, int num, POSITION* pos, double angle, VEROCITY *ver);
 static setPos(POSITION* pos, int x, int y);
 static void initEvent(eventNotification* event);
 static bool averageFromFrequency(double freq);
@@ -136,7 +136,7 @@ static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 		return NULL;
 }
 
-static bool generateObstacle(int id, int num, POSITION* pos, double angle, double ver) {
+static bool generateObstacle(int id, int num, POSITION* pos, double angle, VEROCITY *ver) {
 		OBSTACLE* curObs;
 		if ((curObs = malloc(sizeof(OBSTACLE))) == NULL) {
 				fprintf(stderr, "Out of memory! Failed to insert obstacle.\n");
@@ -150,7 +150,7 @@ static bool generateObstacle(int id, int num, POSITION* pos, double angle, doubl
 		curObs->object->id = id;
 		curObs->num = num;
 		curObs->angle = angle;
-		curObs->ver = ver;
+		curObs->ver = *ver;
 		return true;
 }
 
@@ -181,7 +181,8 @@ static void initEvent(eventNotification* event) {
 		event->pos.x = 0;
 		event->pos.y = 0;
 		event->angle = 0;
-		event->ver = 0;
+		event->ver.vx = 0;
+		event->ver.vy = 0;
 		event->killTo = -1;
 }
 
@@ -214,7 +215,6 @@ static bool averageFromFrequency(double freq) {
 
 static bool randomGenerateObstacle() {
 		double randAngle = (rand() % (HALF_DEGRESS * 2) - HALF_DEGRESS) * PI / HALF_DEGRESS;
-		double randVer = VER_ROCK;
 		/* Set random position in map.
 		 * Get position on edge of world, that's direction to is last position.
 		 * World's shape is circle.
@@ -230,7 +230,12 @@ static bool randomGenerateObstacle() {
 		double x = (-(a * b) + (cos(randAngle) > 0 ? -1 : 1) * sqrt(pow(a * r, 2) - pow(b, 2) + pow(r, 2))) / (pow(a, 2) + 1);
 		double y = (sin(randAngle) > 0 ? -1 : 1) * sqrt(pow(r, 2) - pow(x, 2));
 		POSITION randPos = {x, y};
-		printf("obstacle pos[%.0f: %.0f]\n", x, y);
+		VEROCITY randVer =  {
+				.vx = VER_ROCK * cos(randAngle),
+				.vy = VER_ROCK * sin(randAngle),
+		};
+		printf("obstacle	pos[%.0f: %.0f]\n", x, y);
+		printf("			angle: %f\n", randAngle);
 
 		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
 				eventNotification event;

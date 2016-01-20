@@ -84,7 +84,7 @@ typedef struct {
 		OBSTACLE_TYPE num;
 		int owner;
 		double angle;
-		double ver;
+		VEROCITY ver;
 } OBSTACLE;
 
 
@@ -200,7 +200,7 @@ typedef struct {
 		int id;			// オブジェクトID
 		POSITION pos;
 		double angle;
-		double ver;
+		VEROCITY ver;
 		int killTo;
 } eventNotification;
 

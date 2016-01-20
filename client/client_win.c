@@ -16,7 +16,7 @@
 /*画像ファイルパス*/
 static char gMapImgFile[] = "IMG/WallL.gif"; //マップ
 static char gRockImgFile[] = "IMG/obstacle.png"; //隕石
-static char gItemBoxImgFile[] = "IMG/Itembox.png"; //アイテムボックス
+static char gItemBoxImgFile[] = "IMG/Itembox.gif"; //アイテムボックス
 static char gBoostImgFile[] = "IMG/boost.png"; //噴射炎
 static char gWarningImgFile[] = "IMG/warning.png"; //警告マーク
 static char gBoomImgFile[] = "IMG/boom.png"; //爆発
