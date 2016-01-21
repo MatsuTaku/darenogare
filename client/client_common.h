@@ -2,6 +2,8 @@
 #define _CLIENT_COMMON_H_
 
 #include "../common.h"
+#include "SDL/SDL.h"
+
 
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
@@ -40,6 +42,11 @@ enum deltaFrame {
 		FRAME_LATEST,
 		FRAME_NUM
 };
+
+typedef struct {
+		SDL_Rect src;
+		SDL_Rect dst;
+} Rect;
 
 
 /* client_system.c */

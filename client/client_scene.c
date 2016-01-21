@@ -2,7 +2,7 @@
 #include "client_func.h"
 #include "client_menu.h"
 
-static SCENE scene = SCENE_PREPARE;
+static SCENE scene = SCENE_MENU;
 static SCENE nextScene = SCENE_NONE;
 
 static void sceneInitModule(SCENE cScene);
@@ -20,7 +20,7 @@ void sceneFinal() {
 
 void sceneManagerUpdate() {
 		switch (scene) {
-				case SCENE_PREPARE:
+				case SCENE_MENU:
 						updateMenu();
 						break;
 				case SCENE_BATTLE:
@@ -40,7 +40,7 @@ void sceneManagerUpdate() {
 
 void sceneManagerDraw() {
 		switch (scene) {
-				case SCENE_PREPARE:
+				case SCENE_MENU:
 						drawMenu();
 						break;
 				case SCENE_BATTLE:
@@ -61,7 +61,7 @@ void changeScene(SCENE newScene) {
 
 static void sceneInitModule(SCENE cScene) {
 		switch (cScene) {
-				case SCENE_PREPARE:
+				case SCENE_MENU:
 						initMenu();
 						break;
 				case SCENE_BATTLE:
@@ -75,7 +75,7 @@ static void sceneInitModule(SCENE cScene) {
 
 static void sceneFinalModule(SCENE cScene) {
 		switch (cScene) {
-				case SCENE_PREPARE:
+				case SCENE_MENU:
 						finalMenu();
 						break;
 				case SCENE_BATTLE:

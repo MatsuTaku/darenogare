@@ -3,7 +3,7 @@
 
 typedef enum {
 		SCENE_NONE,
-		SCENE_PREPARE,
+		SCENE_MENU,
 		SCENE_BATTLE,
 } SCENE;
 

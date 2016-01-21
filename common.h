@@ -13,6 +13,7 @@
 
 #define FPS	60
 #define CPS 30
+
 #define MIRI_SECOND		1000
 #define RETENTION_FRAME	0x7f
 

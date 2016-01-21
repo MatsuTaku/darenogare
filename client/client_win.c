@@ -109,11 +109,6 @@ static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static int judgeRange(POSITION *objPos, POSITION *myPos);
 
-typedef struct {
-		SDL_Rect src;
-		SDL_Rect dst;
-} Rect;
-
 char playerName[MAX_CLIENTS][32] = {
 		"RedFox",
 		"BlueHound",

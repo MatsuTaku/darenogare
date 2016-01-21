@@ -119,10 +119,15 @@ static int networkEvent(void* data) {
 static Uint32 timerEvent(Uint32 frame) {
 		int s, e, w;
 		s = SDL_GetTicks();
-		updateEvent();
+		sceneManagerUpdate();
+		// updateEvent();
 		e = SDL_GetTicks();
-		if (skipFrame <= 0)	drawWindow();
-		else	skipFrame--;
+		if (skipFrame <= 0)	{
+				sceneManagerDraw();
+				// drawWindow();
+		} else {
+				skipFrame--;
+		}
 		w = SDL_GetTicks();
 		// printf("time system: %d,	window: %d\n", e - s, w - e);
 }
