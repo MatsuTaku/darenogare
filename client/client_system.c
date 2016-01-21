@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "client_scene.h"
 
 /** Definitions */
 #define nextObj(a)	((a + 1) % MAX_OBJECT)
@@ -12,6 +13,7 @@ PLAYER* player;
 PLAYER* myPlayer;
 
 /** Static Variables */
+static int clientId;
 static int clientNum;
 static int curObjNum = 0;
 static int selfObject;
@@ -56,10 +58,16 @@ static bool insertEvent(eventNotification* event);
  *	return: Error = -1
  */
 int initGameSystem(int myId, int playerNum) {
+		clientId = myId;
+		clientNum = playerNum;
+
+		return initSystem();
+}
+
+int initSystem() {
 		int i;
 		srand((unsigned)time(NULL));
 
-		clientNum = playerNum;
 		for (i = 0; i < FRAME_NUM; i++) {
 				getEntity[i].lastFrame = 0;
 				getEntity[i].latestFrame = 0;
@@ -72,24 +80,24 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* curObj = &object[i];
 				initObject(curObj);
 		}
-		selfObject = 0x1000 * (myId + 1);
+		selfObject = 0x1000 * (clientId + 1);
 
-		myPlayer = &player[myId];
+		myPlayer = &player[clientId];
 
-		for (i = 0; i < playerNum; i++) {
+		for (i = 0; i < clientNum; i++) {
 				PLAYER* curPlayer = &player[i];
 				if (insertObject(curPlayer, i, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
-				initPlayer(curPlayer, i, playerNum);
+				initPlayer(curPlayer, i, clientNum);
 		}
 
 		return 0;
 }
 
 
-void destroySystem() {
+void finalSystem() {
 		int i;
 		// malloc の消去
 		for (i = 0; i < MAX_OBJECT; i++) {
@@ -789,9 +797,20 @@ static double getObjectSize(OBJECT* object) {
 						size = RANGE_ITEM;
 						break;
 				case OBJECT_OBSTACLE:
-						size = RANGE_ROCK;
+						switch (((OBSTACLE *)object->typeBuffer)->num) {
+								case OBS_ROCK:
+										size = RANGE_ROCK;
+										break;
+								case OBS_MISSILE:
+										size = RANGE_MISSILE;
+												break;
+								case OBS_LASER:
+										size = RANGE_LASER;
+												break;
+								default:
+										break;
+						}
 						break;
-				case OBJECT_EMPTY:
 				default:
 						break;
 		}

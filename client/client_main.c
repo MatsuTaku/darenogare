@@ -1,7 +1,8 @@
+#include "SDL/SDL.h"
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
-#include <SDL/SDL.h>
+#include "client_scene.h"
 
 static int networkEvent(void* data);
 static Uint32 drawEvent(Uint32 interval, void* param);
@@ -9,12 +10,12 @@ static Uint32 timerEvent(Uint32 frame);
 static int skipFrame = 0;
 
 
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
 		int		num;
 		int 	clientID;
 		bool	endFlag = false;
 		bool 	endNet = false;
-		char	localHostName[]="localhost";
+		char	localHostName[] = "localhost";
 		char	*serverName;
 
 		int		frame = -1;
@@ -45,6 +46,8 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr,"setup failed : InitWindows\n");
 				return -1;
 		}
+
+		sceneInit();
 
 
 		/* ネットワーク処理スレッド作成 */
@@ -83,7 +86,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		destroyWindow();
-		destroySystem();
+		sceneFinal();
 		closeSoc();
 		return 0;
 }

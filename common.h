@@ -113,6 +113,8 @@ typedef enum {
 		RANGE_MINIMUM = 20,
 		RANGE_ITEM = 25,
 		RANGE_ROCK = 15,
+		RANGE_MISSILE = 26,
+		RANGE_LASER = 200,
 } OBJECT_RANGE;
 
 
@@ -231,12 +233,14 @@ typedef struct {
 } entityStateGet;
 
 
+/*
 // ゲームシーン
 typedef enum {
+		SCENE_NONE,
 		SCENE_PREPARE,
 		SCENE_BATTLE,
-		SCENE_DEAD,
-		SCENE_FINISH
+		SCENE_RESULT,
 } SCENE;
+*/
 
 #endif

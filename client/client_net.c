@@ -1,8 +1,9 @@
+#include <sys/socket.h>
+#include <netdb.h>
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
-#include <sys/socket.h>
-#include <netdb.h>
+#include "client_scene.h"
 
 #define	BUF_SIZE	100
 

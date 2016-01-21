@@ -7,6 +7,7 @@
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "client_scene.h"
 
 #define WINDOW_WIDTH	1000
 #define WINDOW_HEIGHT	600
@@ -90,7 +91,6 @@ static SDL_Surface *gTargetImage; //中心位置への方向
 
 /*関数*/
 static int initImage();
-static SDL_Surface* loadImage(char* imageName);
 static void drawObject();
 static void drawChara(POSITION *charaPos, int chara_id);
 static void drawArroundEffect(MODE mode, SDL_Surface *c_window);
@@ -185,7 +185,6 @@ int initWindows(int clientID, int num) {
 
 /*ゲーム画面の描画*/
 int drawWindow() {
-
 		int endFlag = 1;
 		clearWindow(); //ウィンドウのクリア
 		now = SDL_GetTicks(); //現在の時刻を取得
@@ -215,6 +214,7 @@ int drawWindow() {
 		SDL_Flip(gMainWindow);//描画更新
 		return endFlag; //endflagは1で返す(継続)
 }
+
 
 /*サーフェスの解放*/
 void destroyWindow(void) {
@@ -348,7 +348,7 @@ static int initImage(void) { //画像の読み込み
 }
 
 
-static SDL_Surface* loadImage(char* imageName) {
+SDL_Surface* loadImage(char* imageName) {
 		SDL_Surface* image;
 		if (image = IMG_Load(imageName))
 				printf("Load [%s]\n", imageName);
