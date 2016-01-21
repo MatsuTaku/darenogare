@@ -629,7 +629,8 @@ void drawForecast(int id, POSITION* charaPos){
 		POSITION  fcPos,diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
 		SDL_Surface* reImage;
-		double angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
+		int angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
+		double r_angle = player[id].dir; //角度（ラジアン）
 
 		fcPos.x = charaPos->x + (gLaserImage[0]->w *cos(player[id].dir));
 		fcPos.y = charaPos->y + (gLaserImage[0]->h *sin(player[id].dir));
@@ -638,8 +639,11 @@ void drawForecast(int id, POSITION* charaPos){
 		int dy = reImage->h - gLaserImage[0]->h;
 		src_rect.x = 0;		src_rect.y = 0;
 		src_rect.w = reImage->w;	src_rect.h = reImage->h;
-		diffPos.x = charaPos->x - myPos->x - (gLaserImage[0]->w /2) - dx/2;
-		diffPos.y = charaPos->y - myPos->y - (gLaserImage[0]->h /2) - dy/2;
+		double rx, ry;
+		rx = reImage->w/2*cos(r_angle);
+		ry = -reImage->h/2*sin(r_angle);
+		diffPos.x = charaPos->x - myPos->x - (gLaserImage[0]->w /2) + rx - dx/2;
+		diffPos.y = charaPos->y - myPos->y - (gLaserImage[0]->h /2) + ry - dy/2;
 		adjustWindowPosition(&dst_rect, &diffPos);
 		SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect);
 		if(reImage != NULL){
