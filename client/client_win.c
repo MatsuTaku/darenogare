@@ -19,7 +19,7 @@ static char gMapImgFile[] = "IMG/WallL.gif"; //マップ
 static char gRockImgFile[] = "IMG/obstacle.png"; //隕石
 static char gItemBoxImgFile[] = "IMG/Itembox.gif"; //アイテムボックス
 static char gBoostImgFile[] = "IMG/boost.png"; //噴射炎
-static char gWarningImgFile[] = "IMG/warning.png"; //警告マーク
+static char gWarningImgFile[] = "IMG/warning.gif"; //警告マーク
 static char gBoomImgFile[] = "IMG/boom.png"; //爆発
 static char gDeadIconImgFile[] = "IMG/Deadicon.png"; //死亡時のキャラ
 static char gMiniMapImgFile[] = "IMG/minimap.png"; //ミニマップ
@@ -251,7 +251,6 @@ void destroyWindow(void) {
  */
 bool windowEvent() {
 		SDL_Event event;
-		bool endFlag = false;
 
 		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
 		while (SDL_PollEvent(&event)) {
@@ -287,11 +286,10 @@ bool windowEvent() {
 								}
 								break;
 						case SDL_QUIT:
-								endFlag = true;
 #ifndef NDEBUG
 								printf("Press close button\n");
 #endif
-								return endFlag;
+								return true;
 						default:
 								break;
 				}
@@ -309,7 +307,7 @@ bool windowEvent() {
 		} else
 				fixRotation();
 
-		return endFlag;
+		return false;
 }
 
 

@@ -64,10 +64,12 @@ int main (int argc, char *argv[]) {
 		Uint32 loopInterval = ms / src;
 		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
-		while(!(endFlag = windowEvent()) && !endNet){
+		while(!(endFlag = sceneManagerEvent()) && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
+
 				timerEvent(++frame);
+
 				endTime = SDL_GetTicks() * timeRate;
 				if (skipFrame <= 0) {
 						if (endTime < toTime)	SDL_Delay((toTime - endTime) / timeRate);

@@ -1,10 +1,11 @@
 #include "client_scene.h"
 #include "client_func.h"
-#include "client_menu.h"
+#include "client_title.h"
 
-static SCENE scene = SCENE_MENU;
+static SCENE scene = SCENE_TITLE;
 static SCENE nextScene = SCENE_NONE;
 
+static void switchScene();
 static void sceneInitModule(SCENE cScene);
 static void sceneFinalModule(SCENE cScene);
 
@@ -18,10 +19,28 @@ void sceneFinal() {
 }
 
 
+bool sceneManagerEvent() {
+		switchScene();
+		switch (scene) {
+				case SCENE_TITLE:
+						return eventTitle();
+				case SCENE_LOADING:
+						return eventLoading();
+				case SCENE_BATTLE:
+						return windowEvent();
+				default:
+						break;
+		}
+		return false;
+}
+
 void sceneManagerUpdate() {
 		switch (scene) {
-				case SCENE_MENU:
-						updateMenu();
+				case SCENE_TITLE:
+						updateTitle();
+						break;
+				case SCENE_LOADING:
+						updateLoading();
 						break;
 				case SCENE_BATTLE:
 						updateEvent();
@@ -29,19 +48,16 @@ void sceneManagerUpdate() {
 				default:
 						break;
 		}
-		if (nextScene != SCENE_NONE) {
-				sceneFinalModule(scene);
-				scene = nextScene;
-				nextScene = SCENE_NONE;
-				sceneInitModule(scene);
-		}
 }
 
 
 void sceneManagerDraw() {
 		switch (scene) {
-				case SCENE_MENU:
-						drawMenu();
+				case SCENE_TITLE:
+						drawTitle();
+						break;
+				case SCENE_LOADING:
+						drawLoading();
 						break;
 				case SCENE_BATTLE:
 						drawWindow();
@@ -53,16 +69,31 @@ void sceneManagerDraw() {
 
 
 void changeScene(SCENE newScene) {
-		scene = newScene;
+		nextScene = newScene;
 }
 
 
 /********* static **********/
 
+static void switchScene() {
+		if (nextScene != SCENE_NONE) {
+				sceneFinalModule(scene);
+				scene = nextScene;
+				nextScene = SCENE_NONE;
+				sceneInitModule(scene);
+#ifndef NDEBUG
+				printf("Change scene: %d\n", scene);
+#endif
+		}
+}
+
 static void sceneInitModule(SCENE cScene) {
 		switch (cScene) {
-				case SCENE_MENU:
-						initMenu();
+				case SCENE_TITLE:
+						initTitle();
+						break;
+				case SCENE_LOADING:
+						initLoading();
 						break;
 				case SCENE_BATTLE:
 						initSystem();
@@ -75,8 +106,11 @@ static void sceneInitModule(SCENE cScene) {
 
 static void sceneFinalModule(SCENE cScene) {
 		switch (cScene) {
-				case SCENE_MENU:
-						finalMenu();
+				case SCENE_TITLE:
+						finalTitle();
+						break;
+				case SCENE_LOADING:
+						finalLoading();
 						break;
 				case SCENE_BATTLE:
 						finalSystem();
