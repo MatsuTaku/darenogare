@@ -18,7 +18,7 @@ static char gMapImgFile[] = "IMG/WallL.gif"; //マップ
 static char gRockImgFile[] = "IMG/obstacle.png"; //隕石
 static char gItemBoxImgFile[] = "IMG/Itembox.gif"; //アイテムボックス
 static char gBoostImgFile[] = "IMG/boost.png"; //噴射炎
-static char gWarningImgFile[] = "IMG/warning.png"; //警告マーク
+static char gWarningImgFile[] = "IMG/warning.gif"; //警告マーク
 static char gBoomImgFile[] = "IMG/boom.png"; //爆発
 static char gDeadIconImgFile[] = "IMG/Deadicon.png"; //死亡時のキャラ
 static char gMiniMapImgFile[] = "IMG/minimap.png"; //ミニマップ
@@ -51,7 +51,7 @@ static char gIconImgFile[MAX_CLIENTS][20] = { //アイコン
 };
 
 /* フォントファイル */
-static char gFontFile[] = "/usr/share/fonts/opentype/ipafont-mincho/ipamp.ttf";
+static char gFontFile[] = "IMG/STJEDISE.TTF";//"/usr/share/fonts/opentype/ipafont-mincho/ipamp.ttf";
 
 /* 変数 */
 static int now, interval; //アニメーション用の時間変数
@@ -668,7 +668,7 @@ void drawDeadChara(POSITION *charaPos, int chara_id){
 			if(!myPlayer->alive){ //"GAME OVER"の描写
 				SDL_Surface *strings;
 				SDL_Color red = {204, 0, 0};
-				strings = TTF_RenderUTF8_Blended(gFont, "GAME OVER", red);
+				strings = TTF_RenderUTF8_Blended(gFont, "game over", red);
 				SDL_Rect go_dst = {gMainWindow->w/2 - strings->w/2, gMainWindow->h/2 - strings->h/2};
 				SDL_Rect go_src = {0, 0, strings->w, strings->h};
 				SDL_BlitSurface(strings, &go_src, gMainWindow, &go_dst);
@@ -784,7 +784,7 @@ void drawWarning(void){
 		SDL_BlitSurface(gWarningImage, &warn_src, gMainWindow, &warn_dst); //警告マークの表示
 		l = myPlayer->lastTime/1000; //残り時間の整数部分
 		m = myPlayer->lastTime%1000; //少数部分
-		sprintf(warn_st ,"Back to Area!!!    %d.%d", l,m);
+		sprintf(warn_st ,"Back to Area    %d.%d", l,m);
 		TypeWarnStrings(warn_st); //警告文の描画
 
 		//中心への矢印
@@ -932,14 +932,14 @@ void drawMiniMap(POSITION* myPos) {
 										if (id = myID) {
 												filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
 										} else {
-												filledCircleColor(gMiniMap, point.x, point.y, size, 0xffffd770); //敵
+												filledCircleColor(gMiniMap, point.x, point.y, size, 0xffd770ff); //敵
 										}
 										if(player[id].action == ACTION_CD_LASER){ //レーザ予測線
 											for(p = 0; p < 3; p++){
 												lineColor(gMiniMap, point.x, point.y, point.x + 50*cos(player[id].dir)+p, point.y - 50*sin(player[id].dir)+p, 0xb22222ff);
 											}
 											if(id != myID){
-														TypeWarnStrings("Warning Laser!!!");
+														TypeWarnStrings("Warning Laser");
 											}
 										}
 
