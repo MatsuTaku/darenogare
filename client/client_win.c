@@ -934,15 +934,6 @@ void drawMiniMap(POSITION* myPos) {
 										} else {
 												filledCircleColor(gMiniMap, point.x, point.y, size, 0xffd770ff); //敵
 										}
-										if(player[id].action == ACTION_CD_LASER){ //レーザ予測線
-											for(p = 0; p < 3; p++){
-												lineColor(gMiniMap, point.x, point.y, point.x + 50*cos(player[id].dir)+p, point.y - 50*sin(player[id].dir)+p, 0xb22222ff);
-											}
-											if(id != myID){
-														TypeWarnStrings("Warning Laser");
-											}
-										}
-
 										break;
 								case OBJECT_OBSTACLE: //障害物
 										filledCircleColor(gMiniMap, point.x, point.y, size, 0xff0000ff);
@@ -955,8 +946,23 @@ void drawMiniMap(POSITION* myPos) {
 						}
 				}
 		}
-
-		//3.gMiniMapをメインウィンドウに貼付け
+ 		//3.レーザ予測線の描画
+		for(i = 0; i < MAX_CLIENTS; i++){
+			if(player[i].action == ACTION_CD_LASER){ //レーザ予測線
+				double lx = player[i].object->pos.x - myPos->x;
+				double ly = player[i].object->pos.y - myPos->y;
+				POSITION point;
+				point.x = center.x + lx;
+				point.y = center.y + ly;
+				for(p = 0; p < 3; p++){
+					lineColor(gMiniMap, point.x, point.y, point.x + 50*cos(player[i].dir)+p, point.y - 50*sin(player[i].dir)+p, 0xb22222ff);
+				}
+				if(i != myID){
+					TypeWarnStrings("Warning Laser");
+				}
+			}
+		}
+		//4.gMiniMapをメインウィンドウに貼付け
 		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 		SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
