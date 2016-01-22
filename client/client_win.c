@@ -96,6 +96,7 @@ static void drawChara(POSITION *charaPos, int chara_id);
 static void drawArroundEffect(MODE mode, SDL_Surface *c_window);
 static void drawBoost(int chara_id, SDL_Surface *c_window);
 static void drawForecast(int id, POSITION *charaPos);
+static void drawline(SDL_Surface *window, double x1, double y1, double x2, double y2, Uint32 pixel);
 static void drawDeadChara(POSITION *charaPos, int chara_id);
 static void drawItem(POSITION *itemPos, int item_id);
 static void drawObstacle(POSITION *obsPos, int obs_id, double obs_dir, int owner);
@@ -440,7 +441,8 @@ void drawObject(void) {
 }
 
 
-/*範囲内のオブジェクトを検知*/
+/*範囲内のオブジェクトを検知
+返り値が正で範囲内*/
 int judgeRange(POSITION *objPos, POSITION *myPos){
 		int range_w = WINDOW_WIDTH/2 + 200;
 		int range_h = WINDOW_HEIGHT/2 + 200;
@@ -471,7 +473,8 @@ void drawChara(POSITION *charaPos, int chara_id){
 
 		//c_windowの透過処理
 		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h +60, 32, rmask, gmask, bmask, amask);
-		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0x00, 0x00, 0x00)); //黒を透過
+		SDL_FillRect(c_window, NULL, 0x00000000); //範囲外だけ黒で塗り潰し
+		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0, 0, 0)); //黒を透過
 		c_window = SDL_DisplayFormat(c_window);
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
@@ -632,8 +635,31 @@ void drawForecast(int id, POSITION* charaPos){
 		int angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
 		double r_angle = player[id].dir; //角度（ラジアン）
 		int rmask, gmask, amask, bmask;
+		SDL_Rect start;
+		POSITION end;
 
-		/*1.予測線をf_windowに描画*/
+		int i;
+		for(i =0; i < 5; i++){
+		if(judgeRange(charaPos, myPos) > 0){
+			diffPos.x = charaPos->x - myPos->x + i*3; 
+			diffPos.y = charaPos->y - myPos->y + i*3;
+			adjustWindowPosition(&start, &diffPos);
+		}else{
+			double dir = atan2(-(charaPos->y - myPos->y), charaPos->x - myPos->x);
+			start.x = gMainWindow->w/2 - gMainWindow->w/2*cos(dir) + i*3;
+			start.y = gMainWindow->h/2 + gMainWindow->h/2*sin(dir) + i*3;
+		}
+			end.x = start.x + (gMainWindow->w * cos(r_angle));
+			end.y = start.y - (gMainWindow->h * sin(r_angle));
+			
+			lineColor(gMainWindow, start.x, start.y, end.x, end.y, SDL_MapRGBA(gMainWindow->format, 255,0,i*50,255));
+		}
+
+		
+
+		
+/*
+		//1.予測線をf_windowに描画
 		f_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gLaserImage[0]->w + 20, gLaserImage[0]->h, 32, 0, 0, 0, 0);
 		SDL_SetColorKey(f_window, SDL_SRCCOLORKEY, SDL_MapRGB(f_window->format, 0, 0, 0)); //黒を透過
 		f_window = SDL_DisplayFormat(f_window);
@@ -641,7 +667,7 @@ void drawForecast(int id, POSITION* charaPos){
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gLaserImage[0], &src_rect, f_window, &dst_rect);
 
-		/*2.f_windowをメインウィンドウに貼付け*/
+		//2.f_windowをメインウィンドウに貼付け
 		reImage = rotozoomSurface(f_window, angle, 1.0, 1.0); //画像の回転
 		int dx = reImage->w - f_window->w; //調整差分
 		int dy = reImage->h - f_window->h;
@@ -653,7 +679,54 @@ void drawForecast(int id, POSITION* charaPos){
 		SDL_BlitSurface(reImage, &src_rect, gMainWindow, &dst_rect);
 
 		SDL_FreeSurface(reImage);
-		SDL_FreeSurface(f_window);
+		SDL_FreeSurface(f_window); */
+}
+
+/*点を打つ*/
+void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel) 
+{
+    int bpp=surface->format->BytesPerPixel;
+    Uint8 *p=(Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp){
+    case 1:
+        *p=pixel;
+        break;
+
+    case 2:
+        *(Uint16 *)p=pixel;
+    break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN){
+            p[0]=(pixel>>16) & 0xff;
+            p[1]=(pixel>>8) & 0xff;
+            p[2]=pixel & 0xff;
+        } else {
+            p[0]=pixel & 0xff;
+            p[1]=(pixel>>8) & 0xff;
+            p[2]=(pixel>>16) & 0xff;
+        }
+        break;
+
+    case 4:
+        *(Uint32 *)p=pixel;
+        break;
+    }
+} 
+
+/*線を引く*/
+void drawline(SDL_Surface *window, double x1, double y1, double x2, double y2, Uint32 pixel)
+{
+	int i,j;
+	double a,b;
+
+	a=(y1-y2)/(x1-x2);  //傾きを計算
+	b=y1-a*x1;            //切片を計算
+	for(i=x1; i<=x2;i++){
+		j=a*i+b;
+	putpixel(window, i, j, pixel);
+    }
 }
 
 
@@ -754,8 +827,8 @@ void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
 		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1.0);
 		int dx = reImage->w - gLaserImage[1]->w;
 		int dy = reImage->h - gLaserImage[1]->h;
-		int so = ((player[owner].object->pos.x) * (player[owner].object->pos.x)) + ((player[owner].object->pos.y) * (player[owner].object->pos.y));
-		int sl = (lsPos->x * lsPos->x) + (lsPos->y * lsPos->y);
+		int so = pow(player[owner].object->pos.x, 2) + pow(player[owner].object->pos.y,2);
+		int sl = pow(lsPos->x,2) + pow(lsPos->y,2);
 		entity.src.x = 0;	entity.src.y = 0;
 		entity.src.w = abs(sl - so);
 		entity.src.h = reImage->h;
@@ -898,16 +971,17 @@ void drawStatus(void){
 /*ミニマップの描画*/
 void drawMiniMap(POSITION* myPos) {
 		//1.gMiniMapの初期化
-		SDL_FillRect(gMiniMap, NULL, 0xffffff); //白で塗りつぶし
-		SDL_SetColorKey(gMiniMap, SDL_SRCCOLORKEY, SDL_MapRGB(gMiniMap->format, 255, 255, 255)); //白を透過
+		SDL_FillRect(gMiniMap, NULL, 0xa9a9a9); //白で塗りつぶし
+		SDL_SetColorKey(gMiniMap, SDL_SRCCOLORKEY, SDL_MapRGB(gMiniMap->format, 169, 169, 169)); //白を透過
 		gMiniMap = SDL_DisplayFormat(gMiniMap);
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
 		//2.オブジェクトの位置をgMiniMapに描写
-		int i, p;
+		int i, p, k;
 		int rImg = 60;
+		int size = 2;
 		int asp = 40; //比率
 		int rd = rImg * asp; //ミニマップの半径
 		int id;
@@ -925,15 +999,8 @@ void drawMiniMap(POSITION* myPos) {
 						point.x = center.x + dx / asp;
 						point.y = center.y + dy / asp;
 
-						int size = 2;
 						switch(object[i].type) {
 								case OBJECT_CHARACTER: //キャラクター
-										id = ((PLAYER*)object[i].typeBuffer)->num;
-										if (id = myID) {
-												filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
-										} else {
-												filledCircleColor(gMiniMap, point.x, point.y, size, 0xffd770ff); //敵
-										}
 										break;
 								case OBJECT_OBSTACLE: //障害物
 										filledCircleColor(gMiniMap, point.x, point.y, size, 0xff0000ff);
@@ -946,22 +1013,41 @@ void drawMiniMap(POSITION* myPos) {
 						}
 				}
 		}
- 		//3.レーザ予測線の描画
-		for(i = 0; i < MAX_CLIENTS; i++){
-			if(player[i].action == ACTION_CD_LASER){ //レーザ予測線
-				double lx = player[i].object->pos.x - myPos->x;
-				double ly = player[i].object->pos.y - myPos->y;
-				POSITION point;
-				point.x = center.x + lx;
-				point.y = center.y + ly;
+
+ 		//3.キャラクターの描画
+		for(k = 0; k < MAX_CLIENTS; k++){
+			if(player[k].object == NULL) break;
+			double lx = player[k].object->pos.x - myPos->x;
+			double ly = player[k].object->pos.y - myPos->y;
+			double range = pow(lx, 2) + pow(ly, 2);
+			POSITION ps;
+			//範囲毎に描画位置を指定
+			if (range < pow(rd, 2)) {
+				ps.x = center.x + lx / asp;
+				ps.y = center.y + ly / asp;
+			}else{
+				double dir;
+				dir = atan2(-(player[k].object->pos.y - myPos->y), player[k].object->pos.x - myPos->x); 
+				ps.x = center.x + gMiniMapImage->w/2*cos(dir);
+				ps.y = center.y - gMiniMapImage->h/2*sin(dir);
+			}
+			//位置を描画
+			if (k == myID) {
+				filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
+			} else {
+				filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xffd770ff); //敵
+			}
+			//レーザ予測線の描画
+			if(player[k].action == ACTION_CD_LASER){
 				for(p = 0; p < 3; p++){
-					lineColor(gMiniMap, point.x, point.y, point.x + 50*cos(player[i].dir)+p, point.y - 50*sin(player[i].dir)+p, 0xb22222ff);
+					lineColor(gMiniMap, ps.x, ps.y, ps.x + 50*cos(player[k].dir)+p, ps.y - 50*sin(player[k].dir)+p, 0xb22222ff);
 				}
-				if(i != myID){
+				if(k != myID){
 					TypeWarnStrings("Warning Laser");
 				}
 			}
 		}
+
 		//4.gMiniMapをメインウィンドウに貼付け
 		SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 		SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
