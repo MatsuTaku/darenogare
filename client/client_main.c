@@ -37,17 +37,12 @@ int main (int argc, char *argv[]) {
 				return -1;
 		}
 
-		if (initGameSystem(clientID, num) == -1) {
-				fprintf(stderr, "initalize failed: initGameSystem\n");
-				return -1;
-		}
+		sceneInit();
 
 		if (initWindows(clientID, num) == -1) {
 				fprintf(stderr,"setup failed : InitWindows\n");
 				return -1;
 		}
-
-		sceneInit();
 
 
 		/* ネットワーク処理スレッド作成 */

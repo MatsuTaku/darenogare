@@ -68,6 +68,39 @@ void sceneManagerDraw() {
 }
 
 
+bool sceneManagerRecv(syncData *data) {
+		switch (scene) {
+				case SCENE_TITLE:
+						break;
+				case SCENE_LOADING:
+						break;
+				case SCENE_BATTLE:
+						if (data->get.endFlag)
+								return true;
+						reflectDelta(data);
+						break;
+				default:
+						break;
+		}
+		return false;
+}
+
+
+void sceneManagerSend() {
+		switch (scene) {
+				case SCENE_TITLE:
+						break;
+				case SCENE_LOADING:
+						break;
+				case SCENE_BATTLE:
+						sendEntity();
+						break;
+				default:
+						break;
+		}
+}
+
+
 void changeScene(SCENE newScene) {
 		nextScene = newScene;
 }

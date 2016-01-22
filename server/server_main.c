@@ -1,5 +1,6 @@
-#include<SDL/SDL.h>
-#include"server_common.h"
+#include "SDL/SDL.h"
+#include "server_common.h"
+#include "server_scene.h"
 
 static Uint32 SignalHandler(Uint32 interval, void *param);
 
@@ -22,15 +23,12 @@ int main(int argc,char *argv[]) {
 				exit(-1);
 		}
 
-		if (initSystem(num) < 0) {
-				printf("failed to initSystem!\n");
+		if (setUpServer(num) == -1) {
+				fprintf(stderr, "Cannot setup server!\n");
 				exit(-1);
 		}
 
-		if(setUpServer(num) == -1){
-				fprintf(stderr,"Cannot setup server\n");
-				exit(-1);
-		}
+		sceneInit();
 
 		/* ネットワークループ */
 		int ms = MIRI_SECOND;
@@ -41,7 +39,9 @@ int main(int argc,char *argv[]) {
 		while(!endFlag) {
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
-				endFlag = sendRecvManager();
+
+				endFlag = sceneManagerSync();
+
 				endTime = SDL_GetTicks() * timeRate;
 				if (endTime < toTime) {
 						SDL_Delay((toTime - endTime) / timeRate);

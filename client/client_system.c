@@ -57,11 +57,9 @@ static bool insertEvent(eventNotification* event);
  *	ゲームシステムの初期化
  *	return: Error = -1
  */
-int initGameSystem(int myId, int playerNum) {
+void initGameSystem(int myId, int playerNum) {
 		clientId = myId;
 		clientNum = playerNum;
-
-		return initSystem();
 }
 
 int initSystem() {
@@ -962,7 +960,7 @@ void sendEntity() {
 		entityStateSet data = {
 				.latestFrame = latestFrame,
 				.endFlag = false,
-				.clientId = myPlayer->num,
+				.clientId = clientId,
 				.pos = myPlayer->object->pos,
 				.player = *myPlayer,
 		};
@@ -972,6 +970,6 @@ void sendEntity() {
 
 		sendData(&data, sizeof(entityStateSet));
 #ifndef NDEBUG
-		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
+		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

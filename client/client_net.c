@@ -60,6 +60,8 @@ int setUpClient(char *hostName,int *clientID,int *num)
 
 		setMask();
 
+		initGameSystem(*clientID, *num);
+
 		return 0;
 }
 
@@ -87,14 +89,12 @@ bool sendRecvManager(void) {
 		select(gWidth,&readOK,NULL,NULL,&timeout);
 		if(FD_ISSET(gSocket,&readOK)){
 				/* サーバーからのデータを反映 */
-				entityStateGet data;
-				recvData(&data, sizeof(entityStateGet)); /* コマンドを読み込む */
-				endFlag = executeCommand(&data);
-
+				syncData data;
+				recvData(&data, sizeof(syncData));
+				endFlag = sceneManagerRecv(&data);
 		}
 
-		/* send player entity */
-		sendEntity();
+		sceneManagerSend();
 
 		return endFlag;
 }
@@ -180,9 +180,9 @@ static void setMask(void)
 		int	i;
 
 		FD_ZERO(&gMask);
-		FD_SET(gSocket,&gMask);
+		FD_SET(gSocket, &gMask);
 
-		gWidth = gSocket+1;
+		gWidth = gSocket + 1;
 }
 
 
@@ -200,3 +200,17 @@ int recvData(void *data,int dataSize)
 
 		return read(gSocket,data,dataSize);
 }
+
+/*********
+ 終了データ送信
+ **********/
+ void sendEndCommand(void) {
+		 #ifndef NDEBUG
+		 printf("#####\nsendEndCommand\n");
+#endif
+		 syncData data;
+		 data.common.type = DATA_COMMON;
+		 data.common.endFlag = true;
+
+		 sendData(&data, sizeof(syncData));
+ }

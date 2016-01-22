@@ -187,6 +187,14 @@ typedef struct {
 } ASSEMBLY;
 
 
+/* sync data server */
+typedef enum {
+		DATA_COMMON,
+		DATA_ES_GET,
+		DATA_ES_SET,
+		DATA_PREPARE,
+} DATA_TYPE;
+
 // イベント通知
 typedef enum {
 		EVENT_NONE,
@@ -207,17 +215,16 @@ typedef struct {
 		int killTo;
 } eventNotification;
 
-
 // 通信データ(client -> server)
 typedef struct {
-		int latestFrame;// 受信した最新フレーム 
+		DATA_TYPE type;
 		bool endFlag;	// 終了フラグ
+		int latestFrame;// 受信した最新フレーム 
 		int clientId;	// ユーザーID
 		POSITION pos;	// プレイヤーポジション
 		PLAYER player;	// プレイヤーのデータ
 		eventNotification event[MAX_EVENT];
 } entityStateSet;
-
 
 // 通信データ(server -> client)
 typedef struct {
@@ -226,22 +233,37 @@ typedef struct {
 } DELTA;
 
 typedef struct {
+		DATA_TYPE type;
+		bool endFlag;
 		int latestFrame;
 		int lastFrame;
-		bool endFlag;
 		DELTA delta;
 		eventNotification event[MAX_EVENT];
 } entityStateGet;
 
+typedef struct {
+		DATA_TYPE type;
+		bool endFlag;
+} statePrepare;
 
-/*
-// ゲームシーン
+typedef union {
+		DATA_TYPE type;
+		struct {
+				DATA_TYPE type;
+				bool endFlag;
+		} common;
+		entityStateGet get;
+		entityStateSet set;
+		statePrepare prepare;
+} syncData;
+
+
+// scene manager
 typedef enum {
 		SCENE_NONE,
-		SCENE_PREPARE,
+		SCENE_TITLE,
+		SCENE_LOADING,
 		SCENE_BATTLE,
-		SCENE_RESULT,
 } SCENE;
-*/
 
 #endif

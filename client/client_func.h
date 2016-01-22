@@ -29,7 +29,7 @@ extern bool executeCommand(entityStateGet* data);
 extern void sendEndCommand(void);
 
 /* client_system.c */
-extern int initGameSystem(int myId, int playerNum);
+extern void initGameSystem(int myId, int playerNum);
 extern int initSystem();
 extern void finalSystem();
 extern void updateEvent();
