@@ -42,7 +42,7 @@ extern void fixRotation();
 extern void acceleration();
 extern void deceleration();
 extern void inertialNavigation();
-extern void relectDelta(entityStateGet* data);
+extern void relectDelta(syncData);
 extern void sendEntity();
 
 #endif

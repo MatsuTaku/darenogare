@@ -20,4 +20,4 @@ client_win.o: client_win.c client_func.h ../common.h client_scene.h
 client_system.o: client_system.c client_func.h ../common.h client_scene.h
 client_scene.o: client_scene.c client_scene.h client_func.h client_title.h
 client_title.o: client_title.c client_title.h client_scene.h client_func.h client_common.h
-client_loading.o: client_loading.c client_loading.h client_scene.h client_func.h client_common.h
+client_loading.o: client_loading.c client_loading.h client_scene.h client_func.h client_common.h ../common.h

@@ -69,14 +69,15 @@ void sceneManagerDraw() {
 
 
 bool sceneManagerRecv(syncData *data) {
+		if (data->common.endFlag)
+				return true;
 		switch (scene) {
 				case SCENE_TITLE:
 						break;
 				case SCENE_LOADING:
+						recvLoading(data);
 						break;
 				case SCENE_BATTLE:
-						if (data->get.endFlag)
-								return true;
 						reflectDelta(data);
 						break;
 				default:

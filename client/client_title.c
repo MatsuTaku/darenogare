@@ -22,11 +22,15 @@ static char fSWFontFile[] = "IMG/STJEDISE.TTF";
 static TTF_Font *fSWFont;
 static SDL_Color colorOrange = {0xEF, 0xB4, 0x02};
 
+static bool loadingFlag;
+
 void initTitle() {
 		printf("initTitle\n");
 
 		int i;
 		srand((unsigned)time(NULL));
+
+		loadingFlag = false;
 
 		gTitleImg = loadImage(gTitleImgFile);
 		int BGIndex = rand() % BG_NUM;
@@ -56,7 +60,7 @@ bool eventTitle() {
 						case SDL_JOYBUTTONDOWN:
 								switch (event.jbutton.button) {
 										case BUTTON_CIRCLE:
-												changeScene(SCENE_LOADING);
+												loadingFlag = true;
 												break;
 								}
 								break;
@@ -68,6 +72,9 @@ bool eventTitle() {
 }
 
 void updateTitle() {
+		if (loadingFlag) {
+				changeScene(SCENE_LOADING);
+		}
 }
 
 void drawTitle() {

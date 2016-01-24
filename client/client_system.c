@@ -127,7 +127,7 @@ static bool deleteObject(int objectId) {
 				curObject = &object[i];
 				if (curObject->type == OBJECT_EMPTY)	continue;
 				if (curObject->id == objectId) {
-						free((OBSTACLE *)curObject->typeBuffer);
+						free(curObject->typeBuffer);
 						initObject(curObject);
 						printf("delete object[%d]\n", objectId);
 						return true;
@@ -840,7 +840,9 @@ static bool judgeSafety(POSITION* pos) {
 /***********
  * server method
  */
-void reflectDelta(entityStateGet* data) {
+void reflectDelta(syncData* sData) {
+		if (sData->type != DATA_ES_GET)	return;
+		entityStateGet *data = &sData->get;
 		latestFrame = data->latestFrame;
 		bool recieved = data->lastFrame > getEntity[FRAME_LAST].lastFrame;
 		getEntity[FRAME_LAST] = getEntity[FRAME_LATEST];
@@ -957,18 +959,21 @@ static bool insertEvent(eventNotification* event) {
 
 
 void sendEntity() {
-		entityStateSet data = {
-				.latestFrame = latestFrame,
-				.endFlag = false,
-				.clientId = clientId,
-				.pos = myPlayer->object->pos,
-				.player = *myPlayer,
+		syncData data = {
+				.set = {
+						.type = DATA_ES_SET,
+						.latestFrame = latestFrame,
+						.endFlag = false,
+						.clientId = clientId,
+						.pos = myPlayer->object->pos,
+						.player = *myPlayer,
+				},
 		};
 		int i;
-		for (i = 0; i < MAX_EVENT; i++)	data.event[i] = eventStack[i];
+		for (i = 0; i < MAX_EVENT; i++)	data.set.event[i] = eventStack[i];
 		initEvent();
 
-		sendData(&data, sizeof(entityStateSet));
+		sendData(&data, sizeof(syncData));
 #ifndef NDEBUG
 		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif

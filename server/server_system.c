@@ -212,8 +212,12 @@ static bool randomGenerateObstacle() {
 				.vx = VER_ROCK * cos(randAngle),
 				.vy = VER_ROCK * sin(randAngle),
 		};
+#ifndef NDEBUG
+		/*
 		printf("obstacle	pos[%.0f: %.0f]\n", x, y);
 		printf("			angle: %f\n", randAngle);
+		*/
+#endif
 
 		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
 				eventNotification event;
@@ -332,7 +336,9 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 
 
 void sendDeltaBuffer(int id, int latest, bool endFlag) {
+		syncData sData;
 		entityStateGet data;
+		data.type = DATA_ES_GET;
 		printf("latest[%d: %d]\n", latest, sub(latest));
 
 		if ((data.endFlag = endFlag) == false) {
@@ -387,5 +393,6 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 				printf("send server frame: %d\n", data.latestFrame);
 		}
 
-		sendData(id, &data, sizeof(entityStateGet));
+		sData.get = data;
+		sendData(id, &sData, sizeof(entityStateGet));
 }

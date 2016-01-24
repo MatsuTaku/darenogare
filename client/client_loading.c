@@ -2,6 +2,7 @@
 #include "client_scene.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "../common.h"
 #include "SDL/SDL.h"
 
 static char gLoadingImgFile[] = "IMG/tutorial.gif";
@@ -25,8 +26,6 @@ bool eventLoading() {
 				switch (event.type) {
 						case SDL_QUIT:
 								return true;
-						case SDL_JOYBUTTONDOWN:
-								break;
 						default:
 								break;
 				}
@@ -35,6 +34,18 @@ bool eventLoading() {
 }
 
 void updateLoading() {
+		syncData data = {
+				.prepare.type = DATA_PREPARE,
+				.prepare.endFlag = false,
+		};
+		sendData(&data, sizeof(syncData));
+}
+
+void recvLoading(syncData *data) {
+		printf("#recvLoading[%d]\n", data->type);
+		if (data->type == DATA_PREPARE) {
+				changeScene(SCENE_BATTLE);
+		}
 }
 
 void drawLoading() {
@@ -42,15 +53,11 @@ void drawLoading() {
 
 		SDL_FillRect(window, NULL, 0xff000000);
 
-		if (gLoadingImg) {
-				Rect rect = {
-						.src.w = gLoadingImg->w,
-						.src.h = gLoadingImg->h,
-				};
-				SDL_BlitSurface(gLoadingImg, &rect.src, window, &rect.dst);
-		} else {
-				printf("loadingimg is NULL\n");
-		}
+		Rect rect = {
+				.src.w = gLoadingImg->w,
+				.src.h = gLoadingImg->h,
+		};
+		SDL_BlitSurface(gLoadingImg, &rect.src, window, &rect.dst);
 
 		SDL_Flip(window);
 }

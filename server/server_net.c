@@ -14,6 +14,7 @@ static int	gClientNum;
 static fd_set	gMask;		
 static int	gWidth;
 
+static void callEndGame();
 static int multiAccept(int request_soc, int num);
 static void enter(int pos, int fd);
 static void setMask(int maxfd);
@@ -100,9 +101,15 @@ bool loadingSync() {
 				if (FD_ISSET((gClients[i].fd), &readOK)) {
 						syncData data;
 						recvData(i, &data, sizeof(syncData));
-						if (data.prepare.endFlag)	endFlag = true;
-
+						if (data.common.endFlag)	endFlag = true;
+						if (data.type == DATA_PREPARE)
+								nowLoadingClient(i);
 				}
+		}
+		if (!endFlag) {
+				updateLoading();
+		} else {
+				callEndGame();
 		}
 
 		return endFlag;
@@ -122,12 +129,17 @@ bool battleSync() {
 		int i;
 		bool recvId[gClientNum];
 		for (i = 0; i < gClientNum; i++) { //全てのクライアントに対して
-				if (recvId[i] = FD_ISSET(gClients[i].fd, &readOK)) { //読み込み可能なFDがあれば
+				recvId[i] = false;
+				if (FD_ISSET(gClients[i].fd, &readOK)) { //読み込み可能なFDがあれば
 						recvData(i, &data[i], sizeof(syncData)); //受信
 						if (data[i].set.endFlag) {
 								endFlag = true;
 								break;
 						}
+						if (data[i].type != DATA_ES_SET)
+								continue;
+						printf("data[%d] type: %d\n", i, data[i].type);
+						recvId[i] = true;
 						setPlayerState(i, &data[i].set);
 				}
 		}
@@ -143,6 +155,15 @@ bool battleSync() {
 }
 
 
+static void callEndGame() {
+		syncData end = {
+				.type = DATA_COMMON,
+				.common.endFlag = true,
+		};
+		sendData(ALL_CLIENTS, &end, sizeof(syncData));
+}
+
+
 /*****************************************************************
   関数名	: SendData
   機能	: クライアントにデータを送る
@@ -152,7 +173,7 @@ bool battleSync() {
   int	   dataSize	: 送るデータのサイズ
   出力	: なし
  *****************************************************************/
-void sendData(int pos,void *data,int dataSize) {
+void sendData(int pos, void *data, int dataSize) {
 		assert(0 <= pos && pos < gClientNum || pos == ALL_CLIENTS); //送信先が正しいか確認
 		assert(data != NULL); //データが存在するか確認
 		assert(0 < dataSize); //データサイズの確認

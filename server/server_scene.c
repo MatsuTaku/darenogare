@@ -2,7 +2,7 @@
 #include "server_func.h"
 #include "server_loading.h"
 
-static SCENE mScene = SCENE_TITLE;
+static SCENE mScene = SCENE_LOADING;
 static SCENE mNextScene = SCENE_NONE;
 
 static void sceneInitModule(SCENE scene);
@@ -17,6 +17,9 @@ bool sceneManagerSync() {
 				mScene = mNextScene;
 				mNextScene = SCENE_NONE;
 				sceneInit(mScene);
+#ifndef NDEBUG
+				printf("Change scene: %d\n", mScene);
+#endif
 		}
 		switch (mScene) {
 				case SCENE_LOADING:
