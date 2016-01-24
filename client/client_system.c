@@ -127,7 +127,7 @@ static bool deleteObject(int objectId) {
 				curObject = &object[i];
 				if (curObject->type == OBJECT_EMPTY)	continue;
 				if (curObject->id == objectId) {
-						free(curObject->typeBuffer);
+						if (curObject->typeBuffer)	free(curObject->typeBuffer);
 						initObject(curObject);
 						printf("delete object[%d]\n", objectId);
 						return true;
