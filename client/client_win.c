@@ -7,6 +7,7 @@
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "client_scene.h"
 
 #define WINDOW_WIDTH	1000
 #define WINDOW_HEIGHT	600
@@ -92,7 +93,6 @@ static SDL_Surface *gTargetImage; //中心位置への方向
 
 /*関数*/
 static int initImage();
-static SDL_Surface* loadImage(char* imageName);
 static void drawObject();
 static void drawChara(POSITION *charaPos, int chara_id);
 static void drawArroundEffect(MODE mode, SDL_Surface *c_window);
@@ -112,11 +112,6 @@ static void adjustWindowPosition(SDL_Rect* windowPos, POSITION* pos);
 static void clearWindow();
 static void TypeWarnStrings(char message[20]);
 static int judgeRange(POSITION *objPos, POSITION *myPos);
-
-typedef struct {
-		SDL_Rect src;
-		SDL_Rect dst;
-} Rect;
 
 char playerName[MAX_CLIENTS][32] = {
 		"RedFox",
@@ -189,7 +184,6 @@ int initWindows(int clientID, int num) {
 
 /*ゲーム画面の描画*/
 int drawWindow() {
-
 		int endFlag = 1;
 		clearWindow(); //ウィンドウのクリア
 		now = SDL_GetTicks(); //現在の時刻を取得
@@ -220,6 +214,7 @@ int drawWindow() {
 		SDL_Flip(gMainWindow);//描画更新
 		return endFlag; //endflagは1で返す(継続)
 }
+
 
 /*サーフェスの解放*/
 void destroyWindow(void) {
@@ -261,7 +256,6 @@ void destroyWindow(void) {
  */
 bool windowEvent() {
 		SDL_Event event;
-		bool endFlag = false;
 
 		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
 		while (SDL_PollEvent(&event)) {
@@ -297,11 +291,10 @@ bool windowEvent() {
 								}
 								break;
 						case SDL_QUIT:
-								endFlag = true;
 #ifndef NDEBUG
 								printf("Press close button\n");
 #endif
-								return endFlag;
+								return true;
 						default:
 								break;
 				}
@@ -319,7 +312,7 @@ bool windowEvent() {
 		} else
 				fixRotation();
 
-		return endFlag;
+		return false;
 }
 
 
@@ -354,7 +347,7 @@ static int initImage(void) { //画像の読み込み
 }
 
 
-static SDL_Surface* loadImage(char* imageName) {
+SDL_Surface* loadImage(char* imageName) {
 		SDL_Surface* image;
 		if (image = IMG_Load(imageName))
 				printf("Load [%s]\n", imageName);

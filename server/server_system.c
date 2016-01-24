@@ -26,12 +26,11 @@ static bool insertEvent(int id, eventNotification* event);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void setPlayerValue(PLAYER* to, PLAYER* from);
 
-
-int initSystem(int clientNumber) {
+void initSystem() {
 		srand((unsigned)time(NULL));
 
+		clientNum = getClientNum();
 		frame = 0;
-		clientNum = clientNumber;
 		int i, j;
 
 		ASSEMBLY* firstData = &pastAssembly[sub(frame)];
@@ -53,10 +52,10 @@ int initSystem(int clientNumber) {
 				}
 		}
 
-		for (i = 0; i < clientNumber; i++) {
-				if (insertObject(&firstData->player[i], 0x0100 * i, OBJECT_CHARACTER) == NULL) {
+		for (i = 0; i < clientNum; i++) {
+				if (!insertObject(&firstData->player[i], 0x0100 * i, OBJECT_CHARACTER)) {
 						fprintf(stderr, "InsertingObject is failed!\n");
-						return -1;
+						exit(-1);
 				}
 				initPlayer(&firstData->player[i], i);
 		}
@@ -77,27 +76,6 @@ static void initPlayer(PLAYER* player, int id) {
 				.num = id,
 		};
 		*player = source;
-		/*
-		player->object = NULL;
-		player->num = id;
-		player->mode = 0;
-		player->modeTime = 0;
-		player->dir = 0;
-		player->toDir = player->dir;
-		player->ver.vx = 0;
-		player->ver.vy = 0;
-		player->alive = 0;
-		player->boost = 0;
-		player->rotate = 0;
-		player->action = 0;
-		player->item = 0;
-		player->bullets = 0;
-		player->launchCount = 0;
-		player->warn = 0;
-		player->deadTime = 0;
-		player->lastTime = 0;
-		player->deadAnimation = 0;
-		*/
 }
 
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
@@ -234,8 +212,12 @@ static bool randomGenerateObstacle() {
 				.vx = VER_ROCK * cos(randAngle),
 				.vy = VER_ROCK * sin(randAngle),
 		};
+#ifndef NDEBUG
+		/*
 		printf("obstacle	pos[%.0f: %.0f]\n", x, y);
 		printf("			angle: %f\n", randAngle);
+		*/
+#endif
 
 		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
 				eventNotification event;
@@ -354,7 +336,9 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 
 
 void sendDeltaBuffer(int id, int latest, bool endFlag) {
+		syncData sData;
 		entityStateGet data;
+		data.type = DATA_ES_GET;
 		printf("latest[%d: %d]\n", latest, sub(latest));
 
 		if ((data.endFlag = endFlag) == false) {
@@ -393,10 +377,6 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 						object->id = curPlObj->id - latestPlObj->id;
 						object->pos.x = curPlObj->pos.x - latestPlObj->pos.x;
 						object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
-						
-						/*
-						printf("				alive: %d\n", player->alive);
-						*/
 				}
 
 				/* イベント所得 */
@@ -409,10 +389,10 @@ void sendDeltaBuffer(int id, int latest, bool endFlag) {
 								data.event[i].type = EVENT_NONE;
 						}
 				}
-				// clearEvent(id, latest);
 
 				printf("send server frame: %d\n", data.latestFrame);
 		}
 
-		sendData(id, &data, sizeof(entityStateGet));
+		sData.get = data;
+		sendData(id, &sData, sizeof(entityStateGet));
 }

@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "client_scene.h"
 
 /** Definitions */
 #define nextObj(a)	((a + 1) % MAX_OBJECT)
@@ -12,6 +13,7 @@ PLAYER* player;
 PLAYER* myPlayer;
 
 /** Static Variables */
+static int clientId;
 static int clientNum;
 static int curObjNum = 0;
 static int selfObject;
@@ -55,11 +57,15 @@ static bool insertEvent(eventNotification* event);
  *	ゲームシステムの初期化
  *	return: Error = -1
  */
-int initGameSystem(int myId, int playerNum) {
+void initGameSystem(int myId, int playerNum) {
+		clientId = myId;
+		clientNum = playerNum;
+}
+
+int initSystem() {
 		int i;
 		srand((unsigned)time(NULL));
 
-		clientNum = playerNum;
 		for (i = 0; i < FRAME_NUM; i++) {
 				getEntity[i].lastFrame = 0;
 				getEntity[i].latestFrame = 0;
@@ -72,24 +78,24 @@ int initGameSystem(int myId, int playerNum) {
 				OBJECT* curObj = &object[i];
 				initObject(curObj);
 		}
-		selfObject = 0x1000 * (myId + 1);
+		selfObject = 0x1000 * (clientId + 1);
 
-		myPlayer = &player[myId];
+		myPlayer = &player[clientId];
 
-		for (i = 0; i < playerNum; i++) {
+		for (i = 0; i < clientNum; i++) {
 				PLAYER* curPlayer = &player[i];
 				if (insertObject(curPlayer, i, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
-				initPlayer(curPlayer, i, playerNum);
+				initPlayer(curPlayer, i, clientNum);
 		}
 
 		return 0;
 }
 
 
-void destroySystem() {
+void finalSystem() {
 		int i;
 		// malloc の消去
 		for (i = 0; i < MAX_OBJECT; i++) {
@@ -121,7 +127,7 @@ static bool deleteObject(int objectId) {
 				curObject = &object[i];
 				if (curObject->type == OBJECT_EMPTY)	continue;
 				if (curObject->id == objectId) {
-						free((OBSTACLE *)curObject->typeBuffer);
+						free(curObject->typeBuffer);
 						initObject(curObject);
 						printf("delete object[%d]\n", objectId);
 						return true;
@@ -789,9 +795,20 @@ static double getObjectSize(OBJECT* object) {
 						size = RANGE_ITEM;
 						break;
 				case OBJECT_OBSTACLE:
-						size = RANGE_ROCK;
+						switch (((OBSTACLE *)object->typeBuffer)->num) {
+								case OBS_ROCK:
+										size = RANGE_ROCK;
+										break;
+								case OBS_MISSILE:
+										size = RANGE_MISSILE;
+												break;
+								case OBS_LASER:
+										size = RANGE_LASER;
+												break;
+								default:
+										break;
+						}
 						break;
-				case OBJECT_EMPTY:
 				default:
 						break;
 		}
@@ -823,7 +840,9 @@ static bool judgeSafety(POSITION* pos) {
 /***********
  * server method
  */
-void reflectDelta(entityStateGet* data) {
+void reflectDelta(syncData* sData) {
+		if (sData->type != DATA_ES_GET)	return;
+		entityStateGet *data = &sData->get;
 		latestFrame = data->latestFrame;
 		bool recieved = data->lastFrame > getEntity[FRAME_LAST].lastFrame;
 		getEntity[FRAME_LAST] = getEntity[FRAME_LATEST];
@@ -940,19 +959,22 @@ static bool insertEvent(eventNotification* event) {
 
 
 void sendEntity() {
-		entityStateSet data = {
-				.latestFrame = latestFrame,
-				.endFlag = false,
-				.clientId = myPlayer->num,
-				.pos = myPlayer->object->pos,
-				.player = *myPlayer,
+		syncData data = {
+				.set = {
+						.type = DATA_ES_SET,
+						.latestFrame = latestFrame,
+						.endFlag = false,
+						.clientId = clientId,
+						.pos = myPlayer->object->pos,
+						.player = *myPlayer,
+				},
 		};
 		int i;
-		for (i = 0; i < MAX_EVENT; i++)	data.event[i] = eventStack[i];
+		for (i = 0; i < MAX_EVENT; i++)	data.set.event[i] = eventStack[i];
 		initEvent();
 
-		sendData(&data, sizeof(entityStateSet));
+		sendData(&data, sizeof(syncData));
 #ifndef NDEBUG
-		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
+		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

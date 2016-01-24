@@ -3,7 +3,6 @@
 
 #include"../common.h"
 
-
 enum generateFrequency {	// 毎秒の頻度
 		FREQ_OBSTACLE = 4,
 		FREQ_ITEM = 1,
@@ -14,8 +13,6 @@ typedef struct {
 } eventAssembly;
 
 /* server_net.c */
-extern int gClientNum;
-//extern Charatype gChara[CT_NUM];
 extern ITEM_NUMBER Item[ITEM_NUM];
 extern PLAYER player;
 extern POSITION positon;

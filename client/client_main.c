@@ -1,7 +1,8 @@
+#include "SDL/SDL.h"
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
-#include <SDL/SDL.h>
+#include "client_scene.h"
 
 static int networkEvent(void* data);
 static Uint32 drawEvent(Uint32 interval, void* param);
@@ -9,12 +10,12 @@ static Uint32 timerEvent(Uint32 frame);
 static int skipFrame = 0;
 
 
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
 		int		num;
 		int 	clientID;
 		bool	endFlag = false;
 		bool 	endNet = false;
-		char	localHostName[]="localhost";
+		char	localHostName[] = "localhost";
 		char	*serverName;
 
 		int		frame = -1;
@@ -36,10 +37,7 @@ int main(int argc, char *argv[]) {
 				return -1;
 		}
 
-		if (initGameSystem(clientID, num) == -1) {
-				fprintf(stderr, "initalize failed: initGameSystem\n");
-				return -1;
-		}
+		sceneInit();
 
 		if (initWindows(clientID, num) == -1) {
 				fprintf(stderr,"setup failed : InitWindows\n");
@@ -61,10 +59,12 @@ int main(int argc, char *argv[]) {
 		Uint32 loopInterval = ms / src;
 		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
-		while(!(endFlag = windowEvent()) && !endNet){
+		while(!(endFlag = sceneManagerEvent()) && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
+
 				timerEvent(++frame);
+
 				endTime = SDL_GetTicks() * timeRate;
 				if (skipFrame <= 0) {
 						if (endTime < toTime)	SDL_Delay((toTime - endTime) / timeRate);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		destroyWindow();
-		destroySystem();
+		sceneFinal();
 		closeSoc();
 		return 0;
 }
@@ -116,10 +116,15 @@ static int networkEvent(void* data) {
 static Uint32 timerEvent(Uint32 frame) {
 		int s, e, w;
 		s = SDL_GetTicks();
-		updateEvent();
+		sceneManagerUpdate();
+		// updateEvent();
 		e = SDL_GetTicks();
-		if (skipFrame <= 0)	drawWindow();
-		else	skipFrame--;
+		if (skipFrame <= 0)	{
+				sceneManagerDraw();
+				// drawWindow();
+		} else {
+				skipFrame--;
+		}
 		w = SDL_GetTicks();
 		// printf("time system: %d,	window: %d\n", e - s, w - e);
 }

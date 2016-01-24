@@ -1,7 +1,8 @@
 #ifndef _CLIENT_FUNC_H_
 #define _CLIENT_FUNC_H_
 
-#include"../common.h"
+#include "../common.h"
+#include "SDL/SDL.h"
 
 /* client_main.c */
 extern int gcd(int a, int b);
@@ -21,13 +22,16 @@ extern void destroyWindow(void);
 extern bool windowEvent();
 extern int drawWindow();
 
+extern SDL_Surface *loadImage(char *);
+
 /* client_command.c */
 extern bool executeCommand(entityStateGet* data);
 extern void sendEndCommand(void);
 
 /* client_system.c */
-extern int initGameSystem(int myId, int playerNum);
-extern void destroySystem();
+extern void initGameSystem(int myId, int playerNum);
+extern int initSystem();
+extern void finalSystem();
 extern void updateEvent();
 extern void getItem();
 extern void useItem();
@@ -38,7 +42,7 @@ extern void fixRotation();
 extern void acceleration();
 extern void deceleration();
 extern void inertialNavigation();
-extern void relectDelta(entityStateGet* data);
+extern void relectDelta(syncData);
 extern void sendEntity();
 
 #endif
