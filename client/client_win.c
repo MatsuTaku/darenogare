@@ -23,6 +23,7 @@ static char gBoomImgFile[] = "IMG/boom.png"; //爆発
 static char gDeadIconImgFile[] = "IMG/Deadicon.png"; //死亡時のキャラ
 static char gMiniMapImgFile[] = "IMG/minimap.png"; //ミニマップ
 static char gTargetImgFile[] = "IMG/target.png"; //目的地
+static char pnLaserImgFile[] = "IMG/LaserEff3.png"; //お仕置きレーザー
 static char gMissileImgFile[] = "IMG/missileEff.png"; //ミサイル
 static char gNoizingImgFile[] = "IMG/noizingEff.png"; //妨害電波
 static char gBarrierImgFile[] = "IMG/barrierEff.png"; //バリア
@@ -84,6 +85,7 @@ static SDL_Surface *gBarrierImage; //バリア
 static SDL_Surface *gLaserImage[2]; //レーザー
 static SDL_Surface *gWarningImage; //警告
 static SDL_Surface *gBoomImage; //爆発
+static SDL_Surface *pnLaserImage; //お仕置きレーザ
 static SDL_Surface *gMiniMap; //ミニマップ用ウィンドウ
 static SDL_Surface *gMiniMapImage; //ミニマップの画像
 static SDL_Surface *gTargetImage; //中心位置への方向
@@ -197,6 +199,8 @@ int drawWindow() {
 			}
 			interval = now + 100; //次の開始時間を0.1秒後に設定
 		}
+		int angle = myPlayer->dir * HALF_DEGRESS / PI;
+		printf("%d\n", angle);
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 		if(myPlayer->alive){ //生存状態
@@ -333,6 +337,7 @@ static int initImage(void) { //画像の読み込み
 		if ((gBoomImage = loadImage(gBoomImgFile)) == NULL)	endFlag = -1;	// 爆発アニメーション
 		if ((gMiniMapImage = loadImage(gMiniMapImgFile)) == NULL)	endFlag = -1;	// ミニマップ
 		if ((gTargetImage = loadImage(gTargetImgFile)) == NULL)	endFlag = -1;	// 目的地
+		if ((pnLaserImage = loadImage(pnLaserImgFile)) == NULL) endFlag = -1;	//お仕置きレーザ
 		if ((gMissileImage = loadImage(gMissileImgFile)) == NULL)	endFlag = -1;	// ミサイル
 		if ((gNoizingImage = loadImage(gNoizingImgFile)) == NULL)	endFlag = -1;	// ジャミング
 		if ((gBarrierImage = loadImage(gBarrierImgFile)) == NULL)	endFlag = -1;	// バリア
@@ -824,16 +829,26 @@ void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos;
 
-		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1.0);
+		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1);
 		int dx = reImage->w - gLaserImage[1]->w;
 		int dy = reImage->h - gLaserImage[1]->h;
 		int so = pow(player[owner].object->pos.x, 2) + pow(player[owner].object->pos.y,2);
 		int sl = pow(lsPos->x,2) + pow(lsPos->y,2);
 		entity.src.x = 0;	entity.src.y = 0;
-		entity.src.w = abs(sl - so);
+		/*if(abs(sl - so) > gLaserImage[1]->w){ //実行者の位置から描写
+			entity.src.w = abs(sl - so);
+		}else{
+			entity.src.w = reImage->w;
+		}*/
+		entity.src.w = reImage->w;
 		entity.src.h = reImage->h;
 		diffPos.x = lsPos->x - myPos->x - reImage->w/2 - dx/2;
 		diffPos.y = lsPos->y - myPos->y - reImage->h/2 - dy/2;
+		int dangle = angle;
+		diffPos.x -= gLaserImage[1]->h*2; //座標調節
+		if(dangle < -90){
+			diffPos.y += gLaserImage[1]->h*3;
+		}
 		adjustWindowPosition(&entity.dst, &diffPos);
 		SDL_BlitSurface(reImage, &entity.src, gMainWindow, &entity.dst);
 		SDL_FreeSurface(reImage);
@@ -892,11 +907,11 @@ void drawPunishment(void){
 		if(pn_flag == 1){ //1.外部からのレーザー攻撃
 			div = 10;
 			Rect laser;
-			laser.src.x = gLaserImage[1]->w - gLaserImage[1]->w/div * pn_anm;	laser.src.y = 0;
-			laser.src.w = gLaserImage[1]->w/div * pn_anm;	  laser.src.h = gLaserImage[1]->h;
+			laser.src.x = pnLaserImage->w - pnLaserImage->w/div * pn_anm;	laser.src.y = 0;
+			laser.src.w = pnLaserImage->w/div * pn_anm;	  laser.src.h = pnLaserImage->h;
 			laser.dst.x = 0;
-			laser.dst.y = gMainWindow->h/2 - gLaserImage[1]->h/2;
-			SDL_BlitSurface(gLaserImage[1], &laser.src, gMainWindow, &laser.dst);
+			laser.dst.y = gMainWindow->h/2 - pnLaserImage->h/2;
+			SDL_BlitSurface(pnLaserImage, &laser.src, gMainWindow, &laser.dst);
 		}else if(pn_flag == 2){ //2.巨大隕石の襲来
 			div = 5;
 			Rect meteo;
