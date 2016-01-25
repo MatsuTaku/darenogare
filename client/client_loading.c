@@ -4,20 +4,35 @@
 #include "client_func.h"
 #include "../common.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
 
 static char gLoadingImgFile[] = "IMG/tutorial.gif";
 static SDL_Surface *gLoadingImg;
+static int mChangeTime;
+static bool mChangeFlag;
+static int mViewAlpha;
+static char fSWFontFile[] = "IMG/STJEDISE.TTF";
+static TTF_Font *fSWFont;
+static SDL_Color colorOrange = {0xEF, 0xB4, 0x02};
 
 void initLoading() {
 		printf("initLoading\n");
 
+		mChangeFlag = false;
+
 		gLoadingImg = loadImage(gLoadingImgFile);
+
+		TTF_Init();
+		fSWFont = TTF_OpenFont(fSWFontFile, 20);
 }
 
 void finalLoading() {
 		printf("finalLoading\n");
 
 		SDL_FreeSurface(gLoadingImg);
+
+		TTF_CloseFont(fSWFont);
+		TTF_Quit();
 }
 
 bool eventLoading() {
@@ -34,17 +49,22 @@ bool eventLoading() {
 }
 
 void updateLoading() {
-		syncData data = {
-				.prepare.type = DATA_PREPARE,
-				.prepare.endFlag = false,
-		};
-		sendData(&data, sizeof(syncData));
+		if (!mChangeFlag) {
+				syncData data = {
+						.prepare.type = DATA_PREPARE,
+						.prepare.endFlag = false,
+				};
+				sendData(&data, sizeof(syncData));
+		} else  if (mChangeTime < SDL_GetTicks()) {
+				changeScene(SCENE_BATTLE);
+		}
 }
 
 void recvLoading(syncData *data) {
 		printf("#recvLoading[%d]\n", data->type);
 		if (data->type == DATA_PREPARE) {
-				changeScene(SCENE_BATTLE);
+				mChangeFlag = true;
+				mChangeTime = SDL_GetTicks() + CHANGE_TIME;
 		}
 }
 
@@ -57,7 +77,28 @@ void drawLoading() {
 				.src.w = gLoadingImg->w,
 				.src.h = gLoadingImg->h,
 		};
+		int alpha = 0xff;
+		int lastTime = mChangeTime - SDL_GetTicks();
+		if (mChangeFlag && lastTime < CHANGE_TIME / 3) {
+				alpha = 0xff * lastTime / (CHANGE_TIME / 3);
+		}
+		printf("alpha: %x\n", alpha);
+		SDL_SetAlpha(gLoadingImg, SDL_SRCALPHA, alpha);
 		SDL_BlitSurface(gLoadingImg, &rect.src, window, &rect.dst);
+
+		if (mChangeFlag) {
+				char lastTimeChar[4];
+				sprintf(lastTimeChar, "%d", lastTime / 1000 + 1);
+				SDL_Surface *lastTime = TTF_RenderUTF8_Blended(fSWFont, lastTimeChar, colorOrange);
+				Rect strRect = {
+						.src.w = lastTime->w,
+						.src.h = lastTime->h,
+						.dst.x = window->w - lastTime->w - 180,
+						.dst.y = window->h - lastTime->h - 2,
+				};
+				SDL_BlitSurface(lastTime, &strRect.src, window, &strRect.dst);
+		}
+
 
 		SDL_Flip(window);
 }

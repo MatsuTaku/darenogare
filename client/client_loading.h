@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "../common.h"
 
+#define CHANGE_TIME	3000
+
 extern void initLoading();
 extern void finalLoading();
 extern bool eventLoading();
