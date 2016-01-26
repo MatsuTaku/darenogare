@@ -576,7 +576,9 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 				boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
 				SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
 		 	   }
-			SDL_FreeSurface(reImage);
+			if(reImage){
+				SDL_FreeSurface(reImage);
+			}
 		}
 		/*回転*/
 		if(rtt_flag != ROTATE_NEUTRAL){
@@ -620,7 +622,9 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
 				}
 			}
-			SDL_FreeSurface(reImage);
+			if(reImage){
+				SDL_FreeSurface(reImage);
+			}
 		}
 }
 
@@ -821,6 +825,9 @@ void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
 		SDL_Surface *reImage;
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos;
+		if(owner != myID){
+			angle -= 90;
+		}
 
 		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1);
 		int dx = reImage->w - gLaserImage[1]->w;
@@ -1028,6 +1035,7 @@ void drawMiniMap(POSITION* myPos) {
 			double lx = player[k].object->pos.x - myPos->x;
 			double ly = player[k].object->pos.y - myPos->y;
 			double range = pow(lx, 2) + pow(ly, 2);
+			double dir;
 			POSITION ps;
 			//範囲毎に描画位置を指定
 			if (range < pow(rd, 2)) {
@@ -1043,15 +1051,25 @@ void drawMiniMap(POSITION* myPos) {
 			if (k == myID) {
 				filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
 			} else {
-				filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xffd770ff); //敵
+				if(player[k].alive){
+					filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xffd770ff); //敵
+				}
 			}
 			//レーザ予測線の描画
 			if(player[k].action == ACTION_CD_LASER){
-				for(p = 0; p < 3; p++){
-					lineColor(gMiniMap, ps.x, ps.y, ps.x + 50*cos(player[k].dir)+p, ps.y - 50*sin(player[k].dir)+p, 0xb22222ff);
-				}
+				dir = player[k].dir * HALF_DEGRESS / PI;
+				printf("角度は%f\n", dir);
 				if(k != myID){
+					if(dir > 0){
+						dir -= 90;
+					}else if(dir <= -90){
+						dir -= 180;
+					}
 					TypeWarnStrings("Warning Laser");
+				}
+				dir = dir / HALF_DEGRESS * PI;
+				for(p = 0; p < 3; p++){
+					lineColor(gMiniMap, ps.x, ps.y, ps.x + 50*cos(dir)+p, ps.y - 50*sin(dir)+p, 0xb22222ff);
 				}
 			}
 		}
