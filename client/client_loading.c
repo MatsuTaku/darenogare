@@ -30,6 +30,7 @@ void finalLoading() {
 		printf("finalLoading\n");
 
 		SDL_FreeSurface(gLoadingImg);
+		SDL_FreeSurface(NULL);
 
 		TTF_CloseFont(fSWFont);
 		TTF_Quit();

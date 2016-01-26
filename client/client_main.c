@@ -13,15 +13,12 @@ static int skipFrame = 0;
 int main (int argc, char *argv[]) {
 		int		num;
 		int 	clientID;
-		bool	endFlag = false;
-		bool 	endNet = false;
 		char	localHostName[] = "localhost";
 		char	*serverName;
-
 		int		frame = -1;
-
+		bool	endFlag = false;
+		bool 	endNet = false;
 		SDL_Thread* networkThread;
-		SDL_TimerID drawTimer;
 
 		if (argc == 1) {
 				serverName = localHostName;
@@ -59,7 +56,7 @@ int main (int argc, char *argv[]) {
 		Uint32 loopInterval = ms / src;
 		int timeRate = FPS / src;
 		Uint32 startTime, endTime, toTime;
-		while(!(endFlag = sceneManagerEvent()) && !endNet){
+		while (!(endFlag = sceneManagerEvent()) && !endNet){
 				startTime = SDL_GetTicks() * timeRate;
 				toTime = startTime + loopInterval;
 
@@ -78,9 +75,10 @@ int main (int argc, char *argv[]) {
 		if (endFlag) {
 				sendEndCommand();
 				SDL_KillThread(networkThread);
+				printf("Kill network thread\n");
 		} else if (endNet) {
 				SDL_WaitThread(networkThread, NULL);
-				printf("WaitThread\n");
+				printf("Wait network thread\n");
 		}
 
 		destroyWindow();

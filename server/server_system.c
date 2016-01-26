@@ -372,22 +372,26 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 
 
 void sendDeltaBuffer(int id, int latest) {
-#ifndef NDEBUG
-		printf("player[%d].latestFrame: %d, frameDelta: %d\n", id, latest, frame - latest);
-#endif
-		entityStateGet data;
-		data.type = DATA_ES_GET;
-
-		data.endFlag = false;
 		assert(id >= 0 && id < MAX_CLIENTS);
 		assert(latest >= 0);
-		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
-		int i;
-		data.latestFrame = frame;
-		data.lastFrame = latest;
+#ifndef NDEBUG
+		// printf("player[%d].latestFrame: %d, frameDelta: %d\n", id, latest, frame - latest);
+		// printf("send server frame: %d\n", data.latestFrame);
+#endif
+
+		syncData data = {
+				.get = {
+						.type = DATA_ES_GET,
+						.endFlag = false,
+						.latestFrame = frame,
+						.lastFrame = latest,
+				},
+		};
 		/* デルタの所得 */
+		int i;
+		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 		for (i = 0; i < clientNum; i++) {
-				PLAYER* player = &data.delta.player[i];
+				PLAYER* player = &data.get.delta.player[i];
 				PLAYER *curPlayer = &curBuffer->player[i];
 				PLAYER* latestPlayer = &latestBuffer->player[i];
 				player->mode = curPlayer->mode - latestPlayer->mode;
@@ -407,14 +411,16 @@ void sendDeltaBuffer(int id, int latest) {
 				player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
 				player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
 
-				OBJECT *object = &data.delta.plyObj[i];
+				OBJECT *object = &data.get.delta.plyObj[i];
 				OBJECT *curPlObj = &curBuffer->object[i];
 				OBJECT *latestPlObj = &latestBuffer->object[i];
 				object->type = curPlObj->type - latestPlObj->type;
 				object->id = curPlObj->id - latestPlObj->id;
 				object->pos.x = curPlObj->pos.x - latestPlObj->pos.x;
 				object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
-				printf("player[%d] delta pos[%d, %d]\n", i, object->pos.x, object->pos.y);
+#ifndef NDEBUG
+				// printf("player[%d] delta pos[%d, %d]\n", i, object->pos.x, object->pos.y);
+#endif
 		}
 
 		/* イベント所得 */
@@ -422,16 +428,11 @@ void sendDeltaBuffer(int id, int latest) {
 				eventAssembly *latestEvent = &pastEvent[sub(latest)];
 				if (curEvent->eventStack[id][i].type != EVENT_NONE && 
 								curEvent->eventStack[id][i].id != latestEvent->eventStack[id][i].id) {
-						data.event[i] = curEvent->eventStack[id][i];
+						data.get.event[i] = curEvent->eventStack[id][i];
 				} else {
-						data.event[i].type = EVENT_NONE;
+						data.get.event[i].type = EVENT_NONE;
 				}
 		}
 
-		printf("send server frame: %d\n", data.latestFrame);
-
-		syncData sData = {
-				.get = data,
-		};
-		sendData(id, &sData, sizeof(syncData));
+		sendData(id, &data, sizeof(syncData));
 }

@@ -475,9 +475,12 @@ void drawChara(POSITION *charaPos, int chara_id){
 
 		//c_windowの透過処理
 		c_window = SDL_CreateRGBSurface(SDL_SWSURFACE, gCharaImage[chara_id]->w + gBoostImage->w + 40, gCharaImage[chara_id]->h + gBoostImage->h +60, 32, rmask, gmask, bmask, amask);
-		SDL_FillRect(c_window, NULL, 0x00000000); //範囲外だけ黒で塗り潰し
-		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0, 0, 0)); //黒を透過
+		//範囲外だけ黒で塗り潰し
+		SDL_FillRect(c_window, NULL, SDL_MapRGB(c_window->format, 0x00, 0x00, 0x00)); 
+		//黒を透過
+		SDL_SetColorKey(c_window, SDL_SRCCOLORKEY, SDL_MapRGB(c_window->format, 0x00, 0x00, 0x00)); 
 		c_window = SDL_DisplayFormat(c_window);
+
 		c_center.x = c_window->w/2;
 		c_center.y = c_window->h/2;
 		/*レーザの予測線の描画*/
@@ -511,12 +514,9 @@ void drawChara(POSITION *charaPos, int chara_id){
 		diffPos.y = charaPos->y - myPos->y - (c_window->h /2) - dy/2;
 		adjustWindowPosition(&dst_rect, &diffPos);
 		SDL_BlitSurface(reImage, &c_rect, gMainWindow, &dst_rect); //描画
-		if(reImage){
-			SDL_FreeSurface(reImage);
-		}
-		if(c_window){
-			SDL_FreeSurface(c_window);
-		}
+
+		SDL_FreeSurface(reImage);
+		SDL_FreeSurface(c_window);
 }
 
 /*キャラ周りのエフェクトの描画*/
@@ -550,7 +550,7 @@ void drawArroundEffect(MODE mode, SDL_Surface *c_window){
 
 /*噴射炎を描画*/
 void drawBoost(int chara_id, SDL_Surface *c_window){
-		SDL_Surface* reImage;
+		SDL_Surface *reImage;
 		POSITION c_center;
 		Rect boost;
 		int dx, dy, i;
@@ -572,7 +572,7 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 					boost.dst.y = (c_center.y - reImage->h/2 - 1) - i*26 - dy;
 					SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
 				}
-			    }
+			}
 		 	if(bst_flag == BOOST_BACK){ //後噴射の場合
 				reImage = rotozoomSurface(gBoostImage, HALF_DEGRESS, 1.0, 1); //角度の変更
 				boost.src.w = reImage->w; boost.src.h = reImage->h;
@@ -581,10 +581,7 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 				boost.dst.x = c_center.x + gCharaImage[chara_id]->w/3 - dx/2;
 				boost.dst.y = c_center.y - gBoostImage->h/2 - dy/2;
 				SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
-		 	   }
-			if(reImage){
-				SDL_FreeSurface(reImage);
-			}
+		 	}
 		}
 		/*回転*/
 		if(rtt_flag != ROTATE_NEUTRAL){
@@ -607,7 +604,7 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 				    boost.dst.y = c_center.y + gCharaImage[chara_id]->h/2 - dy/2 - 10 - i*10;
 				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
 				}
-			    }
+			}
 			if(rtt_flag == ROTATE_LEFT){ //左回転の場合
 				reImage = rotozoomSurface(gBoostImage, 90, 0.4, 1); //角度の変更
 				boost.src.w = reImage->w; boost.src.h = reImage->h;
@@ -628,10 +625,8 @@ void drawBoost(int chara_id, SDL_Surface *c_window){
 				    SDL_BlitSurface(reImage, &boost.src, c_window, &boost.dst);
 				}
 			}
-			if(reImage){
-				SDL_FreeSurface(reImage);
-			}
 		}
+		SDL_FreeSurface(reImage);
 }
 
 /*レーザの予測線の描画*/

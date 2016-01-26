@@ -129,11 +129,13 @@ static bool deleteObject(int objectId) {
 				if (curObject->id == objectId) {
 						if (curObject->typeBuffer)	free(curObject->typeBuffer);
 						initObject(curObject);
-						printf("delete object[%d]\n", objectId);
+						// printf("delete object[%d]\n", objectId);
 						return true;
 				}
 		}
-		printf("failed to delete object[%d]\n", objectId);
+#ifndef NDEBUG
+		// printf("failed to delete object[%d]\n", objectId);
+#endif
 		return false;
 }
 
@@ -942,6 +944,6 @@ void sendEntity() {
 
 		sendData(&data, sizeof(syncData));
 #ifndef NDEBUG
-		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
+		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

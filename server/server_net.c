@@ -117,6 +117,7 @@ bool loadingSync() {
 bool battleSync() {
 		bool endFlag = false;
 		fd_set readOK = gMask;
+		printf("battleSync()\n");
 
 		updateBuffer();
 
