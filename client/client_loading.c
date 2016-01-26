@@ -82,7 +82,7 @@ void drawLoading() {
 		if (mChangeFlag && lastTime < CHANGE_TIME / 3) {
 				alpha = 0xff * lastTime / (CHANGE_TIME / 3);
 		}
-		printf("alpha: %x\n", alpha);
+		// printf("alpha: %x\n", alpha);
 		SDL_SetAlpha(gLoadingImg, SDL_SRCALPHA, alpha);
 		SDL_BlitSurface(gLoadingImg, &rect.src, window, &rect.dst);
 

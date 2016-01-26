@@ -77,7 +77,6 @@ bool sendRecvManager(void) {
 		/* get world delta */
 		fd_set	readOK;
 		int     command;
-		int		i;
 		bool	endFlag = false;
 		struct timeval	timeout;
 
@@ -87,11 +86,13 @@ bool sendRecvManager(void) {
 		readOK = gMask;
 		/* サーバーからデータが届いているか調べる */
 		select(gWidth,&readOK,NULL,NULL,&timeout);
-		if(FD_ISSET(gSocket,&readOK)){
+		while (FD_ISSET(gSocket,&readOK)){
 				/* サーバーからのデータを反映 */
 				syncData data;
 				recvData(&data, sizeof(syncData));
 				endFlag = sceneManagerRecv(&data);
+
+				select(gWidth,&readOK,NULL,NULL,&timeout);
 		}
 
 		sceneManagerSend();
