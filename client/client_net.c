@@ -86,11 +86,14 @@ bool sendRecvManager(void) {
 		readOK = gMask;
 		/* サーバーからデータが届いているか調べる */
 		select(gWidth,&readOK,NULL,NULL,&timeout);
-		while (FD_ISSET(gSocket,&readOK)){
+		while (FD_ISSET(gSocket,&readOK)) {
 				/* サーバーからのデータを反映 */
 				syncData data;
 				recvData(&data, sizeof(syncData));
-				endFlag = sceneManagerRecv(&data);
+				if (sceneManagerRecv(&data)) {
+						endFlag = true;
+						break;
+				}
 
 				select(gWidth,&readOK,NULL,NULL,&timeout);
 		}

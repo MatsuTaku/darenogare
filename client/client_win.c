@@ -196,7 +196,7 @@ int drawWindow() {
 			interval = now + 100; //次の開始時間を0.1秒後に設定
 		}
 		int angle = myPlayer->dir * HALF_DEGRESS / PI;
-		printf("%d\n", angle);
+		// printf("%d\n", angle);
 		drawObject(); //オブジェクトの描画
 		drawStatus(); //ステータスの描画
 		if(myPlayer->alive){ //生存状態
