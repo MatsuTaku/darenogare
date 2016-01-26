@@ -80,6 +80,7 @@ int main (int argc, char *argv[]) {
 				SDL_KillThread(networkThread);
 		} else if (endNet) {
 				SDL_WaitThread(networkThread, NULL);
+				printf("WaitThread\n");
 		}
 
 		destroyWindow();
@@ -89,7 +90,7 @@ int main (int argc, char *argv[]) {
 }
 
 
-static int networkEvent(void* data) {
+static int networkEvent(void *data) {
 		bool *endFlag = (bool *)data;
 		// 1000とCPSの最小公倍数を基準に分数で計算
 		int ms = MIRI_SECOND;

@@ -209,9 +209,10 @@ int recvData(void *data,int dataSize)
 		 #ifndef NDEBUG
 		 printf("#####\nsendEndCommand\n");
 #endif
-		 syncData data;
-		 data.common.type = DATA_COMMON;
-		 data.common.endFlag = true;
+		 syncData data = {
+				 .common.type = DATA_COMMON,
+				 .common.endFlag = true,
+		 };
 
 		 sendData(&data, sizeof(syncData));
  }
