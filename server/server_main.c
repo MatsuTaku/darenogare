@@ -49,9 +49,8 @@ int main(int argc,char *argv[]) {
 		}
 
 		ending();
-		exit(0);
-		return 0;
 
+		return 0;
 }
 
 

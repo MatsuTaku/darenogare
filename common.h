@@ -193,6 +193,7 @@ typedef enum {
 		DATA_ES_GET,
 		DATA_ES_SET,
 		DATA_PREPARE,
+		DATA_RESULT,
 } DATA_TYPE;
 
 // イベント通知
@@ -246,6 +247,12 @@ typedef struct {
 		bool endFlag;
 } statePrepare;
 
+typedef struct {
+		DATA_TYPE type;
+		bool endFlag;
+		int winner;
+} stateResult;
+
 typedef union {
 		DATA_TYPE type;
 		struct {
@@ -255,6 +262,7 @@ typedef union {
 		entityStateGet get;
 		entityStateSet set;
 		statePrepare prepare;
+		stateResult result;
 } syncData;
 
 

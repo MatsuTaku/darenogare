@@ -129,11 +129,13 @@ static bool deleteObject(int objectId) {
 				if (curObject->id == objectId) {
 						if (curObject->typeBuffer)	free(curObject->typeBuffer);
 						initObject(curObject);
-						printf("delete object[%d]\n", objectId);
+						// printf("delete object[%d]\n", objectId);
 						return true;
 				}
 		}
-		printf("failed to delete object[%d]\n", objectId);
+#ifndef NDEBUG
+		// printf("failed to delete object[%d]\n", objectId);
+#endif
 		return false;
 }
 
@@ -162,7 +164,7 @@ static void initPlayer(PLAYER* player, int num, int playerNum) {
 		player->deadTime = 0;
 		player->lastTime = 0;
 		player->deadAnimation = -1;
-		if (playerNum == 1) {
+		if (num != clientId || playerNum == 1) {
 				setPos(&player->object->pos, 0, 0);
 		} else {
 				double startAngle = START_ANGLE + 2 * PI / playerNum * num;
@@ -843,20 +845,17 @@ static bool judgeSafety(POSITION* pos) {
 void reflectDelta(syncData* sData) {
 		if (sData->type != DATA_ES_GET)	return;
 		entityStateGet *data = &sData->get;
-		latestFrame = data->latestFrame;
-		bool recieved = data->lastFrame > getEntity[FRAME_LAST].lastFrame;
-		getEntity[FRAME_LAST] = getEntity[FRAME_LATEST];
-		getEntity[FRAME_LATEST] = *data;
+		if (data->lastFrame == latestFrame) {
+				latestFrame = data->latestFrame;
 
-		DELTA* delta = &data->delta;
-		int i;
-		for (i = 0; i < MAX_CLIENTS; i++) {
-				if (i != myPlayer->num && player[i].object != NULL) {
-						PLAYER* curPlayer = &player[i];
-						PLAYER* deltaPlayer = &delta->player[i];
-						OBJECT* curObject = curPlayer->object;
-						OBJECT* deltaObject = &delta->plyObj[i];
-						if (recieved) {
+				DELTA* delta = &data->delta;
+				int i;
+				for (i = 0; i < clientNum; i++) {
+						if (i != clientId) {
+								PLAYER* curPlayer = &player[i];
+								PLAYER* deltaPlayer = &delta->player[i];
+								OBJECT* curObject = curPlayer->object;
+								OBJECT* deltaObject = &delta->plyObj[i];
 								curPlayer->mode += deltaPlayer->mode;
 								curPlayer->modeTime += deltaPlayer->modeTime;
 								curPlayer->dir += deltaPlayer->dir;
@@ -876,44 +875,14 @@ void reflectDelta(syncData* sData) {
 
 								curObject->pos.x += deltaObject->pos.x;
 								curObject->pos.y += deltaObject->pos.y;
-						} else {
-#ifndef NDEBUG
-								printf("!!!!!fallthrough!!!!!\n");
-#endif
-								DELTA* lastDelta = &getEntity[FRAME_LAST].delta;
-								PLAYER* lastPlayer = &lastDelta->player[i];
-								OBJECT* lastObject = &lastDelta->plyObj[i];
-								curPlayer->mode += deltaPlayer->mode - lastPlayer->mode;
-								curPlayer->modeTime += deltaPlayer->modeTime - lastPlayer->modeTime;
-								curPlayer->dir += deltaPlayer->dir - lastPlayer->dir;
-								curPlayer->toDir += deltaPlayer->toDir - lastPlayer->toDir;
-								curPlayer->ver.vx += deltaPlayer->ver.vx - lastPlayer->ver.vx;
-								curPlayer->ver.vy += deltaPlayer->ver.vy - lastPlayer->ver.vy;
-								curPlayer->alive = deltaPlayer->alive;
-								curPlayer->boost += deltaPlayer->boost - lastPlayer->boost;
-								curPlayer->rotate += deltaPlayer->rotate - lastPlayer->rotate;
-								curPlayer->action += deltaPlayer->action - lastPlayer->action;
-								curPlayer->item += deltaPlayer->item - lastPlayer->item;
-								curPlayer->bullets += deltaPlayer->bullets - lastPlayer->bullets;
-								curPlayer->launchCount += deltaPlayer->launchCount - lastPlayer->launchCount;
-								curPlayer->warn += deltaPlayer->warn - lastPlayer->warn;
-								curPlayer->deadTime +=deltaPlayer->deadTime - lastPlayer->deadTime;
-								curPlayer->lastTime += deltaPlayer->lastTime - lastPlayer->lastTime;
-
-								curObject->pos.x += deltaObject->pos.x - lastObject->pos.x;
-								curObject->pos.y += deltaObject->pos.y - lastObject->pos.y;
 						}
-#ifndef NDEBUG
-						// printf("player[%d] pos x: %d, y: %d\n", i, curObject->pos.x, curObject->pos.y);
-						// printf("		alive: %d\n", curPlayer->alive);
-#endif
 				}
-		}
 
-		for (i = 0; i < MAX_EVENT; i++) {
-				eventNotification *curEvent = &data->event[i];
-				if (curEvent->type != EVENT_NONE)
-						launchEvent(curEvent);
+				for (i = 0; i < MAX_EVENT; i++) {
+						eventNotification *curEvent = &data->event[i];
+						if (curEvent->type != EVENT_NONE)
+								launchEvent(curEvent);
+				}
 		}
 
 #ifndef NDEBUG
@@ -975,6 +944,6 @@ void sendEntity() {
 
 		sendData(&data, sizeof(syncData));
 #ifndef NDEBUG
-		printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
+		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
 }

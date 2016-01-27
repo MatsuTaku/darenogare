@@ -77,7 +77,6 @@ bool sendRecvManager(void) {
 		/* get world delta */
 		fd_set	readOK;
 		int     command;
-		int		i;
 		bool	endFlag = false;
 		struct timeval	timeout;
 
@@ -87,11 +86,16 @@ bool sendRecvManager(void) {
 		readOK = gMask;
 		/* サーバーからデータが届いているか調べる */
 		select(gWidth,&readOK,NULL,NULL,&timeout);
-		if(FD_ISSET(gSocket,&readOK)){
+		while (FD_ISSET(gSocket,&readOK)) {
 				/* サーバーからのデータを反映 */
 				syncData data;
 				recvData(&data, sizeof(syncData));
-				endFlag = sceneManagerRecv(&data);
+				if (sceneManagerRecv(&data)) {
+						endFlag = true;
+						break;
+				}
+
+				select(gWidth,&readOK,NULL,NULL,&timeout);
 		}
 
 		sceneManagerSend();
@@ -208,9 +212,10 @@ int recvData(void *data,int dataSize)
 		 #ifndef NDEBUG
 		 printf("#####\nsendEndCommand\n");
 #endif
-		 syncData data;
-		 data.common.type = DATA_COMMON;
-		 data.common.endFlag = true;
+		 syncData data = {
+				 .common.type = DATA_COMMON,
+				 .common.endFlag = true,
+		 };
 
 		 sendData(&data, sizeof(syncData));
  }

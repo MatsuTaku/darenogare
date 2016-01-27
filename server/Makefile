@@ -11,6 +11,9 @@ all: $(TARGET)
 $(TARGET):	$(OBJS)
 	gcc -o $@ $^ -lm -lSDL
 
+release: $(OBJS)
+	gcc -o $(TARGET) $^ -lm -lSDL $(NDEBUG)
+
 clean:
 	rm *.o $(TARGET) *~ core .*.swp .*.swo
 

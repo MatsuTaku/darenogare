@@ -13,6 +13,7 @@ static int frame;
 static int clientNum;
 static int curObjNum;
 static int ownerObject;
+static bool continueGame;
 
 static void initObject(OBJECT* object);
 static void initPlayer(PLAYER* player, int id);
@@ -22,6 +23,7 @@ static void initEvent(eventNotification* event);
 static bool averageFromFrequency(double freq);
 static bool randomGenerateObstacle();
 static bool randomGenerateItem();
+static void callGameFinish(int winner);
 static bool insertEvent(int id, eventNotification* event);
 static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
 static void setPlayerValue(PLAYER* to, PLAYER* from);
@@ -31,6 +33,7 @@ void initSystem() {
 
 		clientNum = getClientNum();
 		frame = 0;
+		continueGame = true;
 		int i, j;
 
 		ASSEMBLY* firstData = &pastAssembly[sub(frame)];
@@ -166,21 +169,54 @@ static void initEvent(eventNotification* event) {
 
 
 void updateBuffer() {
+		frame++;
 		lastBuffer = &pastAssembly[sub(frame)];
 		curBuffer = &pastAssembly[sub(frame + 1)];
 		*curBuffer = *lastBuffer;
 		lastEvent = &pastEvent[sub(frame)];
 		curEvent = &pastEvent[sub(frame + 1)];
 		*curEvent = *lastEvent;
-		frame++;
 		printf("Frame[%d: %d]\n", frame, sub(frame));
 
+		// generation
 		if (averageFromFrequency(FREQ_OBSTACLE)) {
 				randomGenerateObstacle();
 		}
 		if (averageFromFrequency(FREQ_ITEM)) {
 				randomGenerateItem();
 		}
+}
+
+void updateSystem() {
+		if (clientNum >= 2) { 
+				int i;
+				int alivePlayerNum = 0;
+				int alival;
+				for (i = 0; i < clientNum; i++) {
+						if (curBuffer->player[i].alive) {
+								alivePlayerNum++;
+								alival = i;
+						}
+				}
+				if (alivePlayerNum == 1) {
+						if (continueGame) {
+								continueGame = false;
+								callGameFinish(alival);
+						}
+				}
+		}
+
+}
+
+static void callGameFinish(int winner) {
+		syncData data = {
+				.result = {
+						.type = DATA_RESULT,
+						.endFlag = false,
+						.winner = winner,
+				},
+		};
+		sendData(ALL_CLIENTS, &data, sizeof(syncData));
 }
 
 
@@ -265,14 +301,14 @@ static bool randomGenerateItem() {
 static bool insertEvent(int id, eventNotification* event) {
 		int i;
 		bool endFlag = true;
-		printf("event from[%d] type: %d\n", id, event->type);
+		// printf("event from[%d] type: %d\n", id, event->type);
 		for (i = 0; i < clientNum; i++) {
 				if (i != id) {
 						int j;
 						for (j = 0; j < MAX_EVENT; j++) {
 								if (curEvent->eventStack[i][j].type == EVENT_NONE) {
 										curEvent->eventStack[i][j] = *event;
-										printf("player[%d] Success insert event sub[%d]\n", i, j);
+										// printf("player[%d] Success insert event sub[%d]\n", i, j);
 										break;
 								}
 						}
@@ -335,64 +371,68 @@ static void setPlayerValue(PLAYER* to, PLAYER* from) {
 }
 
 
-void sendDeltaBuffer(int id, int latest, bool endFlag) {
-		syncData sData;
-		entityStateGet data;
-		data.type = DATA_ES_GET;
-		printf("latest[%d: %d]\n", latest, sub(latest));
+void sendDeltaBuffer(int id, int latest) {
+		assert(id >= 0 && id < MAX_CLIENTS);
+		assert(latest >= 0);
+#ifndef NDEBUG
+		// printf("player[%d].latestFrame: %d, frameDelta: %d\n", id, latest, frame - latest);
+		// printf("send server frame: %d\n", data.latestFrame);
+#endif
 
-		if ((data.endFlag = endFlag) == false) {
-				assert(id >= 0 && id < MAX_CLIENTS);
-				assert(latest >= 0);
-				ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
-				int i;
-				data.latestFrame = frame;
-				data.lastFrame = latest;
-				/* デルタの所得 */
-				for (i = 0; i < clientNum; i++) {
-						PLAYER* player = &data.delta.player[i];
-						PLAYER *curPlayer = &curBuffer->player[i];
-						PLAYER* latestPlayer = &latestBuffer->player[i];
-						player->mode = curPlayer->mode - latestPlayer->mode;
-						player->mode = curPlayer->modeTime - latestPlayer->modeTime;
-						player->dir = curPlayer->dir - latestPlayer->dir;
-						player->toDir = curPlayer->toDir - latestPlayer->toDir;
-						player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
-						player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
-						player->alive = curPlayer->alive;	// bool値は直接送信
-						player->boost = curPlayer->boost - latestPlayer->boost;
-						player->rotate = curPlayer->rotate - latestPlayer->rotate;
-						player->action = curPlayer->action - latestPlayer->action;
-						player->item = curPlayer->item - latestPlayer->item;
-						player->bullets = curPlayer->bullets - latestPlayer->bullets;
-						player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
-						player->warn = curPlayer->warn - latestPlayer->warn;
-						player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
-						player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
+		syncData data = {
+				.get = {
+						.type = DATA_ES_GET,
+						.endFlag = false,
+						.latestFrame = frame,
+						.lastFrame = latest,
+				},
+		};
+		/* デルタの所得 */
+		int i;
+		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
+		for (i = 0; i < clientNum; i++) {
+				PLAYER* player = &data.get.delta.player[i];
+				PLAYER *curPlayer = &curBuffer->player[i];
+				PLAYER* latestPlayer = &latestBuffer->player[i];
+				player->mode = curPlayer->mode - latestPlayer->mode;
+				player->mode = curPlayer->modeTime - latestPlayer->modeTime;
+				player->dir = curPlayer->dir - latestPlayer->dir;
+				player->toDir = curPlayer->toDir - latestPlayer->toDir;
+				player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
+				player->ver.vy = curPlayer->ver.vy - latestPlayer->ver.vy;
+				player->alive = curPlayer->alive;	// bool値は直接送信
+				player->boost = curPlayer->boost - latestPlayer->boost;
+				player->rotate = curPlayer->rotate - latestPlayer->rotate;
+				player->action = curPlayer->action - latestPlayer->action;
+				player->item = curPlayer->item - latestPlayer->item;
+				player->bullets = curPlayer->bullets - latestPlayer->bullets;
+				player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
+				player->warn = curPlayer->warn - latestPlayer->warn;
+				player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
+				player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
 
-						OBJECT *object = &data.delta.plyObj[i];
-						OBJECT *curPlObj = &curBuffer->object[i];
-						OBJECT *latestPlObj = &latestBuffer->object[i];
-						object->type = curPlObj->type - latestPlObj->type;
-						object->id = curPlObj->id - latestPlObj->id;
-						object->pos.x = curPlObj->pos.x - latestPlObj->pos.x;
-						object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
-				}
-
-				/* イベント所得 */
-				for (i = 0; i < MAX_EVENT; i++) {
-						eventAssembly *latestEvent = &pastEvent[sub(latest)];
-						if (curEvent->eventStack[id][i].type != EVENT_NONE && 
-							curEvent->eventStack[id][i].id != latestEvent->eventStack[id][i].id) {
-								data.event[i] = curEvent->eventStack[id][i];
-						} else {
-								data.event[i].type = EVENT_NONE;
-						}
-				}
-
-				printf("send server frame: %d\n", data.latestFrame);
+				OBJECT *object = &data.get.delta.plyObj[i];
+				OBJECT *curPlObj = &curBuffer->object[i];
+				OBJECT *latestPlObj = &latestBuffer->object[i];
+				object->type = curPlObj->type - latestPlObj->type;
+				object->id = curPlObj->id - latestPlObj->id;
+				object->pos.x = curPlObj->pos.x - latestPlObj->pos.x;
+				object->pos.y = curPlObj->pos.y - latestPlObj->pos.y;
+#ifndef NDEBUG
+				// printf("player[%d] delta pos[%d, %d]\n", i, object->pos.x, object->pos.y);
+#endif
 		}
 
-		sData.get = data;
-		sendData(id, &sData, sizeof(entityStateGet));
+		/* イベント所得 */
+		for (i = 0; i < MAX_EVENT; i++) {
+				eventAssembly *latestEvent = &pastEvent[sub(latest)];
+				if (curEvent->eventStack[id][i].type != EVENT_NONE && 
+								curEvent->eventStack[id][i].id != latestEvent->eventStack[id][i].id) {
+						data.get.event[i] = curEvent->eventStack[id][i];
+				} else {
+						data.get.event[i].type = EVENT_NONE;
+				}
+		}
+
+		sendData(id, &data, sizeof(syncData));
 }

@@ -1,6 +1,7 @@
 OBJS	=	client_main.o client_net.o client_win.o client_system.o client_scene.o client_title.o client_loading.o
 TARGET	=	client
 NDEBUG	=	-DNDEBUG
+LINK	=	-lm -lSDL -lSDL_image -lSDL_gfx -lSDL_ttf
 
 .c.o:
 	gcc -g -c $<
@@ -9,7 +10,10 @@ NDEBUG	=	-DNDEBUG
 all: $(TARGET)
 
 $(TARGET):	$(OBJS)
-	gcc -o $@ $^ -lm -lSDL -lSDL_image -lSDL_gfx -lSDL_ttf
+	gcc -o $@ $^ $(LINK)
+
+release: $(OBJS)
+	gcc -o $(TARGET) $^ $(LINK) $(NDEBUG)
 
 clean:
 	rm *.o $(TARGET) *~ core .*.swp .*.swo

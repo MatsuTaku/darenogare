@@ -14,7 +14,6 @@ static int	gClientNum;
 static fd_set	gMask;		
 static int	gWidth;
 
-static void callEndGame();
 static int multiAccept(int request_soc, int num);
 static void enter(int pos, int fd);
 static void setMask(int maxfd);
@@ -118,6 +117,7 @@ bool loadingSync() {
 bool battleSync() {
 		bool endFlag = false;
 		fd_set readOK = gMask;
+		printf("battleSync()\n");
 
 		updateBuffer();
 
@@ -132,32 +132,39 @@ bool battleSync() {
 				recvId[i] = false;
 				if (FD_ISSET(gClients[i].fd, &readOK)) { //読み込み可能なFDがあれば
 						recvData(i, &data[i], sizeof(syncData)); //受信
-						if (data[i].set.endFlag) {
+						if (data[i].common.endFlag) {
 								endFlag = true;
 								break;
 						}
 						if (data[i].type != DATA_ES_SET)
 								continue;
-						printf("data[%d] type: %d\n", i, data[i].type);
+#ifndef NDEBUG
+						printf("recvData[from: %d]\n", i);
+#endif
 						recvId[i] = true;
 						setPlayerState(i, &data[i].set);
 				}
 		}
 
-		for (i = 0; i < gClientNum; i++) {
-				if (recvId[i] || endFlag) {
-						printf("player[%d]	latest: %d\n", i, data[i].set.latestFrame);
-						sendDeltaBuffer(i, data[i].set.latestFrame, endFlag);
+		updateSystem();
+
+		if (!endFlag) {
+				for (i = 0; i < gClientNum; i++) {
+						if (recvId[i]) {
+								sendDeltaBuffer(i, data[i].set.latestFrame);
+						}
 				}
+		} else {
+				callEndGame();
 		}
 
 		return endFlag;
 }
 
 
-static void callEndGame() {
+void callEndGame() {
 		syncData end = {
-				.type = DATA_COMMON,
+				.common.type = DATA_COMMON,
 				.common.endFlag = true,
 		};
 		sendData(ALL_CLIENTS, &end, sizeof(syncData));
