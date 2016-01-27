@@ -1,8 +1,8 @@
 #include "../common.h"
 #include "server_common.h"
 #include "server_func.h"
-#define nextObj(a)	((a + 1) % MAX_OBJECT) + MAX_CLIENTS
 
+#define nextObj(a)	((a + 1) % MAX_OBJECT) + MAX_CLIENTS
 #define sub(x)	(x) % RETENTION_FRAME
 
 static ASSEMBLY pastAssembly[RETENTION_FRAME];
@@ -15,18 +15,18 @@ static int curObjNum;
 static int ownerObject;
 static bool continueGame;
 
-static void initObject(OBJECT* object);
-static void initPlayer(PLAYER* player, int id);
-static bool generateObstacle(int id, int num, POSITION* pos, double angle, VEROCITY *ver);
-static setPos(POSITION* pos, int x, int y);
-static void initEvent(eventNotification* event);
+static void initObject(OBJECT *object);
+static void initPlayer(PLAYER *player, int id);
+static bool generateObstacle(int id, int num, POSITION *pos, double angle, VEROCITY *ver);
+static setPos(POSITION *pos, int x, int y);
+static void initEvent(eventNotification *event);
 static bool averageFromFrequency(double freq);
 static bool randomGenerateObstacle();
 static bool randomGenerateItem();
 static void callGameFinish(int winner);
-static bool insertEvent(int id, eventNotification* event);
-static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
-static void setPlayerValue(PLAYER* to, PLAYER* from);
+static bool insertEvent(int id, eventNotification *event);
+static OBJECT *insertObject(void *buffer, int id, OBJECT_TYPE type);
+static void setPlayerValue(PLAYER *to, PLAYER *from);
 
 void initSystem() {
 		srand((unsigned)time(NULL));
@@ -74,9 +74,10 @@ static void initObject(OBJECT* object) {
 		setPos(&object->pos, 0, 0);
 }
 
-static void initPlayer(PLAYER* player, int id) {
+static void initPlayer(PLAYER *player, int id) {
 		PLAYER source = {
 				.num = id,
+				.alive = true,
 		};
 		*player = source;
 }
@@ -169,7 +170,6 @@ static void initEvent(eventNotification* event) {
 
 
 void updateBuffer() {
-		frame++;
 		lastBuffer = &pastAssembly[sub(frame)];
 		curBuffer = &pastAssembly[sub(frame + 1)];
 		*curBuffer = *lastBuffer;
@@ -177,6 +177,7 @@ void updateBuffer() {
 		curEvent = &pastEvent[sub(frame + 1)];
 		*curEvent = *lastEvent;
 		printf("Frame[%d: %d]\n", frame, sub(frame));
+		frame++;
 
 		// generation
 		if (averageFromFrequency(FREQ_OBSTACLE)) {
@@ -193,6 +194,7 @@ void updateSystem() {
 				int alivePlayerNum = 0;
 				int alival;
 				for (i = 0; i < clientNum; i++) {
+								printf("player[%d] alive: %d\n", i, curBuffer->player[i].alive);
 						if (curBuffer->player[i].alive) {
 								alivePlayerNum++;
 								alival = i;
@@ -200,7 +202,7 @@ void updateSystem() {
 				}
 				if (alivePlayerNum == 1) {
 						if (continueGame) {
-								continueGame = false;
+								continueGame = !continueGame;
 								callGameFinish(alival);
 						}
 				}
@@ -209,6 +211,9 @@ void updateSystem() {
 }
 
 static void callGameFinish(int winner) {
+#ifndef NDEBUG
+		printf("Decided winner!!![%d]\n", winner);
+#endif
 		syncData data = {
 				.result = {
 						.type = DATA_RESULT,
@@ -378,7 +383,6 @@ void sendDeltaBuffer(int id, int latest) {
 		// printf("player[%d].latestFrame: %d, frameDelta: %d\n", id, latest, frame - latest);
 		// printf("send server frame: %d\n", data.latestFrame);
 #endif
-
 		syncData data = {
 				.get = {
 						.type = DATA_ES_GET,
@@ -391,9 +395,9 @@ void sendDeltaBuffer(int id, int latest) {
 		int i;
 		ASSEMBLY *latestBuffer = &pastAssembly[sub(latest)];
 		for (i = 0; i < clientNum; i++) {
-				PLAYER* player = &data.get.delta.player[i];
+				PLAYER *player = &data.get.delta.player[i];
 				PLAYER *curPlayer = &curBuffer->player[i];
-				PLAYER* latestPlayer = &latestBuffer->player[i];
+				PLAYER *latestPlayer = &latestBuffer->player[i];
 				player->mode = curPlayer->mode - latestPlayer->mode;
 				player->mode = curPlayer->modeTime - latestPlayer->modeTime;
 				player->dir = curPlayer->dir - latestPlayer->dir;
