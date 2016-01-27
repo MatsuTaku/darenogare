@@ -172,7 +172,7 @@ typedef struct {
 		ACTION_FLAG action;	// 行動フラグ
 		int item;			// 所有アイテム
 		int bullets;		// 残弾数
-		int launchCount;	// launch laesr time
+		int launchCount;	// launch laser time
 		WARNING_FLAG warn;	// 警告フラグ
 		int deadTime;		// 死亡時間(生存領域外にいるとき)
 		int lastTime;		// 生存可能時間（〃）
@@ -272,6 +272,7 @@ typedef enum {
 		SCENE_TITLE,
 		SCENE_LOADING,
 		SCENE_BATTLE,
+		SCENE_RESULT,
 } SCENE;
 
 #endif

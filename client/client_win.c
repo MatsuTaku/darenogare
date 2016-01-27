@@ -213,7 +213,8 @@ int drawWindow() {
 				drawPunishment(); //お仕置きアニメーション
 			}
 		}
-		SDL_Flip(gMainWindow);//描画更新
+		// sceneManagerに委託
+		// SDL_Flip(gMainWindow);//描画更新
 		return endFlag; //endflagは1で返す(継続)
 }
 
@@ -259,7 +260,6 @@ void destroyWindow(void) {
  */
 bool windowEvent() {
 		SDL_Event event;
-
 		// ループ内のイベントを全て所得（ジョイスティックの値が蓄積しているため）
 		while (SDL_PollEvent(&event)) {
 				switch (event.type) { 
@@ -306,8 +306,8 @@ bool windowEvent() {
 		// get analog stick method
 		Sint16 xValue = SDL_JoystickGetAxis(joystick, 0);
 		Sint16 yValue = SDL_JoystickGetAxis(joystick, 1);
-		double range = pow(xValue, 2) + pow(yValue, 2);
-		if (range > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
+		double depth = pow(xValue, 2) + pow(yValue, 2);
+		if (depth > pow(REACTION_VALUE, 2)) {	// 一定以上の角度で反応
 				rotateTo(xValue, yValue);
 #ifndef NDEBUG
 				// printf("joystick valule[x: %6d, y: %6d]\n", xValue, yValue);
