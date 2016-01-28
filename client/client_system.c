@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "client_common.h"
 #include "client_func.h"
+#include "client_battle.h"
 #include "client_scene.h"
 
 /** Definitions */
@@ -15,11 +16,10 @@ PLAYER* myPlayer;
 /** Static Variables */
 static int clientId;
 static int clientNum;
-static int curObjNum = 0;
+static int curObjNum;
 static int selfObject;
 static eventNotification eventStack[MAX_EVENT];
-static int latestFrame = 0;
-static entityStateGet getEntity[FRAME_NUM];
+static int latestFrame;
 
 /** Static Functions */
 static void initObject(OBJECT* object);
@@ -37,6 +37,7 @@ static void rotateDirection(double sign);
 static void accelerateVerocity(double accel);
 static void setPlayerPosition();
 static void setPos(POSITION* pos, int x, int y);
+static void setMyStateNeutral();
 static bool hitObject(OBJECT* alpha, OBJECT* beta);
 static void hitDeleteObject(OBJECT* object);
 static void countDownFireLaser();
@@ -52,7 +53,6 @@ static bool judgeSafety(POSITION* pos);
 static void launchEvent(eventNotification *event);
 static bool insertEvent(eventNotification* event);
 
-
 /**
  *	ゲームシステムの初期化
  *	return: Error = -1
@@ -66,10 +66,8 @@ int initSystem() {
 		int i;
 		srand((unsigned)time(NULL));
 
-		for (i = 0; i < FRAME_NUM; i++) {
-				getEntity[i].lastFrame = 0;
-				getEntity[i].latestFrame = 0;
-		}
+		curObjNum = 0;
+		latestFrame = 0;
 
 		object = allAssembly.object;
 		player = allAssembly.player;
@@ -78,18 +76,20 @@ int initSystem() {
 				OBJECT* curObj = &object[i];
 				initObject(curObj);
 		}
-		selfObject = 0x1000 * (clientId + 1);
+		selfObject = 0x1000 * (clientId + 1) + 1;
 
 		myPlayer = &player[clientId];
 
 		for (i = 0; i < clientNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				if (insertObject(curPlayer, i, OBJECT_CHARACTER) == NULL) {
+				if (insertObject(curPlayer, 0x1000 * i, OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
 				initPlayer(curPlayer, i, clientNum);
 		}
+
+		winnerId = OWNER;
 
 		return 0;
 }
@@ -127,7 +127,7 @@ static bool deleteObject(int objectId) {
 				curObject = &object[i];
 				if (curObject->type == OBJECT_EMPTY)	continue;
 				if (curObject->id == objectId) {
-						if (curObject->typeBuffer)	free(curObject->typeBuffer);
+						free(curObject->typeBuffer);
 						initObject(curObject);
 						// printf("delete object[%d]\n", objectId);
 						return true;
@@ -647,8 +647,8 @@ static void collisionDetection() {
 												myPlayer->alive = false;
 										}
 #ifndef NDEBUG
-										printf("You are still out of safety-zone!\n");
-										printf("come back in [%d] seconds!\n", myPlayer->lastTime / ms);
+										// printf("You are still out of safety-zone!\n");
+										// printf("come back in [%d] seconds!\n", myPlayer->lastTime / ms);
 #endif
 								}
 								break;
@@ -670,7 +670,6 @@ static void hitDeleteObject(OBJECT* object) {
 }
 
 
-
 /**
  * window event emethods
  */
@@ -682,7 +681,6 @@ void useItem() {	// アイテムの使用
 				myPlayer->action = ACTION_NONE;
 		}
 }
-
 
 /**
  * 方向転換
@@ -706,7 +704,6 @@ void rotateTo(int x, int y) {
 				rotateRight();
 }
 
-
 // 左旋回
 void rotateLeft() {
 		myPlayer->rotate = ROTATE_LEFT;
@@ -722,31 +719,29 @@ void fixRotation() {
 		myPlayer->rotate = ROTATE_NEUTRAL;
 }
 
-
 /**
  * 機体の速度変更
  */
 void acceleration() {
 		myPlayer->boost = BOOST_GO;
 #ifndef NDEBUG
-		printf("Acceleration.\n");
+		// printf("Acceleration.\n");
 #endif
 }
 
 void deceleration() {
 		myPlayer->boost = BOOST_BACK;
 #ifndef NDEBUG
-		printf("Deceleration.\n");
+		// printf("Deceleration.\n");
 #endif
 }
 
 void inertialNavigation() {
 		myPlayer->boost = BOOST_NEUTRAL;
 #ifndef NDEBUG
-		printf("Inertial navigation.\n");
+		// printf("Inertial navigation.\n");
 #endif
 }
-
 
 /** 
  * オブジェクト座標設定
@@ -757,7 +752,6 @@ static void setPos(POSITION* pos, int x, int y) {
 		pos->y = y;
 }
 
-
 /**
  *	当たり判定
  *	input:	オブジェクトポインタ
@@ -767,7 +761,6 @@ static bool hitObject(OBJECT* alpha, OBJECT* beta) {
 		double rimitRange = getObjectSize(alpha) + getObjectSize(beta);
 		return getRange(alpha, beta) <= pow(rimitRange, 2);
 }
-
 
 /**
  *	オブジェクト半径を所得
@@ -817,7 +810,6 @@ static double getObjectSize(OBJECT* object) {
 		return size;
 }
 
-
 /**
  *	距離の所得
  *	input:	オブジェクトポインタ
@@ -826,7 +818,6 @@ static double getObjectSize(OBJECT* object) {
 static double getRange(OBJECT* alpha, OBJECT* beta) {
 		return pow(beta->pos.x - alpha->pos.x, 2) + pow(beta->pos.y - alpha->pos.y, 2);
 }
-
 
 /**
  * 安全圏内にいるかどうか
@@ -838,13 +829,10 @@ static bool judgeSafety(POSITION* pos) {
 }
 
 
-
 /***********
  * server method
  */
-void reflectDelta(syncData* sData) {
-		if (sData->type != DATA_ES_GET)	return;
-		entityStateGet *data = &sData->get;
+void reflectDelta(entityStateGet *data) {
 		if (data->lastFrame == latestFrame) {
 				latestFrame = data->latestFrame;
 
@@ -890,7 +878,6 @@ void reflectDelta(syncData* sData) {
 #endif
 }
 
-
 static void launchEvent(eventNotification *event) {
 #ifndef NDEBUG
 		// printf("launchEvent type: %d\n", event->type);
@@ -912,7 +899,6 @@ static void launchEvent(eventNotification *event) {
 		}
 }
 
-
 static bool insertEvent(eventNotification* event) {
 		int i;
 		for (i = 0; i < MAX_EVENT; i++) {
@@ -925,7 +911,6 @@ static bool insertEvent(eventNotification* event) {
 		printf("Event stack is FULL!\n");
 		return false;
 }
-
 
 void sendEntity() {
 		syncData data = {
@@ -946,4 +931,20 @@ void sendEntity() {
 #ifndef NDEBUG
 		// printf("sendEntity frame: %d	time: %d\n", latestFrame, SDL_GetTicks());
 #endif
+}
+
+void setWinner(stateResult *result) {
+		winnerId = result->winner;
+		setMyStateNeutral();
+		changeScene(SCENE_RESULT);
+}
+
+static void setMyStateNeutral() {
+		myPlayer->boost = BOOST_NEUTRAL;
+		myPlayer->rotate = ROTATE_NEUTRAL;
+		myPlayer->warn = WARN_SAFETY;
+}
+
+bool youWin() {
+		return winnerId == clientId;
 }

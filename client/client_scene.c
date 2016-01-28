@@ -13,7 +13,6 @@ void sceneInit() {
 		sceneInitModule(scene);
 }
 
-
 void sceneFinal() {
 		sceneFinalModule(scene);
 }
@@ -28,6 +27,8 @@ bool sceneManagerEvent() {
 						return eventLoading();
 				case SCENE_BATTLE:
 						return windowEvent();
+				case SCENE_RESULT:
+						return eventResult();
 				default:
 						break;
 		}
@@ -45,11 +46,13 @@ void sceneManagerUpdate() {
 				case SCENE_BATTLE:
 						updateEvent();
 						break;
+				case SCENE_RESULT:
+						updateEvent();
+						break;
 				default:
 						break;
 		}
 }
-
 
 void sceneManagerDraw() {
 		switch (scene) {
@@ -62,11 +65,15 @@ void sceneManagerDraw() {
 				case SCENE_BATTLE:
 						drawWindow();
 						break;
+				case SCENE_RESULT:
+						drawWindow();
+						drawResult();
+						break;
 				default:
 						break;
 		}
+		SDL_Flip(SDL_GetVideoSurface());
 }
-
 
 bool sceneManagerRecv(syncData *data) {
 		if (data->common.endFlag)
@@ -78,14 +85,23 @@ bool sceneManagerRecv(syncData *data) {
 						recvLoading(data);
 						break;
 				case SCENE_BATTLE:
-						reflectDelta(data);
+				case SCENE_RESULT:
+						switch (data->type) {
+								case DATA_ES_GET:
+										reflectDelta(&data->get);
+										break;
+								case DATA_RESULT:
+										setWinner(&data->result);
+										break;
+								default:
+										break;
+						}
 						break;
 				default:
 						break;
 		}
 		return false;
 }
-
 
 void sceneManagerSend() {
 		switch (scene) {
@@ -96,22 +112,27 @@ void sceneManagerSend() {
 				case SCENE_BATTLE:
 						sendEntity();
 						break;
+				case SCENE_RESULT:
+						break;
 				default:
 						break;
 		}
 }
 
-
 void changeScene(SCENE newScene) {
 		nextScene = newScene;
 }
-
 
 /********* static **********/
 
 static void switchScene() {
 		if (nextScene != SCENE_NONE) {
+				if (nextScene != SCENE_RESULT) {
 				sceneFinalModule(scene);
+				} else if (scene == SCENE_RESULT) {
+						sceneFinalModule(SCENE_BATTLE);
+						sceneFinalModule(scene);
+				}
 				scene = nextScene;
 				nextScene = SCENE_NONE;
 				sceneInitModule(scene);
@@ -132,6 +153,9 @@ static void sceneInitModule(SCENE cScene) {
 				case SCENE_BATTLE:
 						initSystem();
 						break;
+				case SCENE_RESULT:
+						initResult();
+						break;
 				default:
 						break;
 		}
@@ -148,6 +172,9 @@ static void sceneFinalModule(SCENE cScene) {
 						break;
 				case SCENE_BATTLE:
 						finalSystem();
+						break;
+				case SCENE_RESULT:
+						finalResult();
 						break;
 				default:
 						break;

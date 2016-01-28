@@ -98,6 +98,4 @@ void drawTitle() {
 				.dst.y = window->h - 150 - startString->h / 2,
 		};
 		SDL_BlitSurface(startString, &startRect.src, window, &startRect.dst);
-
-		SDL_Flip(window);
 }

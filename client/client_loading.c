@@ -99,7 +99,4 @@ void drawLoading() {
 				};
 				SDL_BlitSurface(lastTime, &strRect.src, window, &strRect.dst);
 		}
-
-
-		SDL_Flip(window);
 }
