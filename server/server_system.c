@@ -57,7 +57,7 @@ void initSystem() {
 		}
 
 		for (i = 0; i < clientNum; i++) {
-				if (!insertObject(&firstData->player[i], 0x0100 * i, OBJECT_CHARACTER)) {
+				if (!insertObject(&firstData->player[i], 0x0100 * (i + 1), OBJECT_CHARACTER)) {
 						fprintf(stderr, "InsertingObject is failed!\n");
 						exit(-1);
 				}
