@@ -1,6 +1,6 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
-#include "../common.h"
+#include "common.h"
 #include "client_result.h"
 #include "client_battle.h"
 #include "client_func.h"

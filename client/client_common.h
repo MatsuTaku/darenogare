@@ -17,7 +17,7 @@
 #define MODE_TIME_MINIMUM 12
 #define MODE_TIME_BARRIER 6
 #define MAX_MISSILE  5	// ミサイル最大数
-#define START_RANGE	500	// 初期座標距離
+#define START_RANGE	1000	// 初期座標距離
 #define START_ANGLE	(PI / 4)
 
 

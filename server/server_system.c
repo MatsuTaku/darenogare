@@ -1,4 +1,4 @@
-#include "../common.h"
+#include "common.h"
 #include "server_common.h"
 #include "server_func.h"
 
@@ -23,6 +23,7 @@ static void initEvent(eventNotification *event);
 static bool averageFromFrequency(double freq);
 static bool randomGenerateObstacle();
 static bool randomGenerateItem();
+static int choiceItem();
 static void callGameFinish(int winner);
 static bool insertEvent(int id, eventNotification *event);
 static OBJECT *insertObject(void *buffer, int id, OBJECT_TYPE type);
@@ -280,7 +281,7 @@ static bool randomGenerateObstacle() {
 
 
 static bool randomGenerateItem() {
-		ITEM_NUMBER randomNum = rand() % ITEM_NUM;
+		ITEM_NUMBER randomNum = choiceItem();
 		POSITION randomPos = {
 				rand() % MAP_SIZE - MAP_SIZE / 2,
 				rand() % MAP_SIZE - MAP_SIZE / 2
@@ -300,6 +301,30 @@ static bool randomGenerateItem() {
 		//		fprintf(stderr, "Failed to random insert item\n");
 		//		return false;
 		//}
+}
+
+static int choiceItem() {
+		ITEM_NUMBER num;
+		int weights[WEIGHT_NUM] = {
+				WEIGHT_NOIZE,
+				WEIGHT_LASER,
+				WEIGHT_MISSILE,
+				WEIGHT_MINIMUM,
+				WEIGHT_BARRIER,
+		};
+		int edges[WEIGHT_NUM];
+		int i;
+		for (i = 0; i < WEIGHT_NUM; i++) {
+				int j;
+				for (j = 0; j < i + 1; j++)
+						edges[i] += weights[j];
+		}
+		int randNum = rand() % WEIGHT_NUM + 1;
+		for (i = 0; i < ITEM_NUM; i++) {
+				if (randNum < edges[i])
+						return num;
+		}
+		return ITEM_EMPTY;
 }
 
 
