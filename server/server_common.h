@@ -14,7 +14,7 @@ enum itemWeight {
 		WEIGHT_MISSILE = 17,
 		WEIGHT_MINIMUM = 15,
 		WEIGHT_BARRIER = 14,
-		WEIGHT_NUM,
+		WEIGHT_NUM = 5,
 };
 
 typedef struct {

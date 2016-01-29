@@ -117,7 +117,6 @@ bool loadingSync() {
 bool battleSync() {
 		bool endFlag = false;
 		fd_set readOK = gMask;
-		printf("battleSync()\n");
 
 		updateBuffer();
 
@@ -139,7 +138,7 @@ bool battleSync() {
 						if (data[i].type != DATA_ES_SET)
 								continue;
 #ifndef NDEBUG
-						printf("recvData[from: %d]\n", i);
+						// printf("recvData[from: %d]\n", i);
 #endif
 						recvId[i] = true;
 						setPlayerState(i, &data[i].set);
@@ -161,7 +160,6 @@ bool battleSync() {
 		return endFlag;
 }
 
-
 void callEndGame() {
 		syncData end = {
 				.common.type = DATA_COMMON,
@@ -169,7 +167,6 @@ void callEndGame() {
 		};
 		sendData(ALL_CLIENTS, &end, sizeof(syncData));
 }
-
 
 /*****************************************************************
   関数名	: SendData
@@ -204,7 +201,6 @@ void ending(void) {
 		for (i = 0; i < gClientNum; i++)
 				close(gClients[i].fd); //クライアントを終了させる   
 }  
-
 
 /*****
   static
@@ -245,7 +241,7 @@ static void setMask(int maxfd) {
 		for (i = 0; i < gClientNum; i++)	FD_SET(gClients[i].fd, &gMask);
 }
 
-static void sendAllName(void) {
+static void sendAllName() {
 		int	i, j, tmp1, tmp2;
 
 		tmp2 = htonl(gClientNum); //クライアント数のバイトオーダー

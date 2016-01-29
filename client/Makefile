@@ -1,7 +1,7 @@
 OBJS	=	client_main.o client_net.o client_win.o client_system.o client_scene.o client_title.o client_loading.o client_result.o
 TARGET	=	client
 NDEBUG	=	-DNDEBUG
-INCLUDE	=	-I ../
+INCLUDE	=	-I../
 LINK	=	-lm -lSDL -lSDL_image -lSDL_gfx -lSDL_ttf
 
 .c.o:

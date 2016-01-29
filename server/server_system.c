@@ -1,4 +1,4 @@
-#include "common.h"
+#include "../common.h"
 #include "server_common.h"
 #include "server_func.h"
 
@@ -304,7 +304,6 @@ static bool randomGenerateItem() {
 }
 
 static int choiceItem() {
-		ITEM_NUMBER num;
 		int weights[WEIGHT_NUM] = {
 				WEIGHT_NOIZE,
 				WEIGHT_LASER,
@@ -312,17 +311,17 @@ static int choiceItem() {
 				WEIGHT_MINIMUM,
 				WEIGHT_BARRIER,
 		};
-		int edges[WEIGHT_NUM];
+		int edges[WEIGHT_NUM] = {0};
 		int i;
 		for (i = 0; i < WEIGHT_NUM; i++) {
 				int j;
 				for (j = 0; j < i + 1; j++)
 						edges[i] += weights[j];
 		}
-		int randNum = rand() % WEIGHT_NUM + 1;
+		int randNum = rand() % edges[WEIGHT_NUM - 1] + 1;
 		for (i = 0; i < ITEM_NUM; i++) {
-				if (randNum < edges[i])
-						return num;
+				if (randNum <= edges[i])
+						return i;
 		}
 		return ITEM_EMPTY;
 }

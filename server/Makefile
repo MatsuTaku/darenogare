@@ -6,7 +6,6 @@ INCLUDE	=	-I../
 
 .c.o:
 	gcc -c -g $(INCLUDE) $<
-#	gcc -c $(NDEBUG) $<
 
 all: $(TARGET)
 
