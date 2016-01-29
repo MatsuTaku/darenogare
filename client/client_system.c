@@ -82,7 +82,7 @@ int initSystem() {
 
 		for (i = 0; i < clientNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				if (insertObject(curPlayer, 0x1000 * i, OBJECT_CHARACTER) == NULL) {
+				if (insertObject(curPlayer, 0x1000 * (i + 1), OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
