@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include "server_loading.h"
-#include "../common.h"
+#include "common.h"
 #include "server_func.h"
 
 static bool state[MAX_CLIENTS];

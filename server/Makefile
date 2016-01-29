@@ -1,18 +1,19 @@
 OBJS	=	server_main.o server_net.o server_system.o server_scene.o server_loading.o
 TARGET	=	server
 NDEBUG	=	-DNDEBUG
+LINK	=	-lm -lSDL
+INCLUDE	=	-I../
 
 .c.o:
-	gcc -c -g $<
-#	gcc -c $(NDEBUG) $<
+	gcc -c -g $(INCLUDE) $<
 
 all: $(TARGET)
 
 $(TARGET):	$(OBJS)
-	gcc -o $@ $^ -lm -lSDL
+	gcc -o $@ $^ $(LINK)
 
 release: $(OBJS)
-	gcc -o $(TARGET) $^ -lm -lSDL $(NDEBUG)
+	gcc -o $(TARGET) $^ $(LINK) $(NDEBUG)
 
 clean:
 	rm *.o $(TARGET) *~ core .*.swp .*.swo

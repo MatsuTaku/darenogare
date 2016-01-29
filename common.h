@@ -27,8 +27,8 @@
 #define CT_NUM 4
 
 #define MAX_EVENT	0x0f
-#define MAP_SIZE	10000
-#define WORLD_SIZE 		20000
+#define MAP_SIZE	8000
+#define WORLD_SIZE 		15000
 
 #define PI				3.14159265
 #define HALF_DEGRESS	180

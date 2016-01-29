@@ -2,7 +2,7 @@
 #include "client_scene.h"
 #include "client_common.h"
 #include "client_func.h"
-#include "../common.h"
+#include "common.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 

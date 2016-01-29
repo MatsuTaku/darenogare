@@ -1,6 +1,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
-#include "../common.h"
+#include "common.h"
 #include "client_common.h"
 #include "client_func.h"
 #include "client_scene.h"

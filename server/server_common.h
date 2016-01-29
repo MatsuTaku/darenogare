@@ -8,6 +8,15 @@ enum generateFrequency {	// 毎秒の頻度
 		FREQ_ITEM = 1,
 };
 
+enum itemWeight {
+		WEIGHT_NOIZE = 12,
+		WEIGHT_LASER = 8,
+		WEIGHT_MISSILE = 17,
+		WEIGHT_MINIMUM = 15,
+		WEIGHT_BARRIER = 14,
+		WEIGHT_NUM = 5,
+};
+
 typedef struct {
 		eventNotification eventStack[MAX_CLIENTS][MAX_EVENT];
 } eventAssembly;

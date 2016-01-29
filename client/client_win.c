@@ -4,7 +4,7 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
 #include <math.h>
-#include "../common.h"
+#include "common.h"
 #include "client_common.h"
 #include "client_func.h"
 #include "client_scene.h"
