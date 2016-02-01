@@ -1,7 +1,7 @@
 #ifndef _SERVER_COMMON_H_
 #define _SERVER_COMMON_H_
 
-#include"../common.h"
+#include "common.h"
 
 enum generateFrequency {	// 毎秒の頻度
 		FREQ_OBSTACLE = 4,

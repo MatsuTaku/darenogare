@@ -1,4 +1,4 @@
-#include "../common.h"
+#include "common.h"
 #include "server_common.h"
 #include "server_func.h"
 
@@ -177,7 +177,7 @@ void updateBuffer() {
 		lastEvent = &pastEvent[sub(frame)];
 		curEvent = &pastEvent[sub(frame + 1)];
 		*curEvent = *lastEvent;
-		printf("Frame[%d: %d]\n", frame, sub(frame));
+		// printf("Frame[%d: %d]\n", frame, sub(frame));
 		frame++;
 
 		// generation
@@ -195,7 +195,6 @@ void updateSystem() {
 				int alivePlayerNum = 0;
 				int alival;
 				for (i = 0; i < clientNum; i++) {
-								printf("player[%d] alive: %d\n", i, curBuffer->player[i].alive);
 						if (curBuffer->player[i].alive) {
 								alivePlayerNum++;
 								alival = i;
@@ -208,7 +207,6 @@ void updateSystem() {
 						}
 				}
 		}
-
 }
 
 static void callGameFinish(int winner) {
@@ -223,8 +221,8 @@ static void callGameFinish(int winner) {
 				},
 		};
 		sendData(ALL_CLIENTS, &data, sizeof(syncData));
+		changeScene(SCENE_LOADING);
 }
-
 
 static bool averageFromFrequency(double freq) {
 		int accuracy = 4;
@@ -256,23 +254,23 @@ static bool randomGenerateObstacle() {
 		};
 #ifndef NDEBUG
 		/*
-		printf("obstacle	pos[%.0f: %.0f]\n", x, y);
-		printf("			angle: %f\n", randAngle);
-		*/
+		   printf("obstacle	pos[%.0f: %.0f]\n", x, y);
+		   printf("			angle: %f\n", randAngle);
+		 */
 #endif
 
 		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
-				eventNotification event;
-				event.type = EVENT_OBSTACLE;
-				event.playerId = OWNER;
-				event.objId = OBS_ROCK;
-				event.id = ownerObject;
-				event.pos = randPos;
-				event.angle = randAngle;
-				event.ver = randVer;
+		eventNotification event;
+		event.type = EVENT_OBSTACLE;
+		event.playerId = OWNER;
+		event.objId = OBS_ROCK;
+		event.id = ownerObject;
+		event.pos = randPos;
+		event.angle = randAngle;
+		event.ver = randVer;
 
-				ownerObject++;
-				return insertEvent(OWNER, &event);
+		ownerObject++;
+		return insertEvent(OWNER, &event);
 		//} else {
 		//		fprintf(stderr, "Failed to random generate obstacle\n");
 		//		return false;
@@ -288,15 +286,15 @@ static bool randomGenerateItem() {
 		};
 
 		//if (insertItem(ownerObject, randomNum, &randomPos)) {
-				eventNotification event;
-				event.type = EVENT_ITEM;
-				event.playerId = OWNER;
-				event.objId = randomNum;
-				event.id = ownerObject;
-				event.pos = randomPos;
+		eventNotification event;
+		event.type = EVENT_ITEM;
+		event.playerId = OWNER;
+		event.objId = randomNum;
+		event.id = ownerObject;
+		event.pos = randomPos;
 
-				ownerObject++;
-				return insertEvent(OWNER, &event);
+		ownerObject++;
+		return insertEvent(OWNER, &event);
 		//} else {
 		//		fprintf(stderr, "Failed to random insert item\n");
 		//		return false;
@@ -375,13 +373,13 @@ void setPlayerState(int id, entityStateSet* state) {
 		plyObj->pos.y = state->pos.y;
 #ifndef NDEBUG
 		/*
-		printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
-		printf("				alive: %d\n", state->player.alive);
-		printf("				alive: %d\n", player->alive);
-		*/
+		   printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
+		   printf("				alive: %d\n", state->player.alive);
+		   printf("				alive: %d\n", player->alive);
+		 */
 #endif
 		setPlayerValue(player, &state->player);
-		
+
 		clearEvent(id, state->latestFrame);
 		int i;
 		for (i = 0; i < MAX_EVENT; i++) {
@@ -434,10 +432,7 @@ void sendDeltaBuffer(int id, int latest) {
 				player->action = curPlayer->action - latestPlayer->action;
 				player->item = curPlayer->item - latestPlayer->item;
 				player->bullets = curPlayer->bullets - latestPlayer->bullets;
-				player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
 				player->warn = curPlayer->warn - latestPlayer->warn;
-				player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
-				player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
 
 				OBJECT *object = &data.get.delta.plyObj[i];
 				OBJECT *curPlObj = &curBuffer->object[i];

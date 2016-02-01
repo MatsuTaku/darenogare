@@ -97,12 +97,14 @@ bool loadingSync() {
 
 		int i;
 		for (i = 0; i < gClientNum; i++) {
-				if (FD_ISSET((gClients[i].fd), &readOK)) {
+				if (FD_ISSET(gClients[i].fd, &readOK)) {
 						syncData data;
 						recvData(i, &data, sizeof(syncData));
 						if (data.common.endFlag)	endFlag = true;
-						if (data.type == DATA_PREPARE)
+						if (data.type == DATA_PREPARE) {
 								nowLoadingClient(i);
+						}
+
 				}
 		}
 		if (!endFlag) {

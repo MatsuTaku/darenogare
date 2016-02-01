@@ -76,7 +76,7 @@ typedef enum {
 
 enum {
 		VER_ROCK = 200,
-		VER_MISSILE = 1000,
+		VER_MISSILE = 1100,
 		VER_LASER = 10000,
 };
 
@@ -150,7 +150,8 @@ typedef enum {
 typedef enum {
 		MODE_NEUTRAL,
 		MODE_MINIMUM,
-		MODE_BARRIER
+		MODE_BARRIER,
+		MODE_JAMMED,
 } MODE;
 
 typedef enum {
@@ -202,7 +203,7 @@ typedef enum {
 		EVENT_OBSTACLE,
 		EVENT_DELETE,
 		EVENT_ITEM,
-		EVENT_KILL,
+		EVENT_JAMMING,
 } EVENT;
 
 typedef struct {

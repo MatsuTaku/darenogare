@@ -81,7 +81,7 @@ bool sendRecvManager(void) {
 		struct timeval	timeout;
 
 		timeout.tv_sec = 0;
-		timeout.tv_usec = 20;
+		timeout.tv_usec = 10;
 
 		readOK = gMask;
 		/* サーバーからデータが届いているか調べる */

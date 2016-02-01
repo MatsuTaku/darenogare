@@ -9,8 +9,10 @@
 #include "client_func.h"
 #include "client_scene.h"
 
-#define WINDOW_WIDTH	1000
-#define WINDOW_HEIGHT	600
+// #define WINDOW_WIDTH	1000
+// #define WINDOW_HEIGHT	600
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 #define REACTION_VALUE	0x6fff
 
 

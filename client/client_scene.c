@@ -48,6 +48,7 @@ void sceneManagerUpdate() {
 						break;
 				case SCENE_RESULT:
 						updateEvent();
+						updateResult();
 						break;
 				default:
 						break;
@@ -128,7 +129,7 @@ void changeScene(SCENE newScene) {
 static void switchScene() {
 		if (nextScene != SCENE_NONE) {
 				if (nextScene != SCENE_RESULT) {
-				sceneFinalModule(scene);
+						sceneFinalModule(scene);
 				} else if (scene == SCENE_RESULT) {
 						sceneFinalModule(SCENE_BATTLE);
 						sceneFinalModule(scene);
