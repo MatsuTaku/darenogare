@@ -773,10 +773,15 @@ void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
 		diffPos.y = lsPos->y - myPos->y - reImage->h/2 - dy/2;
 		int dangle = angle;
 		if(owner == myID){
-			diffPos.x -= gLaserImage[1]->h*2; //座標調節
+			diffPos.x -= gLaserImage[1]->h*2 + 50; //座標調節
 		}
 		if(dangle < -90){
-			diffPos.y += gLaserImage[1]->h*3;
+			diffPos.y += gLaserImage[1]->h*3 + 20;
+		}
+		printf("%d\n",dangle);
+		if(dangle == -179){
+			diffPos.y = myPos->y;
+			printf("ズレは%d\n", diffPos.y - myPos->y);
 		}
 		adjustWindowPosition(&entity.dst, &diffPos);
 		SDL_BlitSurface(reImage, &entity.src, gMainWindow, &entity.dst);
@@ -924,11 +929,19 @@ void drawMiniMap(POSITION* myPos) {
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
+		/*if(myPlayer->ジャミングフラグ){
+			SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
+			SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
+			SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
+			TypeWarnStrings("Can't use Lader!!!");
+			return;
+		}*/
+
 		//2.オブジェクトの位置をgMiniMapに描写
 		int i, p, k;
 		int rImg = 60;
 		int size = 2;
-		int asp = 40; //比率
+		int asp = 30; //比率
 		int rd = rImg * asp; //ミニマップの半径
 		int id;
 		POSITION center;
