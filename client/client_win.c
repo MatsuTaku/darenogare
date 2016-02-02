@@ -751,45 +751,28 @@ void drawRock_Missile(SDL_Surface *ObsImage, double angle, POSITION *obsPos){
 }
 
 /*レーザの描画*/
-void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
-
-		Rect entity;
-		SDL_Surface *reImage;
-		POSITION diffPos;
-		POSITION* myPos = &myPlayer->object->pos;
-
-		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1);
-		int dx = reImage->w - gLaserImage[1]->w;
-		int dy = reImage->h - gLaserImage[1]->h;
-		int so = pow(player[owner].object->pos.x, 2) + pow(player[owner].object->pos.y,2);
-		int sl = pow(lsPos->x,2) + pow(lsPos->y,2);
-		entity.src.x = 0;	entity.src.y = 0;
-		/*if(abs(sl - so) > gLaserImage[1]->w){ //実行者の位置から描写
-			entity.src.w = abs(sl - so);
-		}else{
-			entity.src.w = reImage->w;
-		}*/
-		entity.src.w = reImage->w;
-		entity.src.h = reImage->h;
-		diffPos.x = lsPos->x - myPos->x - reImage->w/2 - dx/2;
-		diffPos.y = lsPos->y - myPos->y - reImage->h/2 - dy/2;
-		int dangle = angle;
-		if(owner == myID){
-			diffPos.x -= gLaserImage[1]->h*2 + 50; //座標調節
-		}
-		if(dangle < -90){
-			diffPos.y += gLaserImage[1]->h*3 + 20;
-		}
-		printf("%d\n",dangle);
-		if(dangle == -179){
-			diffPos.y = myPos->y;
-			printf("ズレは%d\n", diffPos.y - myPos->y);
+void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner) {
+		POSITION *myPos = &myPlayer->object->pos;
+		SDL_Surface *reImage = rotozoomSurface(ObsImage, angle, 1.0, 1);
+		int dx = (reImage->w - ObsImage->w) / 2;
+		int dy = (reImage->h - ObsImage->h) / 2;
+		Rect entity = {
+				.src.w = reImage->w,
+				.src.h = reImage->h,
+		};
+		POSITION diffPos = {
+				.x = lsPos->x - myPos->x - reImage->w / 2,
+				.y = lsPos->y - myPos->y - reImage->h / 2,
+		};
+		if (owner == myID) {
+				int alignDiff = ObsImage->w / 2;
+				diffPos.x += alignDiff * cos(angle);
+				diffPos.y -= alignDiff * sin(angle);
+				printf("laser angle: %f, diff[%d, %d]\n", angle, diffPos.x, diffPos.y);
 		}
 		adjustWindowPosition(&entity.dst, &diffPos);
 		SDL_BlitSurface(reImage, &entity.src, gMainWindow, &entity.dst);
-		if(reImage){
-			SDL_FreeSurface(reImage);
-		}
+		SDL_FreeSurface(reImage);
 }
 
 

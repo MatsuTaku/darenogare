@@ -500,7 +500,12 @@ static void affectedJamming(int playerId) {
 
 		// Drop item method
 		int objectId = selfObject++;
-		insertItem(objectId, myPlayer->item, &myPlayer->object->pos);
+		POSITION dropPos = myPlayer->object->pos;
+		double angle = atan(myPlayer->ver.vy / -myPlayer->ver.vx);
+		int dropDiff = RANGE_CHARACTER + RANGE_ITEM + 1;
+		dropPos.x += dropDiff * cos(angle);
+		dropPos.y -= dropDiff * sin(angle);
+		insertItem(objectId, myPlayer->item, &dropPos);
 		eventNotification event = {
 				.type = EVENT_ITEM,
 				.playerId = clientId,

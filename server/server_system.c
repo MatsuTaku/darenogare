@@ -1,6 +1,7 @@
 #include "common.h"
 #include "server_common.h"
 #include "server_func.h"
+#include "SDL/SDL.h"
 
 #define nextObj(a)	((a + 1) % MAX_OBJECT) + MAX_CLIENTS
 #define sub(x)	(x) % RETENTION_FRAME
@@ -25,6 +26,7 @@ static bool randomGenerateObstacle();
 static bool randomGenerateItem();
 static int choiceItem();
 static void callGameFinish(int winner);
+static int changeSceneLoading(void *param);
 static bool insertEvent(int id, eventNotification *event);
 static OBJECT *insertObject(void *buffer, int id, OBJECT_TYPE type);
 static void setPlayerValue(PLAYER *to, PLAYER *from);
@@ -221,7 +223,15 @@ static void callGameFinish(int winner) {
 				},
 		};
 		sendData(ALL_CLIENTS, &data, sizeof(syncData));
+		// changeScene(SCENE_LOADING);
+
+		SDL_Thread *thread = SDL_CreateThread(changeSceneLoading, NULL);
+}
+
+static int changeSceneLoading(void *param) {
+		SDL_Delay(500);
 		changeScene(SCENE_LOADING);
+		return 0;
 }
 
 static bool averageFromFrequency(double freq) {
