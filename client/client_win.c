@@ -627,7 +627,7 @@ void drawForecast(int id, POSITION* charaPos){
 
 		POSITION  diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
-		SDL_Surface *f_window, *reImage;
+		SDL_Surface *reImage;
 		int angle = player[id].dir * HALF_DEGRESS / PI; //角度（度数）
 		double r_angle = player[id].dir; //角度（ラジアン）
 		int rmask, gmask, amask, bmask;
@@ -843,6 +843,9 @@ void drawPunishment(void){
 
 		if(pn_anm >= div){
 			pn_flag = 0; //アニメーション終了
+		}
+		if(meteoImage != NULL){
+			SDL_FreeSurface(meteoImage);
 		}
 }
 
