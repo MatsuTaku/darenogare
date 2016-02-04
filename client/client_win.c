@@ -634,20 +634,24 @@ void drawForecast(int id, POSITION* charaPos){
 		SDL_Rect start;
 		POSITION end;
 
-		int i;
-		for(i =-3; i < 4; i++){
-		if(judgeRange(charaPos, myPos) > 0){
-			diffPos.x = charaPos->x - myPos->x + i*3;
-			diffPos.y = charaPos->y - myPos->y + i*3;
-			adjustWindowPosition(&start, &diffPos);
-		}else{
-			double dir = atan2(-(charaPos->y - myPos->y), charaPos->x - myPos->x);
-			start.x = gMainWindow->w/2 - gMainWindow->w/2*cos(dir) + i*3;
-			start.y = gMainWindow->h/2 + gMainWindow->h/2*sin(dir) + i*3;
-		}
-			end.x = start.x + (gMainWindow->w * cos(r_angle));
-			end.y = start.y - (gMainWindow->h * sin(r_angle));
-			lineColor(gMainWindow, start.x, start.y, end.x, end.y, SDL_MapRGBA(gMainWindow->format, 255,0,i*50,255));
+		int i, laserWidth = 20;
+		for(i = -laserWidth/2 + 1; i < laserWidth/2; i++){
+			double shiftX = i*cos(r_angle+PI/2), shiftY = -i*sin(r_angle+PI/2);
+			if(judgeRange(charaPos, myPos) > 0){
+				diffPos.x = charaPos->x - myPos->x + shiftX;
+				diffPos.y = charaPos->y - myPos->y + shiftY;
+				adjustWindowPosition(&start, &diffPos);
+			}else{
+				double dir = atan2(-(charaPos->y - myPos->y), charaPos->x - myPos->x);
+				start.x = gMainWindow->w/2 - gMainWindow->w/2*cos(dir) + shiftX;
+				start.y = gMainWindow->h/2 + gMainWindow->h/2*sin(dir) + shiftY;
+			}
+			int maxLength = 2000;
+			end.x = start.x + (maxLength * cos(r_angle));
+			end.y = start.y - (maxLength * sin(r_angle));
+			int forecastColor = SDL_MapRGBA(gMainWindow->format, 0xff, 0x66, 0xff*abs(i)/laserWidth, 0x1c);
+			printf("forecaset color: %8x\n", forecastColor);
+			lineColor(gMainWindow, start.x, start.y, end.x, end.y, forecastColor);
 		}
 
 
@@ -938,22 +942,30 @@ void drawMiniMap(POSITION* myPos) {
 				double dy = object[i].pos.y - myPos->y;
 				double range = pow(dx, 2) + pow(dy, 2);
 				if (range < pow(rd, 2)) {
+						int color;
 						POSITION point;
 						point.x = center.x + dx / asp;
 						point.y = center.y + dy / asp;
 
 						switch(object[i].type) {
-								case OBJECT_CHARACTER: //キャラクター
-										break;
 								case OBJECT_OBSTACLE: //障害物
-										filledCircleColor(gMiniMap, point.x, point.y, size, 0xff0000ff);
+										switch (((OBSTACLE *)object[i].typeBuffer)->num) {
+												case OBS_LASER:
+												case OBS_MISSILE:
+													color = 0xFF2F14FF;
+													break;
+												default:
+													color = 0xffd770ff;				
+										}
 										break;
 								case OBJECT_ITEM: //アイテム
-										filledCircleColor(gMiniMap, point.x, point.y, size, 0x0000ffff);
+										color = 0x0000ffff;
 										break;
+								case OBJECT_CHARACTER: //キャラクター
 								default:
-										break;
+										continue;
 						}
+						filledCircleColor(gMiniMap, point.x, point.y, size, color);
 				}
 		}
 
@@ -978,21 +990,23 @@ void drawMiniMap(POSITION* myPos) {
 				filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
 			} else {
 				if(player[k].alive){
-					filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xffd770ff); //敵
+					filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xff0000ff); //敵
 				}
 			}
 			//レーザ予測線の描画
 			if(player[k].action == ACTION_CD_LASER){
-				dir = player[k].dir * HALF_DEGRESS / PI;
+				double ragian = player[k].dir;
+				dir = ragian * HALF_DEGRESS / PI;
 				if(k != myID){
 					if(dir > -90 ){
 						dir -= 90;
 					}
 					TypeWarnStrings("Warning Laser");
 				}
-				dir = dir / HALF_DEGRESS * PI;
-				for(p = -2; p < 3; p++){
-					lineColor(gMiniMap, ps.x, ps.y, ps.x + 50*cos(dir)+p, ps.y - 50*sin(dir)+p, 0xb22222ff);
+				int laserWidth = 6;
+				for(p = -laserWidth / 2 + 1; p < laserWidth / 2; p++){
+					int shiftX = p*cos(ragian+PI/2), shiftY = -p*sin(ragian+PI/2);
+					lineColor(gMiniMap, ps.x + shiftX, ps.y - shiftY, ps.x + 100*cos(ragian)+shiftX, ps.y - 100*sin(ragian)+shiftY, 0xb22222ff);
 				}
 			}
 		}
