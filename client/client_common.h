@@ -8,16 +8,17 @@
 #define ALL_CLIENTS		-1
 #define BOOST_ACCELE	1	// one frame
 #define ANGULAR_VEROCITY	360	// 角速度
-#define ACCELE_GO	400		// 加速度
-#define ACCELE_BRAKE	-300	// 減速度
+#define ACCELE_GO	700		// 加速度
+#define ACCELE_BRAKE	-600	// 減速度
 #define MAXIMUM_SPEED	800
 // #define RESISTANCE		-0	// 抵抗
 #define WARN_TIME_RIMIT	10	// 帰還制限時間（秒）
 #define FIRE_TIME_LASER 3	// レーザー照射時間
 #define MODE_TIME_MINIMUM 12
 #define MODE_TIME_BARRIER 6
+#define MODE_TIME_JAMMING 4
 #define MAX_MISSILE  5	// ミサイル最大数
-#define START_RANGE	500	// 初期座標距離
+#define START_RANGE	1000	// 初期座標距離
 #define START_ANGLE	(PI / 4)
 
 

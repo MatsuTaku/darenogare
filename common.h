@@ -27,8 +27,8 @@
 #define CT_NUM 4
 
 #define MAX_EVENT	0x0f
-#define MAP_SIZE	10000
-#define WORLD_SIZE 		20000
+#define MAP_SIZE	8000
+#define WORLD_SIZE 		15000
 
 #define PI				3.14159265
 #define HALF_DEGRESS	180
@@ -76,7 +76,7 @@ typedef enum {
 
 enum {
 		VER_ROCK = 200,
-		VER_MISSILE = 1000,
+		VER_MISSILE = 1100,
 		VER_LASER = 10000,
 };
 
@@ -92,12 +92,12 @@ typedef struct {
 /* ITEM Values */
 typedef enum {
 		ITEM_EMPTY = -1,
-		ITEM_NOIZING,
-		ITEM_LASER,
-		ITEM_MISSILE,
-		ITEM_MINIMUM,
-		ITEM_BARRIER,
-		ITEM_NUM		
+		ITEM_NOIZING = 0,
+		ITEM_LASER = 1,
+		ITEM_MISSILE = 2,
+		ITEM_MINIMUM = 3,
+		ITEM_BARRIER = 4,
+		ITEM_NUM = 5		
 } ITEM_NUMBER;
 
 typedef struct {
@@ -150,7 +150,8 @@ typedef enum {
 typedef enum {
 		MODE_NEUTRAL,
 		MODE_MINIMUM,
-		MODE_BARRIER
+		MODE_BARRIER,
+		MODE_JAMMED,
 } MODE;
 
 typedef enum {
@@ -202,7 +203,7 @@ typedef enum {
 		EVENT_OBSTACLE,
 		EVENT_DELETE,
 		EVENT_ITEM,
-		EVENT_KILL,
+		EVENT_JAMMING,
 } EVENT;
 
 typedef struct {

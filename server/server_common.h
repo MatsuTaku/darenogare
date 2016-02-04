@@ -1,11 +1,20 @@
 #ifndef _SERVER_COMMON_H_
 #define _SERVER_COMMON_H_
 
-#include"../common.h"
+#include "common.h"
 
 enum generateFrequency {	// 毎秒の頻度
 		FREQ_OBSTACLE = 4,
 		FREQ_ITEM = 1,
+};
+
+enum itemWeight {
+		WEIGHT_NOIZE = 11,
+		WEIGHT_LASER = 6,
+		WEIGHT_MISSILE = 21,
+		WEIGHT_MINIMUM = 15,
+		WEIGHT_BARRIER = 13,
+		WEIGHT_NUM = 5,
 };
 
 typedef struct {

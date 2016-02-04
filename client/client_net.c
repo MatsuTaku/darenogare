@@ -1,6 +1,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
-#include "../common.h"
+#include "common.h"
 #include "client_common.h"
 #include "client_func.h"
 #include "client_scene.h"
@@ -81,7 +81,7 @@ bool sendRecvManager(void) {
 		struct timeval	timeout;
 
 		timeout.tv_sec = 0;
-		timeout.tv_usec = 20;
+		timeout.tv_usec = 10;
 
 		readOK = gMask;
 		/* サーバーからデータが届いているか調べる */

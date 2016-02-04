@@ -1,6 +1,7 @@
-#include "../common.h"
+#include "common.h"
 #include "server_common.h"
 #include "server_func.h"
+#include "SDL/SDL.h"
 
 #define nextObj(a)	((a + 1) % MAX_OBJECT) + MAX_CLIENTS
 #define sub(x)	(x) % RETENTION_FRAME
@@ -23,7 +24,9 @@ static void initEvent(eventNotification *event);
 static bool averageFromFrequency(double freq);
 static bool randomGenerateObstacle();
 static bool randomGenerateItem();
+static int choiceItem();
 static void callGameFinish(int winner);
+static int changeSceneLoading(void *param);
 static bool insertEvent(int id, eventNotification *event);
 static OBJECT *insertObject(void *buffer, int id, OBJECT_TYPE type);
 static void setPlayerValue(PLAYER *to, PLAYER *from);
@@ -56,7 +59,7 @@ void initSystem() {
 		}
 
 		for (i = 0; i < clientNum; i++) {
-				if (!insertObject(&firstData->player[i], 0x0100 * i, OBJECT_CHARACTER)) {
+				if (!insertObject(&firstData->player[i], 0x0100 * (i + 1), OBJECT_CHARACTER)) {
 						fprintf(stderr, "InsertingObject is failed!\n");
 						exit(-1);
 				}
@@ -176,7 +179,7 @@ void updateBuffer() {
 		lastEvent = &pastEvent[sub(frame)];
 		curEvent = &pastEvent[sub(frame + 1)];
 		*curEvent = *lastEvent;
-		printf("Frame[%d: %d]\n", frame, sub(frame));
+		// printf("Frame[%d: %d]\n", frame, sub(frame));
 		frame++;
 
 		// generation
@@ -194,7 +197,6 @@ void updateSystem() {
 				int alivePlayerNum = 0;
 				int alival;
 				for (i = 0; i < clientNum; i++) {
-								printf("player[%d] alive: %d\n", i, curBuffer->player[i].alive);
 						if (curBuffer->player[i].alive) {
 								alivePlayerNum++;
 								alival = i;
@@ -207,7 +209,6 @@ void updateSystem() {
 						}
 				}
 		}
-
 }
 
 static void callGameFinish(int winner) {
@@ -222,8 +223,16 @@ static void callGameFinish(int winner) {
 				},
 		};
 		sendData(ALL_CLIENTS, &data, sizeof(syncData));
+		// changeScene(SCENE_LOADING);
+
+		SDL_Thread *thread = SDL_CreateThread(changeSceneLoading, NULL);
 }
 
+static int changeSceneLoading(void *param) {
+		SDL_Delay(500);
+		changeScene(SCENE_LOADING);
+		return 0;
+}
 
 static bool averageFromFrequency(double freq) {
 		int accuracy = 4;
@@ -255,23 +264,23 @@ static bool randomGenerateObstacle() {
 		};
 #ifndef NDEBUG
 		/*
-		printf("obstacle	pos[%.0f: %.0f]\n", x, y);
-		printf("			angle: %f\n", randAngle);
-		*/
+		   printf("obstacle	pos[%.0f: %.0f]\n", x, y);
+		   printf("			angle: %f\n", randAngle);
+		 */
 #endif
 
 		//if (generateObstacle(ownerObject, OBS_ROCK, &randPos, randAngle, randVer)) {
-				eventNotification event;
-				event.type = EVENT_OBSTACLE;
-				event.playerId = OWNER;
-				event.objId = OBS_ROCK;
-				event.id = ownerObject;
-				event.pos = randPos;
-				event.angle = randAngle;
-				event.ver = randVer;
+		eventNotification event;
+		event.type = EVENT_OBSTACLE;
+		event.playerId = OWNER;
+		event.objId = OBS_ROCK;
+		event.id = ownerObject;
+		event.pos = randPos;
+		event.angle = randAngle;
+		event.ver = randVer;
 
-				ownerObject++;
-				return insertEvent(OWNER, &event);
+		ownerObject++;
+		return insertEvent(OWNER, &event);
 		//} else {
 		//		fprintf(stderr, "Failed to random generate obstacle\n");
 		//		return false;
@@ -280,26 +289,49 @@ static bool randomGenerateObstacle() {
 
 
 static bool randomGenerateItem() {
-		ITEM_NUMBER randomNum = rand() % ITEM_NUM;
+		ITEM_NUMBER randomNum = choiceItem();
 		POSITION randomPos = {
 				rand() % MAP_SIZE - MAP_SIZE / 2,
 				rand() % MAP_SIZE - MAP_SIZE / 2
 		};
 
 		//if (insertItem(ownerObject, randomNum, &randomPos)) {
-				eventNotification event;
-				event.type = EVENT_ITEM;
-				event.playerId = OWNER;
-				event.objId = randomNum;
-				event.id = ownerObject;
-				event.pos = randomPos;
+		eventNotification event;
+		event.type = EVENT_ITEM;
+		event.playerId = OWNER;
+		event.objId = randomNum;
+		event.id = ownerObject;
+		event.pos = randomPos;
 
-				ownerObject++;
-				return insertEvent(OWNER, &event);
+		ownerObject++;
+		return insertEvent(OWNER, &event);
 		//} else {
 		//		fprintf(stderr, "Failed to random insert item\n");
 		//		return false;
 		//}
+}
+
+static int choiceItem() {
+		int weights[WEIGHT_NUM] = {
+				WEIGHT_NOIZE,
+				WEIGHT_LASER,
+				WEIGHT_MISSILE,
+				WEIGHT_MINIMUM,
+				WEIGHT_BARRIER,
+		};
+		int edges[WEIGHT_NUM] = {0};
+		int i;
+		for (i = 0; i < WEIGHT_NUM; i++) {
+				int j;
+				for (j = 0; j < i + 1; j++)
+						edges[i] += weights[j];
+		}
+		int randNum = rand() % edges[WEIGHT_NUM - 1] + 1;
+		for (i = 0; i < ITEM_NUM; i++) {
+				if (randNum <= edges[i])
+						return i;
+		}
+		return ITEM_EMPTY;
 }
 
 
@@ -351,13 +383,13 @@ void setPlayerState(int id, entityStateSet* state) {
 		plyObj->pos.y = state->pos.y;
 #ifndef NDEBUG
 		/*
-		printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
-		printf("				alive: %d\n", state->player.alive);
-		printf("				alive: %d\n", player->alive);
-		*/
+		   printf("frame[%d]	player[%d] pos x: %d, y: %d\n", frame, id, plyObj->pos.x, plyObj->pos.y);
+		   printf("				alive: %d\n", state->player.alive);
+		   printf("				alive: %d\n", player->alive);
+		 */
 #endif
 		setPlayerValue(player, &state->player);
-		
+
 		clearEvent(id, state->latestFrame);
 		int i;
 		for (i = 0; i < MAX_EVENT; i++) {
@@ -410,10 +442,7 @@ void sendDeltaBuffer(int id, int latest) {
 				player->action = curPlayer->action - latestPlayer->action;
 				player->item = curPlayer->item - latestPlayer->item;
 				player->bullets = curPlayer->bullets - latestPlayer->bullets;
-				player->launchCount = curPlayer->launchCount - latestPlayer->launchCount;
 				player->warn = curPlayer->warn - latestPlayer->warn;
-				player->deadTime = curPlayer->deadTime - latestPlayer->deadTime;
-				player->lastTime = curPlayer->lastTime - latestPlayer->lastTime;
 
 				OBJECT *object = &data.get.delta.plyObj[i];
 				OBJECT *curPlObj = &curBuffer->object[i];

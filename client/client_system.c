@@ -1,4 +1,4 @@
-#include "../common.h"
+#include "common.h"
 #include "client_common.h"
 #include "client_func.h"
 #include "client_battle.h"
@@ -22,24 +22,24 @@ static eventNotification eventStack[MAX_EVENT];
 static int latestFrame;
 
 /** Static Functions */
-static void initObject(OBJECT* object);
-static bool deleteObject(int objectId);
-static void initPlayer(PLAYER* player, int num, int playerNum);
-static bool generateObstacle(int owner, int id,int num, POSITION* pos, double angle, VEROCITY *ver);
-static bool insertItem(int id, int num, POSITION* pos);
-static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type);
+static void initObject(OBJECT *);
+static bool deleteObject(int);
+static void initPlayer(PLAYER *, int, int);
+static bool generateObstacle(int, int, int, POSITION *, double, VEROCITY *);
+static bool insertItem(int, int, POSITION *);
+static OBJECT* insertObject(void *, int, OBJECT_TYPE);
 static void initEvent();
 static void updatePlayer();
 static void updateObject();
-static void updateObstacle(OBSTACLE* obstacle);
+static void updateObstacle(OBSTACLE *);
 static void collisionDetection();
-static void rotateDirection(double sign);
-static void accelerateVerocity(double accel);
+static void rotateDirection(double);
+static void accelerateVerocity(double);
 static void setPlayerPosition();
-static void setPos(POSITION* pos, int x, int y);
+static void setPos(POSITION *, int, int);
 static void setMyStateNeutral();
-static bool hitObject(OBJECT* alpha, OBJECT* beta);
-static void hitDeleteObject(OBJECT* object);
+static bool hitObject(OBJECT *, OBJECT *);
+static void hitDeleteObject(OBJECT *);
 static void countDownFireLaser();
 static void laserPreparation();
 static void launchMissile();
@@ -47,11 +47,14 @@ static void modeMinimum();
 static void updateMinimum();
 static void modeBarrier();
 static void updateBarrier();
-static double getObjectSize(OBJECT* object);
-static double getRange(OBJECT* alpha, OBJECT* beta);
-static bool judgeSafety(POSITION* pos);
-static void launchEvent(eventNotification *event);
-static bool insertEvent(eventNotification* event);
+static void transmitJamming();
+static void affectedJamming(int);
+static void updateJamming();
+static double getObjectSize(OBJECT *);
+static double getRange(OBJECT *, OBJECT *);
+static bool judgeSafety(POSITION *);
+static void launchEvent(eventNotification *);
+static bool insertEvent(eventNotification *);
 
 /**
  *	ゲームシステムの初期化
@@ -82,7 +85,7 @@ int initSystem() {
 
 		for (i = 0; i < clientNum; i++) {
 				PLAYER* curPlayer = &player[i];
-				if (insertObject(curPlayer, 0x1000 * i, OBJECT_CHARACTER) == NULL) {
+				if (insertObject(curPlayer, 0x1000 * (i + 1), OBJECT_CHARACTER) == NULL) {
 						fprintf(stderr, "Inserting OBJECT is failed!\n");
 						return -1;
 				}
@@ -93,7 +96,6 @@ int initSystem() {
 
 		return 0;
 }
-
 
 void finalSystem() {
 		int i;
@@ -107,7 +109,6 @@ void finalSystem() {
 		}
 }
 
-
 /** 
  * オブジェクトの挿入
  * input1: オブジェクトバッファ
@@ -118,7 +119,6 @@ static void initObject(OBJECT* object) {
 		object->typeBuffer = NULL;
 		setPos(&object->pos, 0, 0);
 }
-
 
 static bool deleteObject(int objectId) {
 		int i;
@@ -139,13 +139,12 @@ static bool deleteObject(int objectId) {
 		return false;
 }
 
-
 /**
  * プレイヤー初期化
  * input1: プレイヤーポインタ
  * input2: プレイヤーID
  */
-static void initPlayer(PLAYER* player, int num, int playerNum) {
+static void initPlayer(PLAYER *player, int num, int playerNum) {
 		player->num = num;
 		player->mode = MODE_NEUTRAL;
 		player->modeTime = 0;
@@ -173,10 +172,8 @@ static void initPlayer(PLAYER* player, int num, int playerNum) {
 						.y = -(START_RANGE * sin(startAngle)),
 				};
 				setPos(&player->object->pos, pos.x, pos.y);
-				// printf("player[%d] angle: %f\n", num, startAngle);
 		}
 }
-
 
 /**
  * 障害物の挿入
@@ -200,7 +197,6 @@ static bool generateObstacle(int owner, int id, int num, POSITION* pos, double a
 		curObs->ver = *ver;
 }
 
-
 /**
  * アイテムの挿入
  * input1: アイテム番号
@@ -221,7 +217,6 @@ static bool insertItem(int id, int num, POSITION* pos) {
 		item->object->pos = *pos;
 		return true;
 }
-
 
 /**
  * オブジェクトの挿入
@@ -270,7 +265,6 @@ static OBJECT* insertObject(void* buffer, int id, OBJECT_TYPE type) {
 		return NULL;
 }
 
-
 /**
  * システムの計算処理
  */
@@ -285,7 +279,6 @@ void updateEvent() {
 		/** launch judging collision detection method */
 		collisionDetection();
 }
-
 
 /**
  * イベントスタックの初期化
@@ -307,7 +300,6 @@ static void initEvent() {
 		}
 }
 
-
 /**
  * プレイヤーデータの計算
  */
@@ -323,6 +315,9 @@ static void updatePlayer() {
 						case MODE_MINIMUM:
 								updateMinimum();
 								break;
+						case MODE_JAMMED:
+								updateJamming();
+								break;
 						default:
 								break;
 				}
@@ -333,6 +328,7 @@ static void updatePlayer() {
 						case ACTION_USE_ITEM:
 								switch (myPlayer->item) {
 										case ITEM_NOIZING:
+												transmitJamming();
 												break;
 										case ITEM_LASER:
 												countDownFireLaser();
@@ -392,7 +388,6 @@ static void updatePlayer() {
 		}
 }
 
-
 static void countDownFireLaser() {
 		myPlayer->launchCount = FIRE_TIME_LASER * MIRI_SECOND;
 		myPlayer->action = ACTION_CD_LASER;
@@ -428,7 +423,6 @@ static void laserPreparation() {
 		}
 }
 
-
 static void launchMissile() {
 		myPlayer->bullets--;
 		int objectId = selfObject++;
@@ -460,7 +454,6 @@ static void launchMissile() {
 		}
 }
 
-
 static void modeMinimum() {
 		myPlayer->mode = MODE_MINIMUM;
 		myPlayer->item = ITEM_EMPTY;
@@ -489,6 +482,47 @@ static void updateBarrier() {
 		}
 }
 
+static void transmitJamming() {
+		eventNotification event = {
+				.playerId = clientId,
+				.type = EVENT_JAMMING,
+		};
+		insertEvent(&event);
+
+		myPlayer->item = ITEM_EMPTY;
+		myPlayer->action = ACTION_NONE;
+}
+
+static void affectedJamming(int playerId) {
+		if (playerId == clientId)	return;
+		myPlayer->mode = MODE_JAMMED;
+		myPlayer->modeTime = MODE_TIME_JAMMING * MIRI_SECOND;
+
+		// Drop item method
+		int objectId = selfObject++;
+		POSITION dropPos = myPlayer->object->pos;
+		double angle = atan(myPlayer->ver.vy / -myPlayer->ver.vx);
+		int dropDiff = RANGE_CHARACTER + RANGE_ITEM + 1;
+		dropPos.x += dropDiff * cos(angle);
+		dropPos.y -= dropDiff * sin(angle);
+		insertItem(objectId, myPlayer->item, &dropPos);
+		eventNotification event = {
+				.type = EVENT_ITEM,
+				.playerId = clientId,
+				.id = objectId,
+				.objId = myPlayer->item,
+				.pos = myPlayer->object->pos,
+		};
+		insertEvent(&event);
+		myPlayer->item = ITEM_EMPTY;	
+}
+
+static void updateJamming() {
+		myPlayer->modeTime -= MIRI_SECOND / FPS;
+		if (myPlayer->modeTime <= 0) {
+				myPlayer->mode = MODE_NEUTRAL;
+		}
+}
 
 /**
  * 機体を旋回
@@ -512,7 +546,6 @@ static void rotateDirection(double sign) {
 #endif	
 }
 
-
 /**
  * 噴射と向きに基づく速度変更
  * input: 機体の向きに対する加速度
@@ -532,7 +565,6 @@ static void accelerateVerocity(double accel) {
 #endif
 }
 
-
 /**
  * 機体の向きと速度から座標を移動
  */
@@ -544,7 +576,6 @@ static void setPlayerPosition() {
 		// printf("player pos[x: %4d, y: %4d]\n", pos->x, pos->y);
 #endif
 }
-
 
 /**
  * オブジェクトデータ更新
@@ -578,7 +609,6 @@ static void updateObject() {
 		}
 }
 
-
 /**
  * 障害物データ更新
  */
@@ -593,8 +623,6 @@ static void updateObstacle(OBSTACLE* obstacle) {
 				free(obstacle);
 		}
 }
-
-
 
 /**
  * 当たり判定と処理
@@ -658,7 +686,6 @@ static void collisionDetection() {
 		}
 }
 
-
 static void hitDeleteObject(OBJECT* object) {
 		eventNotification event;
 		event.type = EVENT_DELETE;
@@ -669,9 +696,8 @@ static void hitDeleteObject(OBJECT* object) {
 		initObject(object);
 }
 
-
 /**
- * window event emethods
+ * window event methods
  */
 
 void useItem() {	// アイテムの使用
@@ -828,51 +854,42 @@ static bool judgeSafety(POSITION* pos) {
 		return pow(pos->x, 2) + pow(pos->y, 2) < pow(MAP_SIZE, 2);
 }
 
-
 /***********
  * server method
  */
 void reflectDelta(entityStateGet *data) {
 		if (data->lastFrame == latestFrame) {
 				latestFrame = data->latestFrame;
-
 				DELTA* delta = &data->delta;
 				int i;
 				for (i = 0; i < clientNum; i++) {
-						if (i != clientId) {
-								PLAYER* curPlayer = &player[i];
-								PLAYER* deltaPlayer = &delta->player[i];
-								OBJECT* curObject = curPlayer->object;
-								OBJECT* deltaObject = &delta->plyObj[i];
-								curPlayer->mode += deltaPlayer->mode;
-								curPlayer->modeTime += deltaPlayer->modeTime;
-								curPlayer->dir += deltaPlayer->dir;
-								curPlayer->toDir += deltaPlayer->toDir;
-								curPlayer->ver.vx += deltaPlayer->ver.vx;
-								curPlayer->ver.vy += deltaPlayer->ver.vy;
-								curPlayer->alive = deltaPlayer->alive;
-								curPlayer->boost += deltaPlayer->boost;
-								curPlayer->rotate += deltaPlayer->rotate;
-								curPlayer->action += deltaPlayer->action;
-								curPlayer->item += deltaPlayer->item;
-								curPlayer->bullets += deltaPlayer->bullets;
-								curPlayer->launchCount += deltaPlayer->launchCount;
-								curPlayer->warn += deltaPlayer->warn;
-								curPlayer->deadTime +=deltaPlayer->deadTime;
-								curPlayer->lastTime += deltaPlayer->lastTime;
+						if (i == clientId) continue;
+						PLAYER* curPlayer = &player[i];
+						PLAYER* deltaPlayer = &delta->player[i];
+						OBJECT* curObject = curPlayer->object;
+						OBJECT* deltaObject = &delta->plyObj[i];
+						curPlayer->mode += deltaPlayer->mode;
+						curPlayer->dir += deltaPlayer->dir;
+						curPlayer->toDir += deltaPlayer->toDir;
+						curPlayer->ver.vx += deltaPlayer->ver.vx;
+						curPlayer->ver.vy += deltaPlayer->ver.vy;
+						curPlayer->alive = deltaPlayer->alive;
+						curPlayer->boost += deltaPlayer->boost;
+						curPlayer->rotate += deltaPlayer->rotate;
+						curPlayer->action += deltaPlayer->action;
+						curPlayer->item += deltaPlayer->item;
+						curPlayer->bullets += deltaPlayer->bullets;
+						curPlayer->warn += deltaPlayer->warn;
 
-								curObject->pos.x += deltaObject->pos.x;
-								curObject->pos.y += deltaObject->pos.y;
-						}
+						curObject->pos.x += deltaObject->pos.x;
+						curObject->pos.y += deltaObject->pos.y;
 				}
-
 				for (i = 0; i < MAX_EVENT; i++) {
 						eventNotification *curEvent = &data->event[i];
 						if (curEvent->type != EVENT_NONE)
 								launchEvent(curEvent);
 				}
 		}
-
 #ifndef NDEBUG
 		// printf("Frame[%d : %d]\n", data->latestFrame, data->lastFrame);
 #endif
@@ -892,7 +909,8 @@ static void launchEvent(eventNotification *event) {
 				case EVENT_ITEM:
 						insertItem(event->id, event->objId, &event->pos);
 						break;
-				case EVENT_KILL:
+				case EVENT_JAMMING:
+						affectedJamming(event->playerId);
 						break;
 				default:
 						break;

@@ -4,13 +4,15 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_rotozoom.h>
 #include <math.h>
-#include "../common.h"
+#include "common.h"
 #include "client_common.h"
 #include "client_func.h"
 #include "client_scene.h"
 
-#define WINDOW_WIDTH	1000
-#define WINDOW_HEIGHT	600
+// #define WINDOW_WIDTH	1000
+// #define WINDOW_HEIGHT	600
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 #define REACTION_VALUE	0x6fff
 
 
@@ -26,7 +28,7 @@ static char gMiniMapImgFile[] = "IMG/minimap.png"; //ミニマップ
 static char gTargetImgFile[] = "IMG/target.png"; //目的地
 static char pnLaserImgFile[] = "IMG/LaserEff3.png"; //お仕置きレーザー
 static char gMissileImgFile[] = "IMG/missileEff.png"; //ミサイル
-static char gNoizingImgFile[] = "IMG/noizingEff2.png"; //妨害電波
+static char gNoizingImgFile[] = "IMG/sandstorm.jpg"; //妨害砂嵐
 static char gParalysisImgFile[] = "IMG/noizingEff.png"; //痺れ状態
 static char gBarrierImgFile[] = "IMG/barrierEff.png"; //バリア
 static char gLaserImgFile[2][20] = { //レーザー
@@ -62,6 +64,7 @@ static int pn_anm; //お仕置きアニメーション
 static int pn_flag; //お仕置きフラグ
 static int weitFlag = 0;
 static int myID; //プレイヤー番号
+static int client_num;
 
 /* フォント */
 TTF_Font* wFont;
@@ -82,7 +85,7 @@ static SDL_Surface *gBoostImage; //ブースト
 static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gRockImage; //障害物
 static SDL_Surface *gMissileImage; //ミサイル
-static SDL_Surface *gNoizingImage; //妨害電波（ジャミング）
+static SDL_Surface *gNoizingImage; //ジャミング
 static SDL_Surface *gParalysisImage; //麻痺
 static SDL_Surface *gBarrierImage; //バリア
 static SDL_Surface *gLaserImage[2]; //レーザー
@@ -144,7 +147,7 @@ int initWindows(int clientID, int num) {
 				return -1;
 		}
 		//StatusWindow
-		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*4, gItemBox->h, 32, 0, 0, 0, 0)) == NULL) {
+		if((gStatusWindow = SDL_CreateRGBSurface(SDL_SWSURFACE, gItemBox->w*num, gItemBox->h, 32, 0, 0, 0, 0)) == NULL) {
 				printf("failed to initialize statuswindow");
 				return -1;
 		}
@@ -164,6 +167,7 @@ int initWindows(int clientID, int num) {
 		interval = SDL_GetTicks() + 100;
 		pn_flag = 0;
 		pn_anm = 0;
+		client_num = num;
 
 		// sprintf(title, "Player No. %d", clientID + 1);
 		SDL_WM_SetCaption(playerName[clientID], NULL);
@@ -380,7 +384,7 @@ void clearWindow(void){ //ウィンドウのクリア
 		SDL_Rect src_rect = {0, 0, gItemBox->w, gItemBox->h};
 		SDL_Rect dst_rect = {0, 0};
 		int i;
-		for(i=0; i < MAX_CLIENTS; i++){
+		for(i=0; i < client_num; i++){
 				dst_rect.x = i*(gItemBox->w);
 				SDL_BlitSurface(gItemBox, &src_rect, gStatusWindow, &dst_rect);
 		}
@@ -528,12 +532,6 @@ void drawArroundEffect(MODE mode, SDL_Surface *c_window){
 		effect.src.x = 0; effect.src.y = 0;
 
 		switch(mode){
-			case 125: //ジャミング
-				effect.src.w = gNoizingImage->w;   effect.src.h = gNoizingImage->h;
-				effect.dst.x = c_center.x + gCharaImage[myID]->w/2;
-				effect.dst.y = c_center.y - gNoizingImage->h/2;
-				SDL_BlitSurface(gNoizingImage, &effect.src, c_window, &effect.dst); //描画
-				break;
 			case MODE_BARRIER: //バリア
 				effect.src.w = gBarrierImage->w;   effect.src.h = gBarrierImage->h;
 				effect.dst.x = c_center.x - gBarrierImage->w/2;
@@ -642,9 +640,9 @@ void drawForecast(int id, POSITION* charaPos){
 		POSITION end;
 
 		int i;
-		for(i =0; i < 5; i++){
+		for(i =-3; i < 4; i++){
 		if(judgeRange(charaPos, myPos) > 0){
-			diffPos.x = charaPos->x - myPos->x + i*3; 
+			diffPos.x = charaPos->x - myPos->x + i*3;
 			diffPos.y = charaPos->y - myPos->y + i*3;
 			adjustWindowPosition(&start, &diffPos);
 		}else{
@@ -654,9 +652,10 @@ void drawForecast(int id, POSITION* charaPos){
 		}
 			end.x = start.x + (gMainWindow->w * cos(r_angle));
 			end.y = start.y - (gMainWindow->h * sin(r_angle));
-			
 			lineColor(gMainWindow, start.x, start.y, end.x, end.y, SDL_MapRGBA(gMainWindow->format, 255,0,i*50,255));
 		}
+
+
 }
 
 
@@ -749,40 +748,27 @@ void drawRock_Missile(SDL_Surface *ObsImage, double angle, POSITION *obsPos){
 }
 
 /*レーザの描画*/
-void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner){
-
-		Rect entity;
-		SDL_Surface *reImage;
-		POSITION diffPos;
-		POSITION* myPos = &myPlayer->object->pos;
-
-		reImage = rotozoomSurface(gLaserImage[1], angle, 1.0, 1);
-		int dx = reImage->w - gLaserImage[1]->w;
-		int dy = reImage->h - gLaserImage[1]->h;
-		int so = pow(player[owner].object->pos.x, 2) + pow(player[owner].object->pos.y,2);
-		int sl = pow(lsPos->x,2) + pow(lsPos->y,2);
-		entity.src.x = 0;	entity.src.y = 0;
-		/*if(abs(sl - so) > gLaserImage[1]->w){ //実行者の位置から描写
-			entity.src.w = abs(sl - so);
-		}else{
-			entity.src.w = reImage->w;
-		}*/
-		entity.src.w = reImage->w;
-		entity.src.h = reImage->h;
-		diffPos.x = lsPos->x - myPos->x - reImage->w/2 - dx/2;
-		diffPos.y = lsPos->y - myPos->y - reImage->h/2 - dy/2;
-		int dangle = angle;
-		if(owner == myID){
-			diffPos.x -= gLaserImage[1]->h*2; //座標調節
-		}
-		if(dangle < -90){
-			diffPos.y += gLaserImage[1]->h*3;
+void drawLaser(SDL_Surface *ObsImage, POSITION *lsPos, double angle, int owner) {
+		POSITION *myPos = &myPlayer->object->pos;
+		SDL_Surface *reImage = rotozoomSurface(ObsImage, angle, 1.0, 1);
+		int dx = (reImage->w - ObsImage->w) / 2;
+		int dy = (reImage->h - ObsImage->h) / 2;
+		Rect entity = {
+				.src.w = reImage->w,
+				.src.h = reImage->h,
+		};
+		POSITION diffPos = {
+				.x = lsPos->x - myPos->x - reImage->w / 2,
+				.y = lsPos->y - myPos->y - reImage->h / 2,
+		};
+		if (owner == myID) {
+				int alignDiff = ObsImage->w / 2;
+				diffPos.x += alignDiff * cos(angle);
+				diffPos.y -= alignDiff * sin(angle);
 		}
 		adjustWindowPosition(&entity.dst, &diffPos);
 		SDL_BlitSurface(reImage, &entity.src, gMainWindow, &entity.dst);
-		if(reImage){
-			SDL_FreeSurface(reImage);
-		}
+		SDL_FreeSurface(reImage);
 }
 
 
@@ -872,7 +858,7 @@ void drawStatus(void){
 		int i;
 		int item_id;
 		int chara_id;
-		for(i=0; i < MAX_CLIENTS; i++){
+		for(i=0; i < client_num; i++){
 			if(player[i].object != NULL) {
 			    chara_id = player[i].num;	// キャラ番号
 			    item_id = player[i].item;	// アイテム番号
@@ -890,11 +876,12 @@ void drawStatus(void){
 			      		dst_rect.x = chara_id*gItemBox->w + (gItemBox->w/2 - gIcon[chara_id]->w)/2;
 			      		dst_rect.y = (gItemBox->h - gIcon[chara_id]->h)/2;
 			      		SDL_BlitSurface(gIcon[chara_id], &src_rect, gStatusWindow, &dst_rect);
+					if(chara_id != myID){
+						item_id++;
+					}
+					printf("client%d item: %d\n", chara_id, item_id);
 			      		//所持アイテム
 			     		 if(item_id > ITEM_EMPTY){
-						if(chara_id != myID){
-							item_id++;
-						}
 				 		src_rect.w = gItemImage[item_id]->w;
 				 		src_rect.h = gItemImage[item_id]->h;
 				 		dst_rect.x = chara_id*gItemBox->w + gItemBox->w/2 + (gItemBox->w/2 - gItemImage[item_id]->w)/2 - 5;
@@ -917,18 +904,28 @@ void drawStatus(void){
 /*ミニマップの描画*/
 void drawMiniMap(POSITION* myPos) {
 		//1.gMiniMapの初期化
-		SDL_FillRect(gMiniMap, NULL, 0xa9a9a9); //白で塗りつぶし
-		SDL_SetColorKey(gMiniMap, SDL_SRCCOLORKEY, SDL_MapRGB(gMiniMap->format, 169, 169, 169)); //白を透過
+		SDL_FillRect(gMiniMap, NULL, 0xa9a9a9); //灰色で塗りつぶし
+		SDL_SetColorKey(gMiniMap, SDL_SRCCOLORKEY, SDL_MapRGB(gMiniMap->format, 169, 169, 169)); //灰色を透過
 		gMiniMap = SDL_DisplayFormat(gMiniMap);
 		SDL_Rect src_rect = {0, 0, gMiniMapImage->w, gMiniMapImage->h};
 		SDL_Rect dst_rect = {0, 0};
 		SDL_BlitSurface(gMiniMapImage, &src_rect, gMiniMap, &dst_rect);
 
+		if(myPlayer->mode == MODE_JAMMED){ //ジャミング状態
+			SDL_Rect sand_src = {myPlayer->modeTime*30, 0, gMiniMap->w, gMiniMap->h};
+			SDL_BlitSurface(gNoizingImage, &sand_src, gMiniMap, &dst_rect);
+			SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
+			SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
+			SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
+			TypeWarnStrings("Can't use Lader!!!");
+			return;
+		}
+
 		//2.オブジェクトの位置をgMiniMapに描写
 		int i, p, k;
-		int rImg = 60;
+		int rImg = 65;
 		int size = 2;
-		int asp = 40; //比率
+		int asp = 30; //比率
 		int rd = rImg * asp; //ミニマップの半径
 		int id;
 		POSITION center;
@@ -961,22 +958,20 @@ void drawMiniMap(POSITION* myPos) {
 		}
 
  		//3.キャラクターの描画
-		for(k = 0; k < MAX_CLIENTS; k++){
+		for(k = 0; k < client_num; k++){
 			if(player[k].object == NULL) break;
 			double lx = player[k].object->pos.x - myPos->x;
 			double ly = player[k].object->pos.y - myPos->y;
 			double range = pow(lx, 2) + pow(ly, 2);
-			double dir;
+			double dir = atan2(-(player[k].object->pos.y - myPos->y), player[k].object->pos.x - myPos->x); 
 			POSITION ps;
 			//範囲毎に描画位置を指定
 			if (range < pow(rd, 2)) {
 				ps.x = center.x + lx / asp;
 				ps.y = center.y + ly / asp;
 			}else{
-				double dir;
-				dir = atan2(-(player[k].object->pos.y - myPos->y), player[k].object->pos.x - myPos->x); 
-				ps.x = center.x + gMiniMapImage->w/2*cos(dir);
-				ps.y = center.y - gMiniMapImage->h/2*sin(dir);
+				ps.x = center.x + rd*cos(dir);
+				ps.y = center.y - rd*sin(dir);
 			}
 			//位置を描画
 			if (k == myID) {
@@ -996,7 +991,7 @@ void drawMiniMap(POSITION* myPos) {
 					TypeWarnStrings("Warning Laser");
 				}
 				dir = dir / HALF_DEGRESS * PI;
-				for(p = 0; p < 3; p++){
+				for(p = -2; p < 3; p++){
 					lineColor(gMiniMap, ps.x, ps.y, ps.x + 50*cos(dir)+p, ps.y - 50*sin(dir)+p, 0xb22222ff);
 				}
 			}

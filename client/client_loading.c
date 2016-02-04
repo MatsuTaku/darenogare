@@ -2,7 +2,7 @@
 #include "client_scene.h"
 #include "client_common.h"
 #include "client_func.h"
-#include "../common.h"
+#include "common.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 
@@ -77,13 +77,14 @@ void drawLoading() {
 		Rect rect = {
 				.src.w = gLoadingImg->w,
 				.src.h = gLoadingImg->h,
+				.dst.x = (window->w - gLoadingImg->w) / 2,
+				.dst.y = (window->h - gLoadingImg->h) / 2,
 		};
 		int alpha = 0xff;
 		int lastTime = mChangeTime - SDL_GetTicks();
 		if (mChangeFlag && lastTime < CHANGE_TIME / 3) {
 				alpha = 0xff * lastTime / (CHANGE_TIME / 3);
 		}
-		// printf("alpha: %x\n", alpha);
 		SDL_SetAlpha(gLoadingImg, SDL_SRCALPHA, alpha);
 		SDL_BlitSurface(gLoadingImg, &rect.src, window, &rect.dst);
 
@@ -94,8 +95,8 @@ void drawLoading() {
 				Rect strRect = {
 						.src.w = lastTime->w,
 						.src.h = lastTime->h,
-						.dst.x = window->w - lastTime->w - 180,
-						.dst.y = window->h - lastTime->h - 2,
+						.dst.x = window->w / 2 - lastTime->w + gLoadingImg->w / 2 - 180,
+						.dst.y = window->h / 2 - lastTime->h + gLoadingImg->h / 2 - 2,
 				};
 				SDL_BlitSurface(lastTime, &strRect.src, window, &strRect.dst);
 		}
