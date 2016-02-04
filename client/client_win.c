@@ -29,7 +29,6 @@ static char gTargetImgFile[] = "IMG/target.png"; //目的地
 static char pnLaserImgFile[] = "IMG/LaserEff3.png"; //お仕置きレーザー
 static char gMissileImgFile[] = "IMG/missileEff.png"; //ミサイル
 static char gNoizingImgFile[] = "IMG/sandstorm.jpg"; //妨害砂嵐
-static char gParalysisImgFile[] = "IMG/noizingEff.png"; //痺れ状態
 static char gBarrierImgFile[] = "IMG/barrierEff.png"; //バリア
 static char gLaserImgFile[2][20] = { //レーザー
 		"IMG/LaserEff.png",
@@ -86,7 +85,6 @@ static SDL_Surface *gItemImage[ITEM_NUM];//アイテム
 static SDL_Surface *gRockImage; //障害物
 static SDL_Surface *gMissileImage; //ミサイル
 static SDL_Surface *gNoizingImage; //ジャミング
-static SDL_Surface *gParalysisImage; //麻痺
 static SDL_Surface *gBarrierImage; //バリア
 static SDL_Surface *gLaserImage[2]; //レーザー
 static SDL_Surface *gWarningImage; //警告
@@ -202,8 +200,8 @@ int drawWindow() {
 		int angle = myPlayer->dir * HALF_DEGRESS / PI;
 		// printf("%d\n", angle);
 		drawObject(); //オブジェクトの描画
-		drawStatus(); //ステータスの描画
 		if(myPlayer->alive){ //生存状態
+			drawStatus(); //ステータスの描画
 			drawMiniMap(&myPlayer->object->pos); //ミニマップの描画
 			if(myPlayer->warn == WARN_OUT_AREA){
 				drawWarning(); //警告文の表示
@@ -239,7 +237,6 @@ void destroyWindow(void) {
 		SDL_FreeSurface(gMissileImage);
 		SDL_FreeSurface(gNoizingImage);
 		SDL_FreeSurface(gBarrierImage);
-		SDL_FreeSurface(gParalysisImage);
 		int i;
 		for (i = 0; i < ITEM_NUM; i++){
 				SDL_FreeSurface (gItemImage[i]);
@@ -248,9 +245,9 @@ void destroyWindow(void) {
 				SDL_FreeSurface (gCharaImage[i]);
 				SDL_FreeSurface (gIcon[i]);
 		}
-		for (i = 0; i < 2; i++)
+		for (i = 0; i < 2; i++){
 				SDL_FreeSurface (gLaserImage[i]);
-
+		}
 		if (joystick)
 				SDL_JoystickClose(joystick);
 
@@ -341,7 +338,6 @@ static int initImage(void) { //画像の読み込み
 		if ((gMissileImage = loadImage(gMissileImgFile)) == NULL)	endFlag = -1;	// ミサイル
 		if ((gNoizingImage = loadImage(gNoizingImgFile)) == NULL)	endFlag = -1;	// ジャミング
 		if ((gBarrierImage = loadImage(gBarrierImgFile)) == NULL)	endFlag = -1;	// バリア
-		if ((gParalysisImage = loadImage(gParalysisImgFile)) == NULL)	endFlag = -1;	//麻痺
 		for (i = 0; i < MAX_CLIENTS; i++) //キャラクター画像
 				if ((gCharaImage[i] = loadImage(gCharaImgFile[i])) == NULL)	endFlag = -1;
 		for (i = 0; i < ITEM_NUM; i++) //アイテム画像
@@ -701,6 +697,9 @@ void drawDeadChara(POSITION *charaPos, int chara_id){
 
 /*アイテムの描画*/
 void drawItem(POSITION *itemPos, int item_id){
+		if(item_id < 0){
+			return;
+		}
 		POSITION diffPos;
 		POSITION* myPos = &myPlayer->object->pos; //マイポジション
 		SDL_Rect dst_rect;
@@ -923,7 +922,7 @@ void drawMiniMap(POSITION* myPos) {
 
 		//2.オブジェクトの位置をgMiniMapに描写
 		int i, p, k;
-		int rImg = 65;
+		int rImg = 60;
 		int size = 2;
 		int asp = 30; //比率
 		int rd = rImg * asp; //ミニマップの半径
@@ -970,8 +969,8 @@ void drawMiniMap(POSITION* myPos) {
 				ps.x = center.x + lx / asp;
 				ps.y = center.y + ly / asp;
 			}else{
-				ps.x = center.x + rd*cos(dir);
-				ps.y = center.y - rd*sin(dir);
+				ps.x = center.x + (gMiniMapImage->w-17)/2*cos(dir) -5;
+				ps.y = center.y - (gMiniMapImage->h-17)/2*sin(dir) -5;
 			}
 			//位置を描画
 			if (k == myID) {
