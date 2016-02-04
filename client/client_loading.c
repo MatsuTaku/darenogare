@@ -62,7 +62,6 @@ void updateLoading() {
 }
 
 void recvLoading(syncData *data) {
-		printf("#recvLoading[%d]\n", data->type);
 		if (data->type == DATA_PREPARE) {
 				mChangeFlag = true;
 				mChangeTime = SDL_GetTicks() + CHANGE_TIME;
