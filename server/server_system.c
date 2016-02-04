@@ -431,7 +431,7 @@ void sendDeltaBuffer(int id, int latest) {
 				PLAYER *curPlayer = &curBuffer->player[i];
 				PLAYER *latestPlayer = &latestBuffer->player[i];
 				player->mode = curPlayer->mode - latestPlayer->mode;
-				player->mode = curPlayer->modeTime - latestPlayer->modeTime;
+				player->modeTime = curPlayer->modeTime - latestPlayer->modeTime;
 				player->dir = curPlayer->dir - latestPlayer->dir;
 				player->toDir = curPlayer->toDir - latestPlayer->toDir;
 				player->ver.vx = curPlayer->ver.vx - latestPlayer->ver.vx;
