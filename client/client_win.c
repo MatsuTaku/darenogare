@@ -198,7 +198,6 @@ int drawWindow() {
 			interval = now + 100; //次の開始時間を0.1秒後に設定
 		}
 		int angle = myPlayer->dir * HALF_DEGRESS / PI;
-		// printf("%d\n", angle);
 		drawObject(); //オブジェクトの描画
 		if(myPlayer->alive){ //生存状態
 			drawStatus(); //ステータスの描画
@@ -878,7 +877,6 @@ void drawStatus(void){
 					if(chara_id != myID){
 						item_id++;
 					}
-					printf("client%d item: %d\n", chara_id, item_id);
 			      		//所持アイテム
 			     		 if(item_id > ITEM_EMPTY){
 				 		src_rect.w = gItemImage[item_id]->w;
@@ -916,7 +914,7 @@ void drawMiniMap(POSITION* myPos) {
 			SDL_Rect map_src = {0, 0, gMiniMap->w, gMiniMap->h};
 			SDL_Rect map_dst = {gMainWindow->w - gMiniMap->w, 0};
 			SDL_BlitSurface(gMiniMap, &map_src, gMainWindow, &map_dst);
-			TypeWarnStrings("Can't use Lader!!!");
+			TypeWarnStrings("Can't use Lader");
 			return;
 		}
 
