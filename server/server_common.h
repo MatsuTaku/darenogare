@@ -9,11 +9,11 @@ enum generateFrequency {	// 毎秒の頻度
 };
 
 enum itemWeight {
-		WEIGHT_NOIZE = 11,
+		WEIGHT_NOIZE = 8,
 		WEIGHT_LASER = 6,
 		WEIGHT_MISSILE = 21,
-		WEIGHT_MINIMUM = 15,
-		WEIGHT_BARRIER = 13,
+		WEIGHT_MINIMUM = 13,
+		WEIGHT_BARRIER = 11,
 		WEIGHT_NUM = 5,
 };
 

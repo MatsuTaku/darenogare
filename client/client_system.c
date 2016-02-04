@@ -129,7 +129,6 @@ static bool deleteObject(int objectId) {
 				if (curObject->id == objectId) {
 						free(curObject->typeBuffer);
 						initObject(curObject);
-						// printf("delete object[%d]\n", objectId);
 						return true;
 				}
 		}
@@ -502,7 +501,7 @@ static void affectedJamming(int playerId) {
 		int objectId = selfObject++;
 		POSITION dropPos = myPlayer->object->pos;
 		double angle = atan(myPlayer->ver.vy / -myPlayer->ver.vx);
-		int dropDiff = RANGE_CHARACTER + RANGE_ITEM + 1;
+		int dropDiff = RANGE_CHARACTER + RANGE_ITEM + 20;
 		dropPos.x += dropDiff * cos(angle);
 		dropPos.y -= dropDiff * sin(angle);
 		insertItem(objectId, myPlayer->item, &dropPos);
