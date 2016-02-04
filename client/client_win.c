@@ -947,15 +947,15 @@ void drawMiniMap(POSITION* myPos) {
 						point.x = center.x + dx / asp;
 						point.y = center.y + dy / asp;
 
+						int owner = ((OBSTACLE *)object[i].typeBuffer)->owner;
 						switch(object[i].type) {
 								case OBJECT_OBSTACLE: //障害物
-										switch (((OBSTACLE *)object[i].typeBuffer)->num) {
-												case OBS_LASER:
-												case OBS_MISSILE:
-													color = 0xFF2F14FF;
-													break;
-												default:
-													color = 0xffd770ff;				
+										if (owner == OWNER) {
+												color = 0xffd770ff;
+										} else if (owner == myID) {
+												color = 0x38ff84ff;
+										} else {
+												color = 0xff5f4fff;
 										}
 										break;
 								case OBJECT_ITEM: //アイテム
@@ -987,7 +987,7 @@ void drawMiniMap(POSITION* myPos) {
 			}
 			//位置を描画
 			if (k == myID) {
-				filledCircleColor(gMiniMap, center.x, center.y, 4, 0x00ffffff); //自分
+				filledCircleColor(gMiniMap, center.x, center.y, 4, 0x24ff5cff); //自分
 			} else {
 				if(player[k].alive){
 					filledCircleColor(gMiniMap, ps.x, ps.y, size, 0xff0000ff); //敵
