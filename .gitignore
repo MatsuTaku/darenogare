@@ -1,0 +1,12 @@
+.DS_Store
+*~
+*.swp
+*.swo
+*.[ao]
+.nfs*
+.goutputstream*
+#*#
+core
+server/server
+client/client
+gdb.txt
