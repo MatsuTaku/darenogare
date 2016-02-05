@@ -16,7 +16,7 @@ release: $(OBJS)
 	gcc -o $(TARGET) $^ $(LINK) $(NDEBUG)
 
 clean:
-	rm *.o $(TARGET) *~ core .*.swp .*.swo
+	rm *.o $(TARGET) *~ core .*.swp .*.swo gdb.txt
 
 server_main.o: server_main.c server_common.h server_func.h ../common.h
 server_net.o: server_net.c server_common.h server_func.h ../common.h

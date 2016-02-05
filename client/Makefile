@@ -16,7 +16,7 @@ release: $(OBJS)
 	gcc -o $(TARGET) $^ $(LINK) $(NDEBUG)
 
 clean:
-	rm *.o $(TARGET) *~ core .*.swp .*.swo
+	rm *.o $(TARGET) *~ core .*.swp .*.swo gdb.txt
 
 client_main.o: client_main.c client_func.h ../common.h
 client_net.o: client_net.c client_func.h ../common.h client_scene.h
