@@ -352,8 +352,8 @@ static int initImage(void) { //画像の読み込み
 
 SDL_Surface* loadImage(char* imageName) {
 		SDL_Surface* image;
-		if (image = IMG_Load(imageName))
-				printf("Load [%s]\n", imageName);
+		if (image = IMG_Load(imageName)) {}
+				// printf("Load [%s]\n", imageName);
 		else
 				printf("Not found [%s]\n", imageName);
 		return image;
@@ -650,7 +650,7 @@ void drawForecast(int id, POSITION* charaPos){
 			end.x = start.x + (maxLength * cos(r_angle));
 			end.y = start.y - (maxLength * sin(r_angle));
 			int forecastColor = SDL_MapRGBA(gMainWindow->format, 0xff, 0x66, 0xff*abs(i)/laserWidth, 0x1c);
-			printf("forecaset color: %8x\n", forecastColor);
+			// printf("forecaset color: %8x\n", forecastColor);
 			lineColor(gMainWindow, start.x, start.y, end.x, end.y, forecastColor);
 		}
 
